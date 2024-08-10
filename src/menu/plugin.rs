@@ -7,6 +7,7 @@ use crate::{game_state::GameState, utility::clear_screen};
 
 pub fn setup(app: &mut App) {
     app.add_systems(OnEnter(GameState::Menu), setup_screen)
+        .add_systems(Update, menu_action)
         .add_systems(OnExit(GameState::Menu), clear_screen::<OnMenuScreen>);
 }
 
@@ -73,11 +74,14 @@ fn setup_screen(mut commands: Commands) {
                     );
 
                     parent
-                        .spawn(ButtonBundle {
-                            style: button_style.clone(),
-                            background_color: BLACK.into(),
-                            ..default()
-                        })
+                        .spawn((
+                            ButtonBundle {
+                                style: button_style.clone(),
+                                background_color: BLACK.into(),
+                                ..default()
+                            },
+                            MenuButtonAction::Start,
+                        ))
                         .with_children(|parent| {
                             parent.spawn(TextBundle::from_section(
                                 "Start",
@@ -86,4 +90,25 @@ fn setup_screen(mut commands: Commands) {
                         });
                 });
         });
+}
+
+#[derive(Clone, Copy, Component)]
+enum MenuButtonAction {
+    Start,
+}
+
+fn menu_action(
+    interaction_query: Query<
+        (&Interaction, &MenuButtonAction),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for (interaction, menu_button_action) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            match menu_button_action {
+                MenuButtonAction::Start => game_state.set(GameState::Game),
+            }
+        }
+    }
 }
