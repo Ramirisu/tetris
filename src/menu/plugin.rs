@@ -3,12 +3,12 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{game_state::GameState, utility::clear_screen};
+use crate::{app_state::AppState, utility::clear_screen};
 
 pub fn setup(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Menu), setup_screen)
+    app.add_systems(OnEnter(AppState::Menu), setup_screen)
         .add_systems(Update, menu_action)
-        .add_systems(OnExit(GameState::Menu), clear_screen::<OnMenuScreen>);
+        .add_systems(OnExit(AppState::Menu), clear_screen::<OnMenuScreen>);
 }
 
 const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
@@ -102,12 +102,12 @@ fn menu_action(
         (&Interaction, &MenuButtonAction),
         (Changed<Interaction>, With<Button>),
     >,
-    mut game_state: ResMut<NextState<GameState>>,
+    mut app_state: ResMut<NextState<AppState>>,
 ) {
     for (interaction, menu_button_action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             match menu_button_action {
-                MenuButtonAction::Start => game_state.set(GameState::Game),
+                MenuButtonAction::Start => app_state.set(AppState::Game),
             }
         }
     }

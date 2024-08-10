@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
+mod app_state;
 mod game;
-mod game_state;
 mod menu;
 mod utility;
 
+use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use game_state::GameState;
 
 fn main() {
     App::new()
@@ -20,7 +20,7 @@ fn main() {
                 },
             },
         })
-        .init_state::<GameState>()
+        .init_state::<AppState>()
         .add_systems(Startup, setup)
         .add_plugins((menu::plugin::setup, game::plugin::setup))
         .run();

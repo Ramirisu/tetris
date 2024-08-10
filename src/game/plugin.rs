@@ -3,11 +3,11 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 
-use crate::{game_state::GameState, utility::clear_screen};
+use crate::{app_state::AppState, utility::clear_screen};
 
 pub fn setup(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Game), setup_screen)
-        .add_systems(OnExit(GameState::Game), clear_screen::<OnGameScreen>);
+    app.add_systems(OnEnter(AppState::Game), setup_screen)
+        .add_systems(OnExit(AppState::Game), clear_screen::<OnGameScreen>);
 }
 
 const WIDTH: f32 = 400.0;
