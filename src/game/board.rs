@@ -36,8 +36,8 @@ impl Board {
 
     pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
-            blk.1 > 0
-                && (blk.1 as usize > BOARD_ROWS
+            Self::is_inside_board(blk.0, blk.1 - 1)
+                && (blk.1 as usize >= BOARD_ROWS
                     || !self.blocks[(blk.1 - 1) as usize][blk.0 as usize])
         });
 
@@ -49,10 +49,11 @@ impl Board {
     }
 
     pub fn move_piece_left(&mut self) -> bool {
-        let movable = self
-            .get_curr_piece_blocks()
-            .iter()
-            .all(|blk| blk.0 > 0 && !self.blocks[blk.1 as usize][(blk.0 - 1) as usize]);
+        let movable = self.get_curr_piece_blocks().iter().all(|blk| {
+            Self::is_inside_board(blk.0 - 1, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][(blk.0 - 1) as usize])
+        });
 
         if movable {
             self.curr_translation.0 -= 1;
@@ -63,7 +64,9 @@ impl Board {
 
     pub fn move_piece_right(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
-            blk.0 + 1 < BOARD_COLS as i32 && !self.blocks[blk.1 as usize][(blk.0 + 1) as usize]
+            Self::is_inside_board(blk.0 + 1, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][(blk.0 + 1) as usize])
         });
 
         if movable {
@@ -71,6 +74,36 @@ impl Board {
         }
 
         movable
+    }
+
+    pub fn rotate_piece_clockwise(&mut self) -> bool {
+        self.curr_piece.rotate_clockwise();
+        let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
+            Self::is_inside_board(blk.0, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS || !self.blocks[blk.1 as usize][(blk.0) as usize])
+        });
+        if !rotatable {
+            self.curr_piece.rotate_counter_clockwise();
+        }
+
+        rotatable
+    }
+
+    pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
+        self.curr_piece.rotate_counter_clockwise();
+        let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
+            Self::is_inside_board(blk.0, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS || !self.blocks[blk.1 as usize][(blk.0) as usize])
+        });
+        if !rotatable {
+            self.curr_piece.rotate_clockwise();
+        }
+
+        rotatable
+    }
+
+    fn is_inside_board(x: i32, y: i32) -> bool {
+        x >= 0 && x < BOARD_COLS as i32 && y >= 0
     }
 }
 

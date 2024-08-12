@@ -17,7 +17,7 @@ const PIECE_SHAPE_J: [[Block; 4]; 4] = [
 
 const PIECE_SHAPE_L: [[Block; 4]; 4] = [
     [Block(-1, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
-    [Block(0, -1), Block(0, 0), Block(-1, 0), Block(0, 1)],
+    [Block(0, -1), Block(0, 0), Block(-1, 1), Block(0, 1)],
     [Block(-1, 0), Block(0, 0), Block(1, 0), Block(1, 1)],
     [Block(0, -1), Block(1, -1), Block(0, 0), Block(0, 1)],
 ];
@@ -52,6 +52,21 @@ pub enum PieceShape {
     Z,
 }
 
+impl PieceShape {
+    pub fn state_len(&self) -> usize {
+        match self {
+            PieceShape::I => PIECE_SHAPE_I.len(),
+            PieceShape::J => PIECE_SHAPE_J.len(),
+            PieceShape::L => PIECE_SHAPE_L.len(),
+            PieceShape::O => PIECE_SHAPE_O.len(),
+            PieceShape::S => PIECE_SHAPE_S.len(),
+            PieceShape::T => PIECE_SHAPE_T.len(),
+            PieceShape::Z => PIECE_SHAPE_Z.len(),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct Piece {
     shape: PieceShape,
     state: usize,
@@ -87,14 +102,10 @@ impl Piece {
     }
 
     pub fn rotate_clockwise(&mut self) {
-        match self.shape {
-            PieceShape::I => self.state = (self.state + 1) % PIECE_SHAPE_I.len(),
-            PieceShape::J => self.state = (self.state + 1) % PIECE_SHAPE_J.len(),
-            PieceShape::L => self.state = (self.state + 1) % PIECE_SHAPE_L.len(),
-            PieceShape::O => self.state = (self.state + 1) % PIECE_SHAPE_O.len(),
-            PieceShape::S => self.state = (self.state + 1) % PIECE_SHAPE_S.len(),
-            PieceShape::T => self.state = (self.state + 1) % PIECE_SHAPE_T.len(),
-            PieceShape::Z => self.state = (self.state + 1) % PIECE_SHAPE_Z.len(),
-        }
+        self.state = (self.state + 1) % self.shape.state_len();
+    }
+
+    pub fn rotate_counter_clockwise(&mut self) {
+        self.state = (self.state + self.shape.state_len() - 1) % self.shape.state_len();
     }
 }

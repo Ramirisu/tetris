@@ -15,6 +15,7 @@ pub fn setup(app: &mut App) {
                 curr_piece_fall_down_system,
                 switch_to_next_piece_system,
             )
+                .chain()
                 .run_if(in_state(AppState::Game)),
         );
 }
@@ -114,30 +115,32 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
 }
 
 fn handle_input_system(
+    mut commands: Commands,
     q_keys: Res<ButtonInput<KeyCode>>,
-    mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
+    q_curr: Query<Entity, With<CurrPieceEntityMarker>>,
     mut player_data: ResMut<PlayerData>,
 ) {
+    let mut respawn = false;
     if q_keys.just_pressed(KeyCode::KeyA) {
-        if player_data.board.move_piece_left() {
-            for mut blk in q_curr.iter_mut() {
-                blk.translation.x -= BLOCK_SIZE;
-            }
-        }
+        respawn |= player_data.board.move_piece_left();
     }
     if q_keys.just_pressed(KeyCode::KeyD) {
-        if player_data.board.move_piece_right() {
-            for mut blk in q_curr.iter_mut() {
-                blk.translation.x += BLOCK_SIZE;
-            }
-        }
+        respawn |= player_data.board.move_piece_right();
     }
     if q_keys.just_pressed(KeyCode::KeyS) {
-        if player_data.board.move_piece_down() {
-            for mut blk in q_curr.iter_mut() {
-                blk.translation.y -= BLOCK_SIZE;
-            }
-        }
+        respawn |= player_data.board.move_piece_down();
+    }
+    if q_keys.just_pressed(KeyCode::Comma) {
+        respawn |= player_data.board.rotate_piece_counter_clockwise();
+    }
+    if q_keys.just_pressed(KeyCode::Period) {
+        respawn |= player_data.board.rotate_piece_clockwise();
+    }
+    if respawn {
+        q_curr
+            .iter()
+            .for_each(|entity| commands.entity(entity).despawn());
+        spawn_curr_piece(commands.reborrow(), &player_data);
     }
 }
 
