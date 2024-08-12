@@ -3,12 +3,12 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{app_state::AppState, utility::clear_screen};
+use crate::{app_state::AppState, utility::despawn_all};
 
 pub fn setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::Menu), setup_screen)
         .add_systems(Update, menu_action)
-        .add_systems(OnExit(AppState::Menu), clear_screen::<OnMenuScreen>);
+        .add_systems(OnExit(AppState::Menu), despawn_all::<OnMenuScreen>);
 }
 
 const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
