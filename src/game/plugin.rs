@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{app_state::AppState, utility::despawn_all};
 
-use super::board::Board;
+use super::{board::Board, level};
 
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
@@ -48,11 +48,18 @@ struct PlayerData {
 
 impl PlayerData {
     fn new() -> Self {
-        Self {
-            board: Board::default(),
-            falldown_timer: Timer::from_seconds(0.5, TimerMode::Repeating),
+        let mut me = Self {
+            board: Board::new(10),
+            falldown_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
             switch_to_next_piece: false,
-        }
+        };
+        me.update_timer();
+        me
+    }
+
+    fn update_timer(&mut self) {
+        self.falldown_timer =
+            Timer::from_seconds(level::drop_time(self.board.level()), TimerMode::Repeating);
     }
 }
 
@@ -210,6 +217,7 @@ fn switch_to_next_piece_system(
             .for_each(|entity| commands.entity(entity).despawn());
         player_data.board.switch_to_next_piece();
         player_data.board.clear_lines();
+        player_data.update_timer();
 
         spawn_board(commands.reborrow(), &player_data);
         spawn_curr_piece(commands.reborrow(), &player_data);
