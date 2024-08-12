@@ -32,6 +32,7 @@ const HEIGHT: f32 = BLOCK_SIZE * 20.0;
 const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, HEIGHT / 2.0 + BLOCK_SIZE, BOARD_LAYER);
 const SCORE_TRANSLATION: Vec3 = Vec3::new(WIDTH, HEIGHT / 3.0, BOARD_LAYER);
 const LEVEL_TRANSLATION: Vec3 = Vec3::new(WIDTH, -HEIGHT / 3.0, BOARD_LAYER);
+const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(WIDTH, 0.0, 0.0);
 
 #[derive(Component)]
 struct GameEntityMarker;
@@ -71,7 +72,8 @@ impl Default for PlayerData {
 
 fn setup_screen(mut commands: Commands, player_data: Res<PlayerData>) {
     spawn_board(commands.reborrow(), &player_data);
-    spawn_curr_piece(commands.reborrow(), &player_data)
+    spawn_curr_piece(commands.reborrow(), &player_data);
+    spawn_next_piece(commands.reborrow(), &player_data);
 }
 
 fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
@@ -100,14 +102,15 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
             blks.iter().enumerate().for_each(|(x, blk)| {
                 if *blk {
                     commands
-                        .spawn(new_block(x as i32, y as i32, BLOCK_LAYER, Color::WHITE))
+                        .spawn(new_block(
+                            board_index_to_translation(x as i32, y as i32, BLOCK_LAYER),
+                            Color::WHITE,
+                        ))
                         .insert(GameEntityMarker);
                 } else {
                     commands
                         .spawn(new_block(
-                            x as i32,
-                            y as i32,
-                            BLOCK_LAYER,
+                            board_index_to_translation(x as i32, y as i32, BLOCK_LAYER),
                             Color::srgb(0.1, 0.1, 0.1),
                         ))
                         .insert(GameEntityMarker);
@@ -146,13 +149,28 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
         .for_each(|blk| {
             commands
                 .spawn(new_block(
-                    blk.0,
-                    blk.1,
-                    CURR_PIECE_LAYER,
+                    board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER),
                     Color::srgb(1.0, 0.0, 0.0),
                 ))
                 .insert(GameEntityMarker)
                 .insert(CurrPieceEntityMarker);
+        });
+}
+
+fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
+    player_data
+        .board
+        .get_next_piece_blocks()
+        .iter()
+        .for_each(|blk| {
+            let translation = Vec3::new(
+                blk.0 as f32 * BLOCK_SIZE,
+                blk.1 as f32 * BLOCK_SIZE,
+                CURR_PIECE_LAYER,
+            ) + NEXT_PIECE_TRANSLATION;
+            commands
+                .spawn(new_block(translation, Color::srgb(1.0, 0.0, 0.0)))
+                .insert(GameEntityMarker);
         });
 }
 
@@ -221,21 +239,22 @@ fn switch_to_next_piece_system(
 
         spawn_board(commands.reborrow(), &player_data);
         spawn_curr_piece(commands.reborrow(), &player_data);
+        spawn_next_piece(commands.reborrow(), &player_data)
     }
 }
 
-fn index_to_translation(x: i32, y: i32) -> (f32, f32) {
-    (
+fn board_index_to_translation(x: i32, y: i32, z: f32) -> Vec3 {
+    Vec3::new(
         (x as f32 + 0.5) * BLOCK_SIZE - WIDTH / 2.0,
         (y as f32 + 0.5) * BLOCK_SIZE - HEIGHT / 2.0,
+        z,
     )
 }
 
-fn new_block(x: i32, y: i32, z: f32, color: Color) -> SpriteBundle {
-    let (x, y) = index_to_translation(x, y);
+fn new_block(translation: Vec3, color: Color) -> SpriteBundle {
     SpriteBundle {
         transform: Transform {
-            translation: Vec3::new(x, y, z),
+            translation,
             ..default()
         },
         sprite: Sprite {

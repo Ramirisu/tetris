@@ -12,6 +12,7 @@ pub struct Board {
     pub blocks: Vec<Vec<bool>>,
     curr_piece: Piece,
     curr_translation: (i32, i32),
+    next_piece: Piece,
     start_level: usize,
     pub lines: usize,
     pub score: usize,
@@ -23,6 +24,7 @@ impl Board {
             blocks: vec![vec![false; BOARD_COLS]; BOARD_ROWS],
             curr_piece: Piece::rand(),
             curr_translation: (BOARD_PIECE_START_X, BOARD_PIECE_START_Y),
+            next_piece: Piece::rand(),
             start_level,
             lines: 0,
             score: 0,
@@ -34,7 +36,7 @@ impl Board {
     }
 
     pub fn switch_to_next_piece(&mut self) {
-        self.curr_piece = Piece::rand();
+        self.curr_piece = std::mem::replace(&mut self.next_piece, Piece::rand());
         self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
     }
 
@@ -61,6 +63,10 @@ impl Board {
                 blk.1 + self.curr_translation.1,
             )
         })
+    }
+
+    pub fn get_next_piece_blocks(&self) -> [Block; 4] {
+        self.next_piece.get_blocks()
     }
 
     pub fn move_piece_down(&mut self) -> bool {
