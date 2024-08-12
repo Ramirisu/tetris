@@ -20,10 +20,18 @@ pub fn setup(app: &mut App) {
         );
 }
 
+const BOARD_LAYER: f32 = 0.0;
+const BLOCK_LAYER: f32 = 1.0;
+const CURR_PIECE_LAYER: f32 = 2.0;
+
 const BLOCK_SIZE: f32 = 40.0;
 const BLOCK_PADDING: f32 = BLOCK_SIZE / 20.0;
 const WIDTH: f32 = BLOCK_SIZE * 10.0;
 const HEIGHT: f32 = BLOCK_SIZE * 20.0;
+
+const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, HEIGHT / 2.0 + BLOCK_SIZE, BOARD_LAYER);
+const SCORE_TRANSLATION: Vec3 = Vec3::new(WIDTH, HEIGHT / 3.0, BOARD_LAYER);
+const LEVEL_TRANSLATION: Vec3 = Vec3::new(WIDTH, -HEIGHT / 3.0, BOARD_LAYER);
 
 #[derive(Component)]
 struct GameEntityMarker;
@@ -63,7 +71,7 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: Vec3::ZERO,
+                translation: Vec3::new(0.0, 0.0, BOARD_LAYER),
                 ..default()
             },
             sprite: Sprite {
@@ -85,20 +93,42 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
             blks.iter().enumerate().for_each(|(x, blk)| {
                 if *blk {
                     commands
-                        .spawn(new_block(x as i32, y as i32, 1.0, Color::WHITE))
+                        .spawn(new_block(x as i32, y as i32, BLOCK_LAYER, Color::WHITE))
                         .insert(GameEntityMarker);
                 } else {
                     commands
                         .spawn(new_block(
                             x as i32,
                             y as i32,
-                            1.0,
+                            BLOCK_LAYER,
                             Color::srgb(0.1, 0.1, 0.1),
                         ))
                         .insert(GameEntityMarker);
                 }
             })
         });
+
+    commands.spawn((
+        new_text(
+            format!("LINES {:04}", player_data.board.lines),
+            LINES_TRANSLATION,
+        ),
+        GameEntityMarker,
+    ));
+    commands.spawn((
+        new_text(
+            format!("SCORE {:06}", player_data.board.score),
+            SCORE_TRANSLATION,
+        ),
+        GameEntityMarker,
+    ));
+    commands.spawn((
+        new_text(
+            format!("LEVEL {:02}", player_data.board.level()),
+            LEVEL_TRANSLATION,
+        ),
+        GameEntityMarker,
+    ));
 }
 
 fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
@@ -108,7 +138,12 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
         .iter()
         .for_each(|blk| {
             commands
-                .spawn(new_block(blk.0, blk.1, 2.0, Color::srgb(1.0, 0.0, 0.0)))
+                .spawn(new_block(
+                    blk.0,
+                    blk.1,
+                    CURR_PIECE_LAYER,
+                    Color::srgb(1.0, 0.0, 0.0),
+                ))
                 .insert(GameEntityMarker)
                 .insert(CurrPieceEntityMarker);
         });
@@ -127,7 +162,7 @@ fn handle_input_system(
     if q_keys.just_pressed(KeyCode::KeyD) {
         respawn |= player_data.board.move_piece_right();
     }
-    if q_keys.just_pressed(KeyCode::KeyS) {
+    if q_keys.pressed(KeyCode::KeyS) {
         respawn |= player_data.board.move_piece_down();
     }
     if q_keys.just_pressed(KeyCode::Comma) {
@@ -174,6 +209,7 @@ fn switch_to_next_piece_system(
             .iter()
             .for_each(|entity| commands.entity(entity).despawn());
         player_data.board.switch_to_next_piece();
+        player_data.board.clear_lines();
 
         spawn_board(commands.reborrow(), &player_data);
         spawn_curr_piece(commands.reborrow(), &player_data);
@@ -200,6 +236,24 @@ fn new_block(x: i32, y: i32, z: f32, color: Color) -> SpriteBundle {
                 BLOCK_SIZE - BLOCK_PADDING,
                 BLOCK_SIZE - BLOCK_PADDING,
             )),
+            ..default()
+        },
+        ..default()
+    }
+}
+
+fn new_text(text: String, translation: Vec3) -> Text2dBundle {
+    Text2dBundle {
+        text: Text::from_section(
+            text,
+            TextStyle {
+                font_size: BLOCK_SIZE,
+                color: Color::WHITE,
+                ..default()
+            },
+        ),
+        transform: Transform {
+            translation,
             ..default()
         },
         ..default()
