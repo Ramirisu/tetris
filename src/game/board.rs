@@ -34,7 +34,7 @@ impl Board {
         })
     }
 
-    pub fn move_curr_piece_down(&mut self) -> bool {
+    pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
             blk.1 > 0
                 && (blk.1 as usize > BOARD_ROWS
@@ -43,6 +43,31 @@ impl Board {
 
         if movable {
             self.curr_translation.1 -= 1;
+        }
+
+        movable
+    }
+
+    pub fn move_piece_left(&mut self) -> bool {
+        let movable = self
+            .get_curr_piece_blocks()
+            .iter()
+            .all(|blk| blk.0 > 0 && !self.blocks[blk.1 as usize][(blk.0 - 1) as usize]);
+
+        if movable {
+            self.curr_translation.0 -= 1;
+        }
+
+        movable
+    }
+
+    pub fn move_piece_right(&mut self) -> bool {
+        let movable = self.get_curr_piece_blocks().iter().all(|blk| {
+            blk.0 + 1 < BOARD_COLS as i32 && !self.blocks[blk.1 as usize][(blk.0 + 1) as usize]
+        });
+
+        if movable {
+            self.curr_translation.0 += 1;
         }
 
         movable

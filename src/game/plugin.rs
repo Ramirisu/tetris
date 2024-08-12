@@ -10,7 +10,11 @@ pub fn setup(app: &mut App) {
         .add_systems(OnExit(AppState::Game), despawn_all::<GameEntityMarker>)
         .add_systems(
             Update,
-            (curr_piece_fall_down_system, switch_to_next_piece_system)
+            (
+                handle_input_system,
+                curr_piece_fall_down_system,
+                switch_to_next_piece_system,
+            )
                 .run_if(in_state(AppState::Game)),
         );
 }
@@ -109,13 +113,41 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
         });
 }
 
+fn handle_input_system(
+    q_keys: Res<ButtonInput<KeyCode>>,
+    mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
+    mut player_data: ResMut<PlayerData>,
+) {
+    if q_keys.just_pressed(KeyCode::KeyA) {
+        if player_data.board.move_piece_left() {
+            for mut blk in q_curr.iter_mut() {
+                blk.translation.x -= BLOCK_SIZE;
+            }
+        }
+    }
+    if q_keys.just_pressed(KeyCode::KeyD) {
+        if player_data.board.move_piece_right() {
+            for mut blk in q_curr.iter_mut() {
+                blk.translation.x += BLOCK_SIZE;
+            }
+        }
+    }
+    if q_keys.just_pressed(KeyCode::KeyS) {
+        if player_data.board.move_piece_down() {
+            for mut blk in q_curr.iter_mut() {
+                blk.translation.y -= BLOCK_SIZE;
+            }
+        }
+    }
+}
+
 fn curr_piece_fall_down_system(
     mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
     time: Res<Time>,
     mut player_data: ResMut<PlayerData>,
 ) {
     if player_data.falldown_timer.tick(time.delta()).finished() {
-        if player_data.board.move_curr_piece_down() {
+        if player_data.board.move_piece_down() {
             for mut blk in q_curr.iter_mut() {
                 blk.translation.y -= BLOCK_SIZE;
             }
