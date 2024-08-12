@@ -35,7 +35,10 @@ impl Board {
         level::level(self.start_level, self.lines)
     }
 
-    pub fn switch_to_next_piece(&mut self) {
+    pub fn lock_and_switch(&mut self) {
+        for blk in self.get_curr_piece_blocks() {
+            self.blocks[blk.1 as usize][blk.0 as usize] = true;
+        }
         self.curr_piece = std::mem::replace(&mut self.next_piece, Piece::rand());
         self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
     }

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{app_state::AppState, utility::despawn_all};
 
-use super::{board::Board, level};
+use super::{board::Board, consts::*, level};
 
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
@@ -11,9 +11,10 @@ pub fn setup(app: &mut App) {
         .add_systems(
             Update,
             (
+                tick_system,
                 handle_input_system,
                 curr_piece_fall_system,
-                switch_to_next_piece_system,
+                lock_and_switch_system,
             )
                 .chain()
                 .run_if(in_state(AppState::Game)),
@@ -43,16 +44,20 @@ struct CurrPieceEntityMarker;
 #[derive(Resource)]
 struct PlayerData {
     board: Board,
+    tick_timer: Timer,
     fall_timer: Timer,
-    switch_to_next_piece: bool,
+    pressed_down_tick: i32,
+    lock_and_switch: bool,
 }
 
 impl PlayerData {
     fn new() -> Self {
         Self {
-            board: Board::new(10),
+            board: Board::new(0),
+            tick_timer: Timer::from_seconds(1.0 / 60.0, TimerMode::Repeating),
             fall_timer: Timer::from_seconds(1.6, TimerMode::Once),
-            switch_to_next_piece: false,
+            pressed_down_tick: TICK_MOVE_DOWN_INPUT_RELEASED_RESET,
+            lock_and_switch: false,
         }
     }
 
@@ -172,6 +177,12 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
         });
 }
 
+fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+    if player_data.tick_timer.tick(time.delta()).just_finished() {
+        player_data.pressed_down_tick += 1;
+    }
+}
+
 fn handle_input_system(
     mut commands: Commands,
     q_keys: Res<ButtonInput<KeyCode>>,
@@ -186,8 +197,13 @@ fn handle_input_system(
         respawn |= player_data.board.move_piece_right();
     }
     if q_keys.pressed(KeyCode::KeyS) {
-        respawn |= player_data.board.move_piece_down();
-        player_data.reset_timer();
+        if player_data.pressed_down_tick >= TICK_MOVE_DOWN_INPUT_PRESSED_TRIGGER {
+            respawn |= player_data.board.move_piece_down();
+            player_data.reset_timer();
+            player_data.pressed_down_tick = TICK_MOVE_DOWN_INPUT_PRESSED_RESET;
+        }
+    } else {
+        player_data.pressed_down_tick = TICK_MOVE_DOWN_INPUT_RELEASED_RESET;
     }
     if q_keys.just_pressed(KeyCode::Comma) {
         respawn |= player_data.board.rotate_piece_counter_clockwise();
@@ -215,25 +231,21 @@ fn curr_piece_fall_system(
             }
             player_data.reset_timer();
         } else {
-            for blk in player_data.board.get_curr_piece_blocks() {
-                player_data.board.blocks[blk.1 as usize][blk.0 as usize] = true;
-            }
-
-            player_data.switch_to_next_piece = true;
+            player_data.lock_and_switch = true;
         }
     }
 }
 
-fn switch_to_next_piece_system(
+fn lock_and_switch_system(
     mut commands: Commands,
     q_game: Query<Entity, With<GameEntityMarker>>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    if std::mem::replace(&mut player_data.switch_to_next_piece, false) {
+    if std::mem::replace(&mut player_data.lock_and_switch, false) {
         q_game
             .iter()
             .for_each(|entity| commands.entity(entity).despawn());
-        player_data.board.switch_to_next_piece();
+        player_data.board.lock_and_switch();
         player_data.board.clear_lines();
         player_data.reset_timer();
 
