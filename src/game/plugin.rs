@@ -12,7 +12,7 @@ pub fn setup(app: &mut App) {
             Update,
             (
                 handle_input_system,
-                curr_piece_fall_down_system,
+                curr_piece_fall_system,
                 switch_to_next_piece_system,
             )
                 .chain()
@@ -43,24 +43,22 @@ struct CurrPieceEntityMarker;
 #[derive(Resource)]
 struct PlayerData {
     board: Board,
-    falldown_timer: Timer,
+    fall_timer: Timer,
     switch_to_next_piece: bool,
 }
 
 impl PlayerData {
     fn new() -> Self {
-        let mut me = Self {
+        Self {
             board: Board::new(10),
-            falldown_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
+            fall_timer: Timer::from_seconds(1.6, TimerMode::Once),
             switch_to_next_piece: false,
-        };
-        me.update_timer();
-        me
+        }
     }
 
-    fn update_timer(&mut self) {
-        self.falldown_timer =
-            Timer::from_seconds(level::drop_time(self.board.level()), TimerMode::Repeating);
+    fn reset_timer(&mut self) {
+        self.fall_timer =
+            Timer::from_seconds(level::drop_time(self.board.level()), TimerMode::Once);
     }
 }
 
@@ -189,6 +187,7 @@ fn handle_input_system(
     }
     if q_keys.pressed(KeyCode::KeyS) {
         respawn |= player_data.board.move_piece_down();
+        player_data.reset_timer();
     }
     if q_keys.just_pressed(KeyCode::Comma) {
         respawn |= player_data.board.rotate_piece_counter_clockwise();
@@ -204,16 +203,17 @@ fn handle_input_system(
     }
 }
 
-fn curr_piece_fall_down_system(
+fn curr_piece_fall_system(
     mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
     time: Res<Time>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    if player_data.falldown_timer.tick(time.delta()).finished() {
+    if player_data.fall_timer.tick(time.delta()).finished() {
         if player_data.board.move_piece_down() {
             for mut blk in q_curr.iter_mut() {
                 blk.translation.y -= BLOCK_SIZE;
             }
+            player_data.reset_timer();
         } else {
             for blk in player_data.board.get_curr_piece_blocks() {
                 player_data.board.blocks[blk.1 as usize][blk.0 as usize] = true;
@@ -235,7 +235,7 @@ fn switch_to_next_piece_system(
             .for_each(|entity| commands.entity(entity).despawn());
         player_data.board.switch_to_next_piece();
         player_data.board.clear_lines();
-        player_data.update_timer();
+        player_data.reset_timer();
 
         spawn_board(commands.reborrow(), &player_data);
         spawn_curr_piece(commands.reborrow(), &player_data);
