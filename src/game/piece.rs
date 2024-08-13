@@ -66,6 +66,20 @@ impl PieceShape {
     }
 }
 
+impl From<usize> for PieceShape {
+    fn from(value: usize) -> Self {
+        match value % 7 {
+            0 => PieceShape::I,
+            1 => PieceShape::J,
+            2 => PieceShape::L,
+            3 => PieceShape::O,
+            4 => PieceShape::S,
+            5 => PieceShape::T,
+            _ => PieceShape::Z,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct Piece {
     shape: PieceShape,
@@ -78,15 +92,17 @@ impl Piece {
     }
 
     pub fn rand() -> Self {
-        Self::new(match rand::thread_rng().gen::<usize>() % 7 {
-            0 => PieceShape::I,
-            1 => PieceShape::J,
-            2 => PieceShape::L,
-            3 => PieceShape::O,
-            4 => PieceShape::S,
-            5 => PieceShape::T,
-            _ => PieceShape::Z,
-        })
+        Self::new(rand::thread_rng().gen::<usize>().into())
+    }
+
+    pub fn rand_1h2r(&self) -> Piece {
+        // 1H2R randomizer
+        let shape = rand::thread_rng().gen_range(0..8);
+        if shape != self.shape as usize {
+            Self::new(shape.into())
+        } else {
+            Self::rand()
+        }
     }
 
     pub fn shape(&self) -> PieceShape {

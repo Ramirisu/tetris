@@ -22,11 +22,13 @@ pub struct Board {
 
 impl Board {
     pub fn new(start_level: usize) -> Self {
+        let curr_piece = Piece::rand();
+        let next_piece = curr_piece.rand_1h2r();
         Self {
             blocks: vec![vec![false; BOARD_COLS]; BOARD_ROWS],
-            curr_piece: Piece::rand(),
+            curr_piece,
             curr_translation: (BOARD_PIECE_START_X, BOARD_PIECE_START_Y),
-            next_piece: Piece::rand(),
+            next_piece,
             start_level,
             lines: 0,
             score: 0,
@@ -60,7 +62,7 @@ impl Board {
         } else {
             self.drought += 1;
         }
-        self.curr_piece = std::mem::replace(&mut self.next_piece, Piece::rand());
+        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
         self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
     }
 
