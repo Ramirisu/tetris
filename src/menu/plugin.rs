@@ -1,26 +1,25 @@
 use bevy::{
-    color::palettes::css::{BLACK, CRIMSON},
+    color::palettes::css::{BLACK, CRIMSON, WHITE},
     prelude::*,
 };
 
-use crate::{app_state::AppState, utility::despawn_all};
+use crate::{app_state::AppState, game::plugin::PlayerData, utility::despawn_all};
 
 pub fn setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::Menu), setup_screen)
-        .add_systems(Update, menu_action)
-        .add_systems(OnExit(AppState::Menu), despawn_all::<OnMenuScreen>);
+        .add_systems(Update, menu_action.run_if(in_state(AppState::Menu)))
+        .add_systems(OnExit(AppState::Menu), despawn_all::<MenuEntityMarker>);
 }
 
-const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
-
 #[derive(Component)]
-struct OnMenuScreen;
+struct MenuEntityMarker;
 
 fn setup_screen(mut commands: Commands) {
     let button_style = Style {
-        width: Val::Px(200.0),
-        height: Val::Px(65.0),
-        margin: UiRect::all(Val::Px(20.0)),
+        width: Val::Px(60.0),
+        height: Val::Px(60.0),
+        margin: UiRect::all(Val::Px(5.0)),
+        padding: UiRect::all(Val::Px(20.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..default()
@@ -28,7 +27,7 @@ fn setup_screen(mut commands: Commands) {
 
     let button_text_style = TextStyle {
         font_size: 40.0,
-        color: TEXT_COLOR,
+        color: WHITE.into(),
         ..default()
     };
 
@@ -44,7 +43,7 @@ fn setup_screen(mut commands: Commands) {
                 },
                 ..default()
             },
-            OnMenuScreen,
+            MenuEntityMarker,
         ))
         .with_children(|parent| {
             parent
@@ -52,6 +51,8 @@ fn setup_screen(mut commands: Commands) {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
+                        margin: UiRect::all(Val::Px(20.0)),
+                        padding: UiRect::all(Val::Px(20.0)),
                         ..default()
                     },
                     background_color: CRIMSON.into(),
@@ -60,33 +61,47 @@ fn setup_screen(mut commands: Commands) {
                 .with_children(|parent| {
                     parent.spawn(
                         TextBundle::from_section(
-                            "TETRIS",
+                            "LEVEL",
                             TextStyle {
-                                font_size: 80.0,
-                                color: TEXT_COLOR,
+                                font_size: 40.0,
+                                color: WHITE.into(),
                                 ..default()
                             },
                         )
                         .with_style(Style {
-                            margin: UiRect::all(Val::Px(50.0)),
+                            margin: UiRect::all(Val::Px(20.0)),
                             ..default()
                         }),
                     );
 
                     parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: BLACK.into(),
+                        .spawn(NodeBundle {
+                            style: Style {
+                                display: Display::Grid,
+                                grid_template_columns: vec![GridTrack::auto(); 5],
                                 ..default()
                             },
-                            MenuButtonAction::Start,
-                        ))
+                            background_color: CRIMSON.into(),
+                            ..default()
+                        })
                         .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                "Start",
-                                button_text_style.clone(),
-                            ));
+                            for level in 0..30 {
+                                parent
+                                    .spawn((
+                                        ButtonBundle {
+                                            style: button_style.clone(),
+                                            background_color: BLACK.into(),
+                                            ..default()
+                                        },
+                                        MenuButtonAction::Level(level),
+                                    ))
+                                    .with_children(|parent| {
+                                        parent.spawn(TextBundle::from_section(
+                                            format!("{}", level),
+                                            button_text_style.clone(),
+                                        ));
+                                    });
+                            }
                         });
                 });
         });
@@ -94,20 +109,21 @@ fn setup_screen(mut commands: Commands) {
 
 #[derive(Clone, Copy, Component)]
 enum MenuButtonAction {
-    Start,
+    Level(usize),
 }
 
 fn menu_action(
-    interaction_query: Query<
-        (&Interaction, &MenuButtonAction),
-        (Changed<Interaction>, With<Button>),
-    >,
+    q_interaction: Query<(&Interaction, &MenuButtonAction), (Changed<Interaction>, With<Button>)>,
     mut app_state: ResMut<NextState<AppState>>,
+    mut player_data: ResMut<PlayerData>,
 ) {
-    for (interaction, menu_button_action) in &interaction_query {
+    for (interaction, menu_button_action) in &q_interaction {
         if *interaction == Interaction::Pressed {
             match menu_button_action {
-                MenuButtonAction::Start => app_state.set(AppState::Game),
+                MenuButtonAction::Level(level) => {
+                    *player_data = PlayerData::new(*level);
+                    app_state.set(AppState::Game);
+                }
             }
         }
     }

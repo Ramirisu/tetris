@@ -47,7 +47,7 @@ struct DASEntityMarker;
 struct CurrPieceEntityMarker;
 
 #[derive(Resource)]
-struct PlayerData {
+pub struct PlayerData {
     board: Board,
     fall_tick: FallTick,
     press_down_tick: PressDownTick,
@@ -57,9 +57,9 @@ struct PlayerData {
 }
 
 impl PlayerData {
-    fn new() -> Self {
+    pub fn new(start_level: usize) -> Self {
         Self {
-            board: Board::new(10),
+            board: Board::new(start_level),
             fall_tick: FallTick::default(),
             press_down_tick: PressDownTick::default(),
             das_tick: DelayAutoShiftTick::default(),
@@ -71,7 +71,7 @@ impl PlayerData {
 
 impl Default for PlayerData {
     fn default() -> Self {
-        Self::new()
+        Self::new(0)
     }
 }
 

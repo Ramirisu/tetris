@@ -3,6 +3,7 @@ use bevy::{prelude::*, window::WindowResolution};
 mod app_state;
 mod game;
 mod menu;
+mod splash;
 mod utility;
 
 use app_state::AppState;
@@ -28,7 +29,11 @@ fn main() {
         })
         .init_state::<AppState>()
         .add_systems(Startup, setup)
-        .add_plugins((menu::plugin::setup, game::plugin::setup))
+        .add_plugins((
+            splash::plugin::setup,
+            menu::plugin::setup,
+            game::plugin::setup,
+        ))
         .run();
 }
 
