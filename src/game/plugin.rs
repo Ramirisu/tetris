@@ -258,20 +258,20 @@ fn running_tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
 
 fn handle_input_system(
     mut commands: Commands,
-    q_keys: Res<ButtonInput<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     q_curr: Query<Entity, With<CurrPieceEntityMarker>>,
     mut player_data: ResMut<PlayerData>,
 ) {
     let mut respawn = false;
     match (
-        q_keys.just_pressed(KeyCode::KeyA),
-        q_keys.just_pressed(KeyCode::KeyD),
+        keys.just_pressed(KeyCode::KeyA),
+        keys.just_pressed(KeyCode::KeyD),
     ) {
         (true, false) => respawn |= player_data.board.move_piece_left(),
         (false, true) => respawn |= player_data.board.move_piece_right(),
         _ => (),
     }
-    match (q_keys.pressed(KeyCode::KeyA), q_keys.pressed(KeyCode::KeyD)) {
+    match (keys.pressed(KeyCode::KeyA), keys.pressed(KeyCode::KeyD)) {
         (true, false) => {
             if !player_data.board.is_left_movable() {
                 player_data.das_tick.reset_max();
@@ -290,7 +290,7 @@ fn handle_input_system(
         _ => (),
     }
 
-    if q_keys.pressed(KeyCode::KeyS) {
+    if keys.pressed(KeyCode::KeyS) {
         if player_data.press_down_tick.consume() {
             respawn |= player_data.board.move_piece_down();
             player_data.fall_tick.reset();
@@ -298,10 +298,10 @@ fn handle_input_system(
     } else {
         player_data.press_down_tick.reset();
     }
-    if q_keys.just_pressed(KeyCode::Comma) {
+    if keys.just_pressed(KeyCode::Comma) {
         respawn |= player_data.board.rotate_piece_counter_clockwise();
     }
-    if q_keys.just_pressed(KeyCode::Period) {
+    if keys.just_pressed(KeyCode::Period) {
         respawn |= player_data.board.rotate_piece_clockwise();
     }
     if respawn {

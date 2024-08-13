@@ -81,10 +81,11 @@ fn setup_screen(mut commands: Commands) {
 }
 
 fn handle_input_system(
-    q_keys: Res<ButtonInput<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<MouseButton>>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    if q_keys.pressed(KeyCode::Enter) {
+    if keys.just_pressed(KeyCode::Enter) || buttons.just_pressed(MouseButton::Left) {
         app_state.set(AppState::Menu);
     }
 }
