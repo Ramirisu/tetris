@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-pub const TICKS_PER_SECOND: u64 = 60;
+const TICKS_PER_MICROSECOND: u64 = 60_098800; // NTSC 60.0988 Hz
 
 const fn ticks_to_duration(count: u64) -> Duration {
-    Duration::from_micros(count * 1000000 / TICKS_PER_SECOND)
+    Duration::from_micros(count * 1000_000_000_000 / TICKS_PER_MICROSECOND)
 }
 
 pub fn duration_to_ticks(duration: Duration) -> u64 {
-    (duration.as_secs_f64() * TICKS_PER_SECOND as f64).round() as u64
+    (duration.as_secs_f64() * TICKS_PER_MICROSECOND as f64 / 1000_000.0).round() as u64
 }
 
 #[derive(Default)]
