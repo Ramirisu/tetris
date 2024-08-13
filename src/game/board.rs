@@ -1,6 +1,6 @@
 use super::{
     level,
-    piece::{Block, Piece},
+    piece::{Block, Piece, PieceShape},
 };
 
 const BOARD_ROWS: usize = 20;
@@ -16,6 +16,8 @@ pub struct Board {
     start_level: usize,
     pub lines: usize,
     pub score: usize,
+    pub tetris_count: usize,
+    pub drought: usize,
 }
 
 impl Board {
@@ -28,6 +30,8 @@ impl Board {
             start_level,
             lines: 0,
             score: 0,
+            tetris_count: 0,
+            drought: 0,
         }
     }
 
@@ -35,9 +39,26 @@ impl Board {
         level::level(self.start_level, self.lines)
     }
 
+    pub fn burned(&self) -> usize {
+        self.lines - self.tetris_count * 4
+    }
+
+    pub fn tetris_rate(&self) -> f32 {
+        if self.lines == 0 {
+            0.0
+        } else {
+            self.tetris_count as f32 * 4.0 / self.lines as f32
+        }
+    }
+
     pub fn lock_and_switch(&mut self) {
         for blk in self.get_curr_piece_blocks() {
             self.blocks[blk.1 as usize][blk.0 as usize] = true;
+        }
+        if self.curr_piece.shape() == PieceShape::I {
+            self.drought = 0;
+        } else {
+            self.drought += 1;
         }
         self.curr_piece = std::mem::replace(&mut self.next_piece, Piece::rand());
         self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
@@ -53,6 +74,9 @@ impl Board {
         }
 
         if lines > 0 {
+            if lines == 4 {
+                self.tetris_count += 1;
+            }
             self.score += self.lines_to_score(lines);
             self.lines += lines;
             self.blocks.resize(BOARD_ROWS, vec![false; BOARD_COLS]);

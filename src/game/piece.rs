@@ -41,7 +41,7 @@ const PIECE_SHAPE_Z: [[Block; 4]; 2] = [
     [Block(0, -1), Block(0, 0), Block(1, 0), Block(1, 1)],
 ];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum PieceShape {
     I,
     J,
@@ -87,6 +87,10 @@ impl Piece {
             5 => PieceShape::T,
             _ => PieceShape::Z,
         })
+    }
+
+    pub fn shape(&self) -> PieceShape {
+        self.shape
     }
 
     pub fn get_blocks(&self) -> [Block; 4] {

@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::WindowResolution};
+use bevy::{color::palettes::css::GREEN, prelude::*, window::WindowResolution};
 
 mod app_state;
 mod game;
@@ -22,7 +22,7 @@ fn main() {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
                     font_size: 40.0,
-                    color: Color::srgb(0.0, 1.0, 0.0),
+                    color: GREEN.into(),
                     font: default(),
                 },
             },
