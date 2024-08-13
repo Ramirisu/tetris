@@ -15,6 +15,7 @@ pub fn setup(app: &mut App) {
                 handle_input_system,
                 curr_piece_fall_system,
                 lock_and_switch_system,
+                setup_screen,
             )
                 .chain()
                 .run_if(in_state(AppState::Game)),
@@ -34,9 +35,13 @@ const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, HEIGHT / 2.0 + BLOCK_SIZE, BOARD_
 const SCORE_TRANSLATION: Vec3 = Vec3::new(WIDTH, HEIGHT / 3.0, BOARD_LAYER);
 const LEVEL_TRANSLATION: Vec3 = Vec3::new(WIDTH, -HEIGHT / 3.0, BOARD_LAYER);
 const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(WIDTH, 0.0, 0.0);
+const DAS_TRANSLATION: Vec3 = Vec3::new(-WIDTH, HEIGHT / 3.0, BOARD_LAYER);
 
 #[derive(Component)]
 struct GameEntityMarker;
+
+#[derive(Component)]
+struct DASEntityMarker;
 
 #[derive(Component)]
 struct CurrPieceEntityMarker;
@@ -47,7 +52,9 @@ struct PlayerData {
     tick_timer: Timer,
     fall_timer: Timer,
     pressed_down_tick: i32,
+    das_tick: i32,
     lock_and_switch: bool,
+    setup_screen: bool,
 }
 
 impl PlayerData {
@@ -57,7 +64,9 @@ impl PlayerData {
             tick_timer: Timer::from_seconds(1.0 / 60.0, TimerMode::Repeating),
             fall_timer: Timer::from_seconds(1.6, TimerMode::Once),
             pressed_down_tick: TICK_MOVE_DOWN_INPUT_RELEASED_RESET,
+            das_tick: TICK_DAS_RELEASED_RESET,
             lock_and_switch: false,
+            setup_screen: true,
         }
     }
 
@@ -73,10 +82,21 @@ impl Default for PlayerData {
     }
 }
 
-fn setup_screen(mut commands: Commands, player_data: Res<PlayerData>) {
-    spawn_board(commands.reborrow(), &player_data);
-    spawn_curr_piece(commands.reborrow(), &player_data);
-    spawn_next_piece(commands.reborrow(), &player_data);
+fn setup_screen(
+    mut commands: Commands,
+    mut player_data: ResMut<PlayerData>,
+    q_das: Query<Entity, With<DASEntityMarker>>,
+) {
+    if std::mem::replace(&mut player_data.setup_screen, false) {
+        spawn_board(commands.reborrow(), &player_data);
+        spawn_curr_piece(commands.reborrow(), &player_data);
+        spawn_next_piece(commands.reborrow(), &player_data);
+    }
+
+    if let Ok(entity) = q_das.get_single() {
+        commands.entity(entity).despawn();
+    }
+    spawn_das_indicator(commands.reborrow(), &player_data);
 }
 
 fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
@@ -144,6 +164,14 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     ));
 }
 
+fn spawn_das_indicator(mut commands: Commands, player_data: &PlayerData) {
+    commands.spawn((
+        new_text(format!("DAS {:02}", player_data.das_tick), DAS_TRANSLATION),
+        GameEntityMarker,
+        DASEntityMarker,
+    ));
+}
+
 fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
     player_data
         .board
@@ -180,6 +208,7 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
 fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
     if player_data.tick_timer.tick(time.delta()).just_finished() {
         player_data.pressed_down_tick += 1;
+        player_data.das_tick = std::cmp::min(16, player_data.das_tick + 1);
     }
 }
 
@@ -195,6 +224,25 @@ fn handle_input_system(
     }
     if q_keys.just_pressed(KeyCode::KeyD) {
         respawn |= player_data.board.move_piece_right();
+    }
+    if q_keys.pressed(KeyCode::KeyA) {
+        if !player_data.board.is_left_movable() {
+            player_data.das_tick = TICK_DAS_PRESSED_TRIGGER;
+        } else if player_data.das_tick >= TICK_DAS_PRESSED_TRIGGER {
+            respawn |= player_data.board.move_piece_left();
+            player_data.das_tick = TICK_DAS_PRESSED_RESET;
+        }
+    }
+    if q_keys.pressed(KeyCode::KeyD) {
+        if !player_data.board.is_right_movable() {
+            player_data.das_tick = TICK_DAS_PRESSED_TRIGGER;
+        } else if player_data.das_tick >= TICK_DAS_PRESSED_TRIGGER {
+            respawn |= player_data.board.move_piece_right();
+            player_data.das_tick = TICK_DAS_PRESSED_RESET;
+        }
+    }
+    if !q_keys.pressed(KeyCode::KeyA) && !q_keys.pressed(KeyCode::KeyD) {
+        player_data.das_tick = TICK_DAS_RELEASED_RESET;
     }
     if q_keys.pressed(KeyCode::KeyS) {
         if player_data.pressed_down_tick >= TICK_MOVE_DOWN_INPUT_PRESSED_TRIGGER {
@@ -249,9 +297,7 @@ fn lock_and_switch_system(
         player_data.board.clear_lines();
         player_data.reset_timer();
 
-        spawn_board(commands.reborrow(), &player_data);
-        spawn_curr_piece(commands.reborrow(), &player_data);
-        spawn_next_piece(commands.reborrow(), &player_data)
+        player_data.setup_screen = true;
     }
 }
 

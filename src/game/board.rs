@@ -72,6 +72,22 @@ impl Board {
         self.next_piece.get_blocks()
     }
 
+    pub fn is_left_movable(&self) -> bool {
+        self.get_curr_piece_blocks().iter().all(|blk| {
+            Self::is_inside_board(blk.0 - 1, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][(blk.0 - 1) as usize])
+        })
+    }
+
+    pub fn is_right_movable(&self) -> bool {
+        self.get_curr_piece_blocks().iter().all(|blk| {
+            Self::is_inside_board(blk.0 + 1, blk.1)
+                && (blk.1 as usize >= BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][(blk.0 + 1) as usize])
+        })
+    }
+
     pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1 - 1)
@@ -87,12 +103,7 @@ impl Board {
     }
 
     pub fn move_piece_left(&mut self) -> bool {
-        let movable = self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0 - 1, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][(blk.0 - 1) as usize])
-        });
-
+        let movable = self.is_left_movable();
         if movable {
             self.curr_translation.0 -= 1;
         }
@@ -101,12 +112,7 @@ impl Board {
     }
 
     pub fn move_piece_right(&mut self) -> bool {
-        let movable = self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0 + 1, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][(blk.0 + 1) as usize])
-        });
-
+        let movable = self.is_right_movable();
         if movable {
             self.curr_translation.0 += 1;
         }
