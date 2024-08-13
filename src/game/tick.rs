@@ -74,12 +74,14 @@ impl DelayAutoShiftTick {
 
 pub struct FallTick {
     duration: Duration,
+    initial_entry_delay: bool,
 }
 
 impl FallTick {
     pub fn new() -> Self {
         Self {
             duration: Duration::ZERO,
+            initial_entry_delay: true,
         }
     }
 
@@ -88,13 +90,18 @@ impl FallTick {
     }
 
     pub fn consume(&mut self, level: usize) -> bool {
-        let trigger = ticks_to_duration(Self::get_trigger_tick(level));
+        let mut trigger = ticks_to_duration(Self::get_trigger_tick(level));
+        if self.initial_entry_delay {
+            trigger += Self::INITIAL_ENTRY_DELAY_TICK;
+        }
+
         if self.duration >= trigger {
             self.duration -= trigger;
-            true
-        } else {
-            false
+            self.initial_entry_delay = false;
+            return true;
         }
+
+        false
     }
 
     pub fn reset(&mut self) {
@@ -113,6 +120,8 @@ impl FallTick {
             1
         }
     }
+
+    const INITIAL_ENTRY_DELAY_TICK: Duration = ticks_to_duration(96);
 }
 
 impl Default for FallTick {
