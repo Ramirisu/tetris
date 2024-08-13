@@ -129,3 +129,30 @@ impl Default for FallTick {
         Self::new()
     }
 }
+
+#[derive(Default)]
+pub struct LockdownDelayTick {
+    duration: Duration,
+    trigger: Duration,
+}
+
+impl LockdownDelayTick {
+    pub fn tick(&mut self, delta: Duration) {
+        self.duration += delta;
+    }
+
+    pub fn consume(&mut self) -> bool {
+        if self.duration >= self.trigger {
+            self.duration -= self.trigger;
+            return true;
+        }
+
+        false
+    }
+
+    pub fn reset(&mut self, height: u64) {
+        // lock in the bottom 2 rows are 10 ticks, and then with additional 2 ticks every 4 rows
+        let ticks = (height + 2) / 4 * 2 + 10;
+        self.duration = ticks_to_duration(ticks);
+    }
+}

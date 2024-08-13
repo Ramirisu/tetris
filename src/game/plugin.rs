@@ -5,10 +5,14 @@ use bevy::{
 
 use crate::{app_state::AppState, utility::despawn_all};
 
-use super::{board::Board, tick::*};
+use super::{
+    board::Board,
+    tick::{duration_to_ticks, DelayAutoShiftTick, FallTick, LockdownDelayTick, PressDownTick},
+};
 
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
+        .init_state::<PlayerState>()
         .add_systems(
             OnEnter(AppState::Game),
             (setup_screen, update_statistic_system).chain(),
@@ -17,14 +21,17 @@ pub fn setup(app: &mut App) {
         .add_systems(
             Update,
             (
-                tick_system,
-                handle_input_system,
-                curr_piece_fall_system,
-                lock_and_switch_system,
-                setup_screen,
-                update_statistic_system,
+                (
+                    running_tick_system,
+                    handle_input_system,
+                    curr_piece_fall_system,
+                    setup_screen,
+                    update_statistic_system,
+                )
+                    .chain()
+                    .run_if(in_state(PlayerState::Running)),
+                lockdown_delay_tick_system.run_if(in_state(PlayerState::LockdownDelay)),
             )
-                .chain()
                 .run_if(in_state(AppState::Game)),
         );
 }
@@ -69,13 +76,20 @@ struct DroughtEntityMarker;
 #[derive(Component)]
 struct CurrPieceEntityMarker;
 
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
+pub enum PlayerState {
+    #[default]
+    Running,
+    LockdownDelay,
+}
+
 #[derive(Resource)]
 pub struct PlayerData {
     board: Board,
     fall_tick: FallTick,
     press_down_tick: PressDownTick,
     das_tick: DelayAutoShiftTick,
-    lock_and_switch: bool,
+    lockdown_delay_tick: LockdownDelayTick,
     setup_screen: bool,
 }
 
@@ -86,7 +100,7 @@ impl PlayerData {
             fall_tick: FallTick::default(),
             press_down_tick: PressDownTick::default(),
             das_tick: DelayAutoShiftTick::default(),
-            lock_and_switch: false,
+            lockdown_delay_tick: LockdownDelayTick::default(),
             setup_screen: true,
         }
     }
@@ -236,7 +250,7 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
         });
 }
 
-fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+fn running_tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
     player_data.fall_tick.tick(time.delta());
     player_data.press_down_tick.tick(time.delta());
     player_data.das_tick.tick(time.delta());
@@ -301,6 +315,7 @@ fn handle_input_system(
 fn curr_piece_fall_system(
     mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
     mut player_data: ResMut<PlayerData>,
+    mut player_state: ResMut<NextState<PlayerState>>,
 ) {
     let level = player_data.board.level();
     if player_data.fall_tick.consume(level) {
@@ -309,17 +324,14 @@ fn curr_piece_fall_system(
                 blk.translation.y -= BLOCK_SIZE;
             }
         } else {
-            player_data.lock_and_switch = true;
+            let min_y = player_data
+                .board
+                .get_curr_piece_blocks()
+                .iter()
+                .fold(19, |acc, blk| acc.min(blk.1 as u64));
+            player_data.lockdown_delay_tick.reset(min_y);
+            player_state.set(PlayerState::LockdownDelay);
         }
-    }
-}
-
-fn lock_and_switch_system(mut player_data: ResMut<PlayerData>) {
-    if std::mem::replace(&mut player_data.lock_and_switch, false) {
-        player_data.board.lock_and_switch();
-        player_data.board.clear_lines();
-
-        player_data.setup_screen = true;
     }
 }
 
@@ -368,6 +380,20 @@ fn update_statistic_system(
         } else {
             text.sections[1].style.color = GREEN.into();
         }
+    }
+}
+
+fn lockdown_delay_tick_system(
+    time: Res<Time>,
+    mut player_data: ResMut<PlayerData>,
+    mut player_state: ResMut<NextState<PlayerState>>,
+) {
+    player_data.lockdown_delay_tick.tick(time.delta());
+    if player_data.lockdown_delay_tick.consume() {
+        player_data.board.lock_and_switch();
+        player_data.board.clear_lines();
+        player_data.setup_screen = true;
+        player_state.set(PlayerState::Running);
     }
 }
 
