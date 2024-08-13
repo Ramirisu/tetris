@@ -18,23 +18,6 @@ pub fn level(start_level: usize, lines: usize) -> usize {
     start_level
 }
 
-pub fn drop_time(level: usize) -> f32 {
-    drop_frame(level) as f32 / 60.0988
-}
-
-fn drop_frame(level: usize) -> usize {
-    const TABLE: [usize; 29] = [
-        48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2,
-    ];
-
-    if level < 29 {
-        TABLE[level]
-    } else {
-        1
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

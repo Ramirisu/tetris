@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{app_state::AppState, utility::despawn_all};
 
-use super::{board::Board, consts::*, level};
+use super::{board::Board, tick::*};
 
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
@@ -49,10 +49,9 @@ struct CurrPieceEntityMarker;
 #[derive(Resource)]
 struct PlayerData {
     board: Board,
-    tick_timer: Timer,
-    fall_timer: Timer,
-    pressed_down_tick: i32,
-    das_tick: i32,
+    fall_tick: FallTick,
+    press_down_tick: PressDownTick,
+    das_tick: DelayAutoShiftTick,
     lock_and_switch: bool,
     setup_screen: bool,
 }
@@ -60,19 +59,13 @@ struct PlayerData {
 impl PlayerData {
     fn new() -> Self {
         Self {
-            board: Board::new(0),
-            tick_timer: Timer::from_seconds(1.0 / 60.0, TimerMode::Repeating),
-            fall_timer: Timer::from_seconds(1.6, TimerMode::Once),
-            pressed_down_tick: TICK_MOVE_DOWN_INPUT_RELEASED_RESET,
-            das_tick: TICK_DAS_RELEASED_RESET,
+            board: Board::new(10),
+            fall_tick: FallTick::default(),
+            press_down_tick: PressDownTick::default(),
+            das_tick: DelayAutoShiftTick::default(),
             lock_and_switch: false,
             setup_screen: true,
         }
-    }
-
-    fn reset_timer(&mut self) {
-        self.fall_timer =
-            Timer::from_seconds(level::drop_time(self.board.level()), TimerMode::Once);
     }
 }
 
@@ -166,7 +159,13 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
 
 fn spawn_das_indicator(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
-        new_text(format!("DAS {:02}", player_data.das_tick), DAS_TRANSLATION),
+        new_text(
+            format!(
+                "DAS {:02}",
+                duration_to_ticks(player_data.das_tick.duration())
+            ),
+            DAS_TRANSLATION,
+        ),
         GameEntityMarker,
         DASEntityMarker,
     ));
@@ -206,10 +205,9 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
 }
 
 fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-    if player_data.tick_timer.tick(time.delta()).just_finished() {
-        player_data.pressed_down_tick += 1;
-        player_data.das_tick = std::cmp::min(16, player_data.das_tick + 1);
-    }
+    player_data.fall_tick.tick(time.delta());
+    player_data.press_down_tick.tick(time.delta());
+    player_data.das_tick.tick(time.delta());
 }
 
 fn handle_input_system(
@@ -219,39 +217,40 @@ fn handle_input_system(
     mut player_data: ResMut<PlayerData>,
 ) {
     let mut respawn = false;
-    if q_keys.just_pressed(KeyCode::KeyA) {
-        respawn |= player_data.board.move_piece_left();
+    match (
+        q_keys.just_pressed(KeyCode::KeyA),
+        q_keys.just_pressed(KeyCode::KeyD),
+    ) {
+        (true, false) => respawn |= player_data.board.move_piece_left(),
+        (false, true) => respawn |= player_data.board.move_piece_right(),
+        _ => (),
     }
-    if q_keys.just_pressed(KeyCode::KeyD) {
-        respawn |= player_data.board.move_piece_right();
-    }
-    if q_keys.pressed(KeyCode::KeyA) {
-        if !player_data.board.is_left_movable() {
-            player_data.das_tick = TICK_DAS_PRESSED_TRIGGER;
-        } else if player_data.das_tick >= TICK_DAS_PRESSED_TRIGGER {
-            respawn |= player_data.board.move_piece_left();
-            player_data.das_tick = TICK_DAS_PRESSED_RESET;
+    match (q_keys.pressed(KeyCode::KeyA), q_keys.pressed(KeyCode::KeyD)) {
+        (true, false) => {
+            if !player_data.board.is_left_movable() {
+                player_data.das_tick.reset_max();
+            } else if player_data.das_tick.consume() {
+                respawn |= player_data.board.move_piece_left();
+            }
         }
-    }
-    if q_keys.pressed(KeyCode::KeyD) {
-        if !player_data.board.is_right_movable() {
-            player_data.das_tick = TICK_DAS_PRESSED_TRIGGER;
-        } else if player_data.das_tick >= TICK_DAS_PRESSED_TRIGGER {
-            respawn |= player_data.board.move_piece_right();
-            player_data.das_tick = TICK_DAS_PRESSED_RESET;
+        (false, true) => {
+            if !player_data.board.is_right_movable() {
+                player_data.das_tick.reset_max();
+            } else if player_data.das_tick.consume() {
+                respawn |= player_data.board.move_piece_right();
+            }
         }
+        (false, false) => player_data.das_tick.reset(),
+        _ => (),
     }
-    if !q_keys.pressed(KeyCode::KeyA) && !q_keys.pressed(KeyCode::KeyD) {
-        player_data.das_tick = TICK_DAS_RELEASED_RESET;
-    }
+
     if q_keys.pressed(KeyCode::KeyS) {
-        if player_data.pressed_down_tick >= TICK_MOVE_DOWN_INPUT_PRESSED_TRIGGER {
+        if player_data.press_down_tick.consume() {
             respawn |= player_data.board.move_piece_down();
-            player_data.reset_timer();
-            player_data.pressed_down_tick = TICK_MOVE_DOWN_INPUT_PRESSED_RESET;
+            player_data.fall_tick.reset();
         }
     } else {
-        player_data.pressed_down_tick = TICK_MOVE_DOWN_INPUT_RELEASED_RESET;
+        player_data.press_down_tick.reset();
     }
     if q_keys.just_pressed(KeyCode::Comma) {
         respawn |= player_data.board.rotate_piece_counter_clockwise();
@@ -269,15 +268,14 @@ fn handle_input_system(
 
 fn curr_piece_fall_system(
     mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
-    time: Res<Time>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    if player_data.fall_timer.tick(time.delta()).finished() {
+    let level = player_data.board.level();
+    if player_data.fall_tick.consume(level) {
         if player_data.board.move_piece_down() {
             for mut blk in q_curr.iter_mut() {
                 blk.translation.y -= BLOCK_SIZE;
             }
-            player_data.reset_timer();
         } else {
             player_data.lock_and_switch = true;
         }
@@ -295,7 +293,6 @@ fn lock_and_switch_system(
             .for_each(|entity| commands.entity(entity).despawn());
         player_data.board.lock_and_switch();
         player_data.board.clear_lines();
-        player_data.reset_timer();
 
         player_data.setup_screen = true;
     }
