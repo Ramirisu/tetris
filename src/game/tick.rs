@@ -22,7 +22,7 @@ impl PressDownTick {
 
     pub fn consume(&mut self) -> bool {
         if self.duration >= Self::TRIGGER_TICK {
-            self.duration -= Self::CONSUME_TICK;
+            self.duration -= Self::TRIGGER_TICK;
             true
         } else {
             false
@@ -33,8 +33,7 @@ impl PressDownTick {
         self.duration = Duration::ZERO;
     }
 
-    const TRIGGER_TICK: Duration = ticks_to_duration(3);
-    const CONSUME_TICK: Duration = ticks_to_duration(2);
+    const TRIGGER_TICK: Duration = ticks_to_duration(2);
 }
 
 #[derive(Default)]

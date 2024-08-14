@@ -84,6 +84,7 @@ pub enum PlayerState {
 pub struct PlayerData {
     board: Board,
     fall_tick: FallTick,
+    can_press_down: bool,
     press_down_tick: PressDownTick,
     das_tick: DelayAutoShiftTick,
     lockdown_delay_tick: LockdownDelayTick,
@@ -95,6 +96,7 @@ impl PlayerData {
         Self {
             board: Board::new(start_level),
             fall_tick: FallTick::default(),
+            can_press_down: false,
             press_down_tick: PressDownTick::default(),
             das_tick: DelayAutoShiftTick::default(),
             lockdown_delay_tick: LockdownDelayTick::default(),
@@ -261,12 +263,20 @@ fn handle_input_system(
 ) {
     let mut respawn = false;
 
-    if keys.pressed(KeyCode::KeyS) {
-        if player_data.press_down_tick.consume() {
-            respawn |= player_data.board.move_piece_down();
-            player_data.fall_tick.reset();
+    if player_data.can_press_down {
+        if keys.pressed(KeyCode::KeyS) {
+            if player_data.press_down_tick.consume() {
+                respawn |= player_data.board.move_piece_down();
+            }
+        } else {
+            player_data.can_press_down = false;
         }
-    } else {
+    } else if keys.just_pressed(KeyCode::KeyS) {
+        player_data.can_press_down = true;
+        player_data.press_down_tick.reset();
+    }
+
+    if !keys.pressed(KeyCode::KeyS) {
         player_data.press_down_tick.reset();
 
         if keys.just_pressed(KeyCode::KeyA) || keys.just_pressed(KeyCode::KeyD) {
@@ -332,6 +342,7 @@ fn curr_piece_fall_system(
                 .iter()
                 .fold(19, |acc, blk| acc.min(blk.1 as u64));
             player_data.lockdown_delay_tick.reset(min_y);
+            player_data.can_press_down = false; // keep pressing down will not affect next piece
             player_state.set(PlayerState::LockdownDelay);
         }
     }
