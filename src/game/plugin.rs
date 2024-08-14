@@ -13,19 +13,16 @@ use super::{
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
         .init_state::<PlayerState>()
-        .add_systems(
-            OnEnter(AppState::Game),
-            (setup_screen, update_statistic_system).chain(),
-        )
+        .add_systems(OnEnter(AppState::Game), setup_screen)
         .add_systems(OnExit(AppState::Game), despawn_all::<GameEntityMarker>)
         .add_systems(
             Update,
             (
                 (
+                    setup_screen,
                     running_tick_system,
                     handle_input_system,
                     curr_piece_fall_system,
-                    setup_screen,
                     update_statistic_system,
                 )
                     .chain()
