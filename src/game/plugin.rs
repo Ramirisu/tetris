@@ -115,7 +115,7 @@ impl Default for PlayerData {
 mod state_game_running {
     use super::*;
 
-    pub(crate) fn setup_screen(
+    pub(super) fn setup_screen(
         mut commands: Commands,
         mut player_data: ResMut<PlayerData>,
         q_game: Query<Entity, With<GameEntityMarker>>,
@@ -315,7 +315,7 @@ mod state_game_running {
         }
     }
 
-    pub(crate) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+    pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
         player_data.fall_tick.tick(time.delta());
         player_data.press_down_tick.tick(time.delta());
         player_data.das_tick.tick(time.delta());
@@ -342,7 +342,7 @@ mod state_game_running {
         }
     }
 
-    pub(crate) fn handle_input_system(
+    pub(super) fn handle_input_system(
         mut commands: Commands,
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
@@ -476,7 +476,7 @@ mod state_game_running {
         respawn
     }
 
-    pub(crate) fn curr_piece_fall_system(
+    pub(super) fn curr_piece_fall_system(
         mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -502,7 +502,7 @@ mod state_game_running {
         }
     }
 
-    pub(crate) fn update_statistic_system(
+    pub(super) fn update_statistic_system(
         mut set: ParamSet<(
             Query<&mut Text, With<DASEntityMarker>>,
             Query<&mut Text, With<BurnedEntityMarker>>,
@@ -554,7 +554,7 @@ mod state_game_running {
 mod state_game_lock_delay {
     use super::*;
 
-    pub(crate) fn tick_system(
+    pub(super) fn tick_system(
         time: Res<Time>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -572,7 +572,7 @@ mod state_game_lock_delay {
 mod state_game_over {
     use super::*;
 
-    pub(crate) fn handle_input_system(
+    pub(super) fn handle_input_system(
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
