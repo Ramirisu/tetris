@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{app_state::AppState, utility::despawn_all};
+use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 use super::{
     board::Board,
@@ -257,42 +257,131 @@ fn running_tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
     player_data.das_tick.tick(time.delta());
 }
 
+pub struct GameRunningInputs {
+    left: (bool, bool),  // (just_pressed, pressed)
+    right: (bool, bool), // (just_pressed, pressed)
+    down: (bool, bool),  // (just_pressed, pressed)
+    rotate_clockwise: bool,
+    rotate_counter_clockwise: bool,
+}
+
+impl std::ops::BitOrAssign for GameRunningInputs {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.left.0 |= rhs.left.0;
+        self.left.1 |= rhs.left.1;
+        self.right.0 |= rhs.right.0;
+        self.right.1 |= rhs.right.1;
+        self.down.0 |= rhs.down.0;
+        self.down.1 |= rhs.down.1;
+        self.rotate_clockwise |= rhs.rotate_clockwise;
+        self.rotate_counter_clockwise |= rhs.rotate_counter_clockwise;
+    }
+}
+
 fn handle_input_system(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
     q_curr: Query<Entity, With<CurrPieceEntityMarker>>,
     mut player_data: ResMut<PlayerData>,
 ) {
+    let mut inputs = GameRunningInputs {
+        left: (
+            keys.just_pressed(KeyCode::KeyA),
+            keys.pressed(KeyCode::KeyA),
+        ),
+        right: (
+            keys.just_pressed(KeyCode::KeyD),
+            keys.pressed(KeyCode::KeyD),
+        ),
+        down: (
+            keys.just_pressed(KeyCode::KeyS),
+            keys.pressed(KeyCode::KeyS),
+        ),
+        rotate_clockwise: keys.just_pressed(KeyCode::Period),
+        rotate_counter_clockwise: keys.just_pressed(KeyCode::Comma),
+    };
+
+    if let Some(gamepad) = controller.gamepad {
+        inputs |= GameRunningInputs {
+            left: (
+                buttons.just_pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadLeft,
+                }),
+                buttons.pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadLeft,
+                }),
+            ),
+            right: (
+                buttons.just_pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadRight,
+                }),
+                buttons.pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadRight,
+                }),
+            ),
+            down: (
+                buttons.just_pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadDown,
+                }),
+                buttons.pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::DPadDown,
+                }),
+            ),
+            rotate_clockwise: buttons.just_pressed(GamepadButton {
+                gamepad,
+                button_type: GamepadButtonType::South,
+            }),
+            rotate_counter_clockwise: buttons.just_pressed(GamepadButton {
+                gamepad,
+                button_type: GamepadButtonType::West,
+            }),
+        };
+    }
+
+    if handle_input(inputs, &mut player_data) {
+        q_curr
+            .iter()
+            .for_each(|entity| commands.entity(entity).despawn());
+        spawn_curr_piece(commands.reborrow(), &player_data);
+    }
+}
+
+fn handle_input(inputs: GameRunningInputs, player_data: &mut PlayerData) -> bool {
     let mut respawn = false;
 
     if player_data.can_press_down {
-        if keys.pressed(KeyCode::KeyS) {
+        if inputs.down.1 {
             if player_data.press_down_tick.consume() {
                 respawn |= player_data.board.move_piece_down();
             }
         } else {
             player_data.can_press_down = false;
         }
-    } else if keys.just_pressed(KeyCode::KeyS) {
+    } else if inputs.down.0 {
         player_data.can_press_down = true;
         player_data.press_down_tick.reset();
     }
 
-    if !keys.pressed(KeyCode::KeyS) {
+    if !inputs.down.1 {
         player_data.press_down_tick.reset();
 
-        if keys.just_pressed(KeyCode::KeyA) || keys.just_pressed(KeyCode::KeyD) {
+        if inputs.left.0 || inputs.right.0 {
             player_data.das_tick.reset();
-            match (
-                keys.just_pressed(KeyCode::KeyA),
-                keys.just_pressed(KeyCode::KeyD),
-            ) {
+            match (inputs.left.0, inputs.right.0) {
                 (true, false) => respawn |= player_data.board.move_piece_left(),
                 (false, true) => respawn |= player_data.board.move_piece_right(),
                 _ => (),
             }
         } else {
-            match (keys.pressed(KeyCode::KeyA), keys.pressed(KeyCode::KeyD)) {
+            match (inputs.left.1, inputs.right.1) {
                 (true, false) => {
                     if !player_data.board.is_left_movable() {
                         player_data.das_tick.reset_max();
@@ -312,18 +401,14 @@ fn handle_input_system(
         }
     }
 
-    if keys.just_pressed(KeyCode::Comma) {
-        respawn |= player_data.board.rotate_piece_counter_clockwise();
-    }
-    if keys.just_pressed(KeyCode::Period) {
+    if inputs.rotate_clockwise {
         respawn |= player_data.board.rotate_piece_clockwise();
     }
-    if respawn {
-        q_curr
-            .iter()
-            .for_each(|entity| commands.entity(entity).despawn());
-        spawn_curr_piece(commands.reborrow(), &player_data);
+    if inputs.rotate_counter_clockwise {
+        respawn |= player_data.board.rotate_piece_counter_clockwise();
     }
+
+    respawn
 }
 
 fn curr_piece_fall_system(
@@ -416,10 +501,20 @@ fn lockdown_delay_tick_system(
 
 fn game_over_handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<MouseButton>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    if keys.just_pressed(KeyCode::Enter) || buttons.just_pressed(MouseButton::Left) {
+    let clicked = if let Some(gamepad) = controller.gamepad {
+        buttons.just_pressed(GamepadButton {
+            gamepad,
+            button_type: GamepadButtonType::Start,
+        })
+    } else {
+        false
+    };
+
+    if clicked || keys.just_pressed(KeyCode::Enter) {
         app_state.set(AppState::Menu);
     }
 }

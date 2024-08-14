@@ -1,6 +1,7 @@
 use bevy::{color::palettes::css::GREEN, prelude::*, window::WindowResolution};
 
 mod app_state;
+mod controller;
 mod game;
 mod menu;
 mod splash;
@@ -30,6 +31,7 @@ fn main() {
         .init_state::<AppState>()
         .add_systems(Startup, setup)
         .add_plugins((
+            controller::setup,
             splash::plugin::setup,
             menu::plugin::setup,
             game::plugin::setup,
