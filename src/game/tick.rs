@@ -107,6 +107,12 @@ impl FallTick {
         self.duration = Duration::ZERO;
     }
 
+    pub fn remove_initial_entry_delay(&mut self) {
+        if std::mem::replace(&mut self.initial_entry_delay, false) {
+            self.reset();
+        }
+    }
+
     fn get_trigger_tick(level: usize) -> u64 {
         const TABLE: [u64; 29] = [
             48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2,

@@ -431,6 +431,7 @@ mod state_game_running {
             }
         } else if inputs.down.0 {
             player_data.can_press_down = true;
+            player_data.fall_tick.remove_initial_entry_delay();
             player_data.press_down_tick.reset();
         }
 
