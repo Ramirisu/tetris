@@ -28,6 +28,7 @@ pub fn setup(app: &mut App) {
                     .chain()
                     .run_if(in_state(PlayerState::Running)),
                 lockdown_delay_tick_system.run_if(in_state(PlayerState::LockdownDelay)),
+                game_over_handle_input_system.run_if(in_state(PlayerState::GameOver)),
             )
                 .run_if(in_state(AppState::Game)),
         );
@@ -78,6 +79,7 @@ pub enum PlayerState {
     #[default]
     Running,
     LockdownDelay,
+    GameOver,
 }
 
 #[derive(Resource)]
@@ -335,6 +337,8 @@ fn curr_piece_fall_system(
             for mut blk in q_curr.iter_mut() {
                 blk.translation.y -= BLOCK_SIZE;
             }
+        } else if !player_data.board.is_curr_position_valid() {
+            player_state.set(PlayerState::GameOver);
         } else {
             let min_y = player_data
                 .board
@@ -407,6 +411,16 @@ fn lockdown_delay_tick_system(
         player_data.board.clear_lines();
         player_data.setup_screen = true;
         player_state.set(PlayerState::Running);
+    }
+}
+
+fn game_over_handle_input_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<MouseButton>>,
+    mut app_state: ResMut<NextState<AppState>>,
+) {
+    if keys.just_pressed(KeyCode::Enter) || buttons.just_pressed(MouseButton::Left) {
+        app_state.set(AppState::Menu);
     }
 }
 

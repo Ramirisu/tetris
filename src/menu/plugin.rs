@@ -3,7 +3,11 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{app_state::AppState, game::plugin::PlayerData, utility::despawn_all};
+use crate::{
+    app_state::AppState,
+    game::plugin::{PlayerData, PlayerState},
+    utility::despawn_all,
+};
 
 pub fn setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::Menu), setup_screen)
@@ -115,6 +119,7 @@ enum MenuButtonAction {
 fn menu_action(
     q_interaction: Query<(&Interaction, &MenuButtonAction), (Changed<Interaction>, With<Button>)>,
     mut app_state: ResMut<NextState<AppState>>,
+    mut player_state: ResMut<NextState<PlayerState>>,
     mut player_data: ResMut<PlayerData>,
 ) {
     for (interaction, menu_button_action) in &q_interaction {
@@ -122,6 +127,7 @@ fn menu_action(
             match menu_button_action {
                 MenuButtonAction::Level(level) => {
                     *player_data = PlayerData::new(*level);
+                    player_state.set(PlayerState::Running);
                     app_state.set(AppState::Game);
                 }
             }
