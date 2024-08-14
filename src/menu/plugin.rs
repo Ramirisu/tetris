@@ -127,7 +127,7 @@ fn menu_action(
             match menu_button_action {
                 MenuButtonAction::Level(level) => {
                     *player_data = PlayerData::new(*level);
-                    player_state.set(PlayerState::Running);
+                    player_state.set(PlayerState::GameRunning);
                     app_state.set(AppState::Game);
                 }
             }
