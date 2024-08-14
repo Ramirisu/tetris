@@ -260,32 +260,6 @@ fn handle_input_system(
     mut player_data: ResMut<PlayerData>,
 ) {
     let mut respawn = false;
-    match (
-        keys.just_pressed(KeyCode::KeyA),
-        keys.just_pressed(KeyCode::KeyD),
-    ) {
-        (true, false) => respawn |= player_data.board.move_piece_left(),
-        (false, true) => respawn |= player_data.board.move_piece_right(),
-        _ => (),
-    }
-    match (keys.pressed(KeyCode::KeyA), keys.pressed(KeyCode::KeyD)) {
-        (true, false) => {
-            if !player_data.board.is_left_movable() {
-                player_data.das_tick.reset_max();
-            } else if player_data.das_tick.consume() {
-                respawn |= player_data.board.move_piece_left();
-            }
-        }
-        (false, true) => {
-            if !player_data.board.is_right_movable() {
-                player_data.das_tick.reset_max();
-            } else if player_data.das_tick.consume() {
-                respawn |= player_data.board.move_piece_right();
-            }
-        }
-        (false, false) => player_data.das_tick.reset(),
-        _ => (),
-    }
 
     if keys.pressed(KeyCode::KeyS) {
         if player_data.press_down_tick.consume() {
@@ -294,7 +268,38 @@ fn handle_input_system(
         }
     } else {
         player_data.press_down_tick.reset();
+
+        if keys.just_pressed(KeyCode::KeyA) || keys.just_pressed(KeyCode::KeyD) {
+            player_data.das_tick.reset();
+            match (
+                keys.just_pressed(KeyCode::KeyA),
+                keys.just_pressed(KeyCode::KeyD),
+            ) {
+                (true, false) => respawn |= player_data.board.move_piece_left(),
+                (false, true) => respawn |= player_data.board.move_piece_right(),
+                _ => (),
+            }
+        } else {
+            match (keys.pressed(KeyCode::KeyA), keys.pressed(KeyCode::KeyD)) {
+                (true, false) => {
+                    if !player_data.board.is_left_movable() {
+                        player_data.das_tick.reset_max();
+                    } else if player_data.das_tick.consume() {
+                        respawn |= player_data.board.move_piece_left();
+                    }
+                }
+                (false, true) => {
+                    if !player_data.board.is_right_movable() {
+                        player_data.das_tick.reset_max();
+                    } else if player_data.das_tick.consume() {
+                        respawn |= player_data.board.move_piece_right();
+                    }
+                }
+                _ => (),
+            }
+        }
     }
+
     if keys.just_pressed(KeyCode::Comma) {
         respawn |= player_data.board.rotate_piece_counter_clockwise();
     }
