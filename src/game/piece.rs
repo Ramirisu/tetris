@@ -22,7 +22,7 @@ const PIECE_SHAPE_L: [[Block; 4]; 4] = [
     [Block(0, -1), Block(1, -1), Block(0, 0), Block(0, 1)],
 ];
 
-const PIECE_SHAPE_O: [[Block; 4]; 1] = [[Block(-1, 0), Block(0, 0), Block(-1, 1), Block(0, 1)]];
+const PIECE_SHAPE_O: [[Block; 4]; 1] = [[Block(-1, -1), Block(0, -1), Block(-1, 0), Block(0, 0)]];
 
 const PIECE_SHAPE_S: [[Block; 4]; 2] = [
     [Block(-1, -1), Block(0, -1), Block(0, 0), Block(1, 0)],
