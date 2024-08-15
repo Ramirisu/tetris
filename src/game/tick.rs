@@ -136,12 +136,12 @@ impl Default for FallTick {
 }
 
 #[derive(Default)]
-pub struct LockDelayTick {
+pub struct EntryDelayTick {
     duration: Duration,
     trigger: Duration,
 }
 
-impl LockDelayTick {
+impl EntryDelayTick {
     pub fn tick(&mut self, delta: Duration) {
         self.duration += delta;
     }

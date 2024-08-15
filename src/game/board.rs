@@ -53,17 +53,10 @@ impl Board {
         }
     }
 
-    pub fn lock_and_switch(&mut self) {
+    pub fn lock_curr_piece(&mut self) {
         for blk in self.get_curr_piece_blocks() {
             self.blocks[blk.1 as usize][blk.0 as usize] = true;
         }
-        if self.curr_piece.shape() == PieceShape::I {
-            self.drought = 0;
-        } else {
-            self.drought += 1;
-        }
-        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
-        self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
     }
 
     pub fn clear_lines(&mut self) {
@@ -83,6 +76,16 @@ impl Board {
             self.lines += lines;
             self.blocks.resize(BOARD_ROWS, vec![false; BOARD_COLS]);
         }
+    }
+
+    pub fn switch_to_next_piece(&mut self) {
+        if self.curr_piece.shape() == PieceShape::I {
+            self.drought = 0;
+        } else {
+            self.drought += 1;
+        }
+        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
+        self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
     }
 
     pub fn get_curr_piece_blocks(&self) -> [Block; 4] {
