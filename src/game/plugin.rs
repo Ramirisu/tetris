@@ -8,10 +8,8 @@ use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 use super::{
     board::Board,
     piece::Block,
-    tick::{
-        duration_to_ticks, DelayAutoShiftTick, EntryDelayTick, FallTick, LineClearTick,
-        PressDownTick,
-    },
+    tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
+    timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
 };
 
 pub fn setup(app: &mut App) {
@@ -110,10 +108,11 @@ pub enum PlayerState {
 #[derive(Resource)]
 pub struct PlayerData {
     board: Board,
-    fall_tick: FallTick,
+    game_timer: GameTimer,
     can_press_down: bool,
-    press_down_tick: PressDownTick,
-    das_tick: DelayAutoShiftTick,
+    press_down_timer: PressDownTimer,
+    das_timer: DelayAutoShiftTimer,
+    fall_tick: FallTick,
     line_clear_tick: LineClearTick,
     line_clear_rows: Vec<usize>,
     line_clear_phase: state_game_line_clear::LineClearPhase,
@@ -124,10 +123,11 @@ impl PlayerData {
     pub fn new(start_level: usize) -> Self {
         Self {
             board: Board::new(start_level),
-            fall_tick: FallTick::default(),
+            game_timer: GameTimer::default(),
             can_press_down: false,
-            press_down_tick: PressDownTick::default(),
-            das_tick: DelayAutoShiftTick::default(),
+            press_down_timer: PressDownTimer::default(),
+            das_timer: DelayAutoShiftTimer::default(),
+            fall_tick: FallTick::new(start_level, true),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: state_game_line_clear::LineClearPhase::default(),
@@ -381,7 +381,7 @@ fn update_statistic_system(
         text.sections[0].value = format!("LEVEL {:02}", player_data.board.level());
     }
     if let Ok(mut text) = set.p3().get_single_mut() {
-        let ticks = duration_to_ticks(player_data.das_tick.duration());
+        let ticks = duration_to_ticks(player_data.das_timer.duration());
         text.sections[1].value = format!("{:02}", ticks);
         if ticks >= 10 {
             text.sections[1].style.color = GREEN.into();
@@ -426,9 +426,9 @@ mod state_game_running {
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-        player_data.fall_tick.tick(time.delta());
-        player_data.press_down_tick.tick(time.delta());
-        player_data.das_tick.tick(time.delta());
+        player_data.game_timer.tick(time.delta());
+        player_data.press_down_timer.tick(time.delta());
+        player_data.das_timer.tick(time.delta());
     }
 
     pub struct GameRunningInputs {
@@ -532,7 +532,7 @@ mod state_game_running {
 
         if player_data.can_press_down {
             if inputs.down.1 {
-                if player_data.press_down_tick.consume() {
+                if player_data.press_down_timer.commit() {
                     moved |= player_data.board.move_piece_down();
                 }
             } else {
@@ -540,15 +540,15 @@ mod state_game_running {
             }
         } else if inputs.down.0 {
             player_data.can_press_down = true;
-            player_data.fall_tick.remove_initial_entry_delay();
-            player_data.press_down_tick.reset();
+            player_data.fall_tick = FallTick::new(player_data.board.level(), false);
+            player_data.press_down_timer.reset();
         }
 
         if !inputs.down.1 {
-            player_data.press_down_tick.reset();
+            player_data.press_down_timer.reset();
 
             if inputs.left.0 || inputs.right.0 {
-                player_data.das_tick.reset();
+                player_data.das_timer.reset();
                 match (inputs.left.0, inputs.right.0) {
                     (true, false) => moved |= player_data.board.move_piece_left(),
                     (false, true) => moved |= player_data.board.move_piece_right(),
@@ -558,15 +558,15 @@ mod state_game_running {
                 match (inputs.left.1, inputs.right.1) {
                     (true, false) => {
                         if !player_data.board.is_left_movable() {
-                            player_data.das_tick.reset_max();
-                        } else if player_data.das_tick.consume() {
+                            player_data.das_timer.reset_max();
+                        } else if player_data.das_timer.commit() {
                             moved |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
                         if !player_data.board.is_right_movable() {
-                            player_data.das_tick.reset_max();
-                        } else if player_data.das_tick.consume() {
+                            player_data.das_timer.reset_max();
+                        } else if player_data.das_timer.commit() {
                             moved |= player_data.board.move_piece_right();
                         }
                     }
@@ -591,8 +591,10 @@ mod state_game_running {
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        let level = player_data.board.level();
-        if player_data.fall_tick.consume(level) {
+        let threshold = player_data.fall_tick.threshold();
+        if player_data.game_timer.commit(threshold) {
+            player_data.fall_tick = FallTick::new(player_data.board.level(), false);
+
             if player_data.board.move_piece_down() {
                 move_board_blocks(
                     q_curr.iter_mut().enumerate(),
@@ -608,7 +610,7 @@ mod state_game_running {
                     .get_curr_piece_blocks()
                     .iter()
                     .fold(19, |acc, blk| acc.min(blk.1 as u64));
-                player_data.entry_delay_tick.reset(min_y);
+                player_data.entry_delay_tick = EntryDelayTick::new(min_y);
 
                 player_data.board.lock_curr_piece();
                 q_curr.iter_mut().for_each(|mut transform| {
@@ -624,7 +626,7 @@ mod state_game_running {
 
                 let lines = player_data.board.get_line_clear_indexes();
                 if lines.len() > 0 {
-                    player_data.line_clear_tick.reset((BOARD_COLS + 1) / 2);
+                    player_data.line_clear_tick = LineClearTick::new((BOARD_COLS + 1) / 2);
                     player_data.line_clear_rows = lines;
                     player_data.line_clear_phase = LineClearPhase::new();
                     player_state.set(PlayerState::GameLineClear);
@@ -680,8 +682,9 @@ mod state_game_line_clear {
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        player_data.line_clear_tick.tick(time.delta());
-        if player_data.line_clear_tick.consume() {
+        player_data.game_timer.tick(time.delta());
+        let threshold = player_data.line_clear_tick.threshold();
+        if player_data.game_timer.commit(threshold) {
             if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
                 for (mut sprite, index) in q_board_block.iter_mut() {
                     if (index.0 == left || index.0 == right)
@@ -692,6 +695,7 @@ mod state_game_line_clear {
                 }
             } else {
                 player_data.board.clear_lines();
+                player_data.fall_tick = FallTick::new(player_data.board.level(), false);
                 player_state.set(PlayerState::GameEntryDelay);
             }
         }
@@ -711,8 +715,9 @@ mod state_game_entry_delay {
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        player_data.entry_delay_tick.tick(time.delta());
-        if player_data.entry_delay_tick.consume() {
+        player_data.game_timer.tick(time.delta());
+        let threshold = player_data.entry_delay_tick.threshold();
+        if player_data.game_timer.commit(threshold) {
             player_data.board.switch_to_next_piece();
 
             for (mut sprite, index) in q_board_block.iter_mut() {
