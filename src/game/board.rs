@@ -4,7 +4,7 @@ use super::{
 };
 
 const BOARD_ROWS: usize = 20;
-const BOARD_COLS: usize = 10;
+pub const BOARD_COLS: usize = 10;
 const BOARD_PIECE_START_X: i32 = (BOARD_COLS / 2) as i32;
 const BOARD_PIECE_START_Y: i32 = (BOARD_ROWS - 1) as i32;
 
@@ -53,6 +53,17 @@ impl Board {
         }
     }
 
+    pub fn get_line_clear_indexes(&self) -> Vec<usize> {
+        let mut indexes = vec![];
+        for index in 0..BOARD_ROWS {
+            if self.blocks[index].iter().all(|blk| *blk) {
+                indexes.push(index);
+            }
+        }
+
+        indexes
+    }
+
     pub fn lock_curr_piece(&mut self) {
         for blk in self.get_curr_piece_blocks() {
             self.blocks[blk.1 as usize][blk.0 as usize] = true;
@@ -60,20 +71,17 @@ impl Board {
     }
 
     pub fn clear_lines(&mut self) {
-        let mut lines = 0;
-        for index in (0..BOARD_ROWS).rev() {
-            if self.blocks[index].iter().all(|blk| *blk) {
-                self.blocks.remove(index);
-                lines += 1;
-            }
-        }
+        let indexes = self.get_line_clear_indexes();
+        indexes.iter().rev().for_each(|index| {
+            self.blocks.remove(*index);
+        });
 
-        if lines > 0 {
-            if lines == 4 {
+        if indexes.len() > 0 {
+            if indexes.len() == 4 {
                 self.tetris_count += 1;
             }
-            self.score += self.lines_to_score(lines);
-            self.lines += lines;
+            self.score += self.lines_to_score(indexes.len());
+            self.lines += indexes.len();
             self.blocks.resize(BOARD_ROWS, vec![false; BOARD_COLS]);
         }
     }

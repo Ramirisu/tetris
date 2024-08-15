@@ -8,7 +8,10 @@ use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 use super::{
     board::Board,
     piece::Block,
-    tick::{duration_to_ticks, DelayAutoShiftTick, EntryDelayTick, FallTick, PressDownTick},
+    tick::{
+        duration_to_ticks, DelayAutoShiftTick, EntryDelayTick, FallTick, LineClearTick,
+        PressDownTick,
+    },
 };
 
 pub fn setup(app: &mut App) {
@@ -111,6 +114,9 @@ pub struct PlayerData {
     can_press_down: bool,
     press_down_tick: PressDownTick,
     das_tick: DelayAutoShiftTick,
+    line_clear_tick: LineClearTick,
+    line_clear_rows: Vec<usize>,
+    line_clear_phase: state_game_line_clear::LineClearPhase,
     entry_delay_tick: EntryDelayTick,
 }
 
@@ -122,6 +128,9 @@ impl PlayerData {
             can_press_down: false,
             press_down_tick: PressDownTick::default(),
             das_tick: DelayAutoShiftTick::default(),
+            line_clear_tick: LineClearTick::default(),
+            line_clear_rows: default(),
+            line_clear_phase: state_game_line_clear::LineClearPhase::default(),
             entry_delay_tick: EntryDelayTick::default(),
         }
     }
@@ -410,6 +419,10 @@ fn update_statistic_system(
 }
 
 mod state_game_running {
+    use state_game_line_clear::LineClearPhase;
+
+    use crate::game::board::BOARD_COLS;
+
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
@@ -573,6 +586,7 @@ mod state_game_running {
     }
 
     pub(super) fn curr_piece_fall_system(
+        mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
         mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -595,22 +609,92 @@ mod state_game_running {
                     .iter()
                     .fold(19, |acc, blk| acc.min(blk.1 as u64));
                 player_data.entry_delay_tick.reset(min_y);
-                player_state.set(PlayerState::GameLineClear);
+
+                player_data.board.lock_curr_piece();
+                q_curr.iter_mut().for_each(|mut transform| {
+                    transform.translation.z = BOARD_LAYER - 1.0; // make invisible
+                });
+                for (mut sprite, index) in q_board_block.iter_mut() {
+                    if player_data.board.blocks[index.1][index.0] {
+                        sprite.color = WHITE.into();
+                    } else {
+                        sprite.color = BLACK.into();
+                    }
+                }
+
+                let lines = player_data.board.get_line_clear_indexes();
+                if lines.len() > 0 {
+                    player_data.line_clear_tick.reset((BOARD_COLS + 1) / 2);
+                    player_data.line_clear_rows = lines;
+                    player_data.line_clear_phase = LineClearPhase::new();
+                    player_state.set(PlayerState::GameLineClear);
+                } else {
+                    player_state.set(PlayerState::GameEntryDelay);
+                }
             }
         }
     }
 }
 
 mod state_game_line_clear {
+    use crate::game::board::BOARD_COLS;
+
     use super::*;
 
+    pub(super) struct LineClearPhase {
+        cols: Option<(usize, usize)>, // (left, right)
+    }
+
+    impl LineClearPhase {
+        pub fn new() -> Self {
+            Self {
+                cols: if BOARD_COLS % 2 == 0 {
+                    Some((BOARD_COLS / 2 - 1, BOARD_COLS / 2))
+                } else {
+                    Some((BOARD_COLS / 2, BOARD_COLS / 2))
+                },
+            }
+        }
+
+        pub fn next_cols(&mut self) -> Option<(usize, usize)> {
+            self.cols.map(|cols| {
+                if cols.0 > 0 {
+                    self.cols = Some((cols.0 - 1, cols.1 + 1));
+                } else {
+                    self.cols = None
+                }
+                cols
+            })
+        }
+    }
+
+    impl Default for LineClearPhase {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     pub(super) fn tick_system(
+        time: Res<Time>,
+        mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        player_data.board.lock_curr_piece();
-        player_data.board.clear_lines();
-        player_state.set(PlayerState::GameEntryDelay);
+        player_data.line_clear_tick.tick(time.delta());
+        if player_data.line_clear_tick.consume() {
+            if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
+                for (mut sprite, index) in q_board_block.iter_mut() {
+                    if (index.0 == left || index.0 == right)
+                        && player_data.line_clear_rows.contains(&index.1)
+                    {
+                        sprite.color = BLACK.into();
+                    }
+                }
+            } else {
+                player_data.board.clear_lines();
+                player_state.set(PlayerState::GameEntryDelay);
+            }
+        }
     }
 }
 

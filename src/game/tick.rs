@@ -162,3 +162,31 @@ impl EntryDelayTick {
         self.duration = Duration::ZERO;
     }
 }
+
+#[derive(Default)]
+pub struct LineClearTick {
+    duration: Duration,
+    trigger: Duration,
+}
+
+impl LineClearTick {
+    pub fn tick(&mut self, delta: Duration) {
+        self.duration += delta;
+    }
+
+    pub fn consume(&mut self) -> bool {
+        if self.duration >= self.trigger {
+            self.duration -= self.trigger;
+            return true;
+        }
+
+        false
+    }
+
+    pub fn reset(&mut self, phase: usize) {
+        self.trigger = Self::TOTAL / phase as u32;
+        self.duration = self.trigger; // first iteration triggers immediately
+    }
+
+    const TOTAL: Duration = ticks_to_duration(18);
+}

@@ -1,6 +1,6 @@
 use rand::Rng;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Block(pub i32, pub i32);
 
 const PIECE_SHAPE_I: [[Block; 4]; 2] = [
