@@ -52,7 +52,7 @@ const SCORE_TRANSLATION: Vec3 = Vec3::new(WIDTH, HEIGHT / 3.0, BOARD_LAYER);
 const LEVEL_TRANSLATION: Vec3 = Vec3::new(WIDTH, -HEIGHT / 3.0, BOARD_LAYER);
 const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(WIDTH, 0.0, CURR_PIECE_LAYER);
 const DAS_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 5.0, BOARD_LAYER);
-const BURNED_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 2.0, BOARD_LAYER);
+const BURNED_LINES_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 2.0, BOARD_LAYER);
 const TETRIS_COUNT_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 1.0, BOARD_LAYER);
 const TETRIS_RATE_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 0.0, BOARD_LAYER);
 const DROUGHT_RATE_TRANSLATION: Vec3 = Vec3::new(-WIDTH, -BLOCK_SIZE * 2.0, BOARD_LAYER);
@@ -79,7 +79,7 @@ struct LevelEntityMarker;
 struct DASEntityMarker;
 
 #[derive(Component)]
-struct BurnedEntityMarker;
+struct BurnedLinesEntityMarker;
 
 #[derive(Component)]
 struct TetrisCountEntityMarker;
@@ -219,9 +219,9 @@ fn spawn_statistic(mut commands: Commands) {
         DASEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["BRN ".into(), "".into()], BURNED_TRANSLATION),
+        new_texts(vec!["BRN ".into(), "".into()], BURNED_LINES_TRANSLATION),
         GameEntityMarker,
-        BurnedEntityMarker,
+        BurnedLinesEntityMarker,
     ));
     commands.spawn((
         new_texts(vec!["TRT ".into(), "".into()], TETRIS_COUNT_TRANSLATION),
@@ -364,7 +364,7 @@ fn update_statistic_system(
         Query<&mut Text, With<ScoreEntityMarker>>,
         Query<&mut Text, With<LevelEntityMarker>>,
         Query<&mut Text, With<DASEntityMarker>>,
-        Query<&mut Text, With<BurnedEntityMarker>>,
+        Query<&mut Text, With<BurnedLinesEntityMarker>>,
         Query<&mut Text, With<TetrisCountEntityMarker>>,
         Query<&mut Text, With<TetrisRateEntityMarker>>,
         Query<&mut Text, With<DroughtEntityMarker>>,
@@ -390,7 +390,7 @@ fn update_statistic_system(
         }
     }
     if let Ok(mut text) = set.p4().get_single_mut() {
-        text.sections[1].value = format!("{:4}", player_data.board.burned());
+        text.sections[1].value = format!("{:4}", player_data.board.burned_lines());
     }
     if let Ok(mut text) = set.p5().get_single_mut() {
         text.sections[1].value = format!("{:4}", player_data.board.tetris_count);
@@ -420,8 +420,6 @@ fn update_statistic_system(
 
 mod state_game_running {
     use state_game_line_clear::LineClearPhase;
-
-    use crate::game::board::BOARD_COLS;
 
     use super::*;
 
@@ -630,7 +628,7 @@ mod state_game_running {
 
                 let lines = player_data.board.get_line_clear_indexes();
                 if lines.len() > 0 {
-                    player_data.line_clear_tick = LineClearTick::new((BOARD_COLS + 1) / 2);
+                    player_data.line_clear_tick = LineClearTick::new((Board::BOARD_COLS + 1) / 2);
                     player_data.line_clear_rows = lines;
                     player_data.line_clear_phase = LineClearPhase::new();
                     player_state.set(PlayerState::GameLineClear);
@@ -643,8 +641,6 @@ mod state_game_running {
 }
 
 mod state_game_line_clear {
-    use crate::game::board::BOARD_COLS;
-
     use super::*;
 
     pub(super) struct LineClearPhase {
@@ -653,11 +649,12 @@ mod state_game_line_clear {
 
     impl LineClearPhase {
         pub fn new() -> Self {
+            const COLS: usize = Board::BOARD_COLS;
             Self {
-                cols: if BOARD_COLS % 2 == 0 {
-                    Some((BOARD_COLS / 2 - 1, BOARD_COLS / 2))
+                cols: if COLS % 2 == 0 {
+                    Some((COLS / 2 - 1, COLS / 2))
                 } else {
-                    Some((BOARD_COLS / 2, BOARD_COLS / 2))
+                    Some((COLS / 2, COLS / 2))
                 },
             }
         }

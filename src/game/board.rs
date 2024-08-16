@@ -1,12 +1,8 @@
 use super::{
     level,
     piece::{Block, Piece, PieceShape},
+    score::calculate_score,
 };
-
-const BOARD_ROWS: usize = 20;
-pub const BOARD_COLS: usize = 10;
-const BOARD_PIECE_START_X: i32 = (BOARD_COLS / 2) as i32;
-const BOARD_PIECE_START_Y: i32 = (BOARD_ROWS - 1) as i32;
 
 pub struct Board {
     pub blocks: Vec<Vec<bool>>,
@@ -21,13 +17,18 @@ pub struct Board {
 }
 
 impl Board {
+    pub const BOARD_ROWS: usize = 20;
+    pub const BOARD_COLS: usize = 10;
+    const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
+    const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
+
     pub fn new(start_level: usize) -> Self {
         let curr_piece = Piece::rand();
         let next_piece = curr_piece.rand_1h2r();
         Self {
-            blocks: vec![vec![false; BOARD_COLS]; BOARD_ROWS],
+            blocks: vec![vec![false; Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece,
-            curr_translation: (BOARD_PIECE_START_X, BOARD_PIECE_START_Y),
+            curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_piece,
             start_level,
             lines: 0,
@@ -41,7 +42,7 @@ impl Board {
         level::level(self.start_level, self.lines)
     }
 
-    pub fn burned(&self) -> usize {
+    pub fn burned_lines(&self) -> usize {
         self.lines - self.tetris_count * 4
     }
 
@@ -55,7 +56,7 @@ impl Board {
 
     pub fn get_line_clear_indexes(&self) -> Vec<usize> {
         let mut indexes = vec![];
-        for index in 0..BOARD_ROWS {
+        for index in 0..Self::BOARD_ROWS {
             if self.blocks[index].iter().all(|blk| *blk) {
                 indexes.push(index);
             }
@@ -76,14 +77,13 @@ impl Board {
             self.blocks.remove(*index);
         });
 
-        if indexes.len() > 0 {
-            if indexes.len() == 4 {
-                self.tetris_count += 1;
-            }
-            self.score += self.lines_to_score(indexes.len());
-            self.lines += indexes.len();
-            self.blocks.resize(BOARD_ROWS, vec![false; BOARD_COLS]);
+        self.score += calculate_score(indexes.len(), self.level());
+        self.lines += indexes.len();
+        if indexes.len() == 4 {
+            self.tetris_count += 1;
         }
+        self.blocks
+            .resize(Self::BOARD_ROWS, vec![false; Self::BOARD_COLS]);
     }
 
     pub fn switch_to_next_piece(&mut self) {
@@ -93,7 +93,7 @@ impl Board {
             self.drought += 1;
         }
         self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
-        self.curr_translation = (BOARD_PIECE_START_X, BOARD_PIECE_START_Y);
+        self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
     }
 
     pub fn get_curr_piece_blocks(&self) -> [Block; 4] {
@@ -112,7 +112,7 @@ impl Board {
     pub fn is_left_movable(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0 - 1, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS
+                && (blk.1 as usize >= Self::BOARD_ROWS
                     || !self.blocks[blk.1 as usize][(blk.0 - 1) as usize])
         })
     }
@@ -120,7 +120,7 @@ impl Board {
     pub fn is_right_movable(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0 + 1, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS
+                && (blk.1 as usize >= Self::BOARD_ROWS
                     || !self.blocks[blk.1 as usize][(blk.0 + 1) as usize])
         })
     }
@@ -128,7 +128,7 @@ impl Board {
     pub fn is_curr_position_valid(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
-                && blk.1 < BOARD_ROWS as i32
+                && blk.1 < Self::BOARD_ROWS as i32
                 && !self.blocks[blk.1 as usize][blk.0 as usize]
         })
     }
@@ -136,7 +136,7 @@ impl Board {
     pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1 - 1)
-                && (blk.1 as usize >= BOARD_ROWS
+                && (blk.1 as usize >= Self::BOARD_ROWS
                     || !self.blocks[(blk.1 - 1) as usize][blk.0 as usize])
         });
 
@@ -169,7 +169,8 @@ impl Board {
         self.curr_piece.rotate_clockwise();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS || !self.blocks[blk.1 as usize][blk.0 as usize])
+                && (blk.1 as usize >= Self::BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][blk.0 as usize])
         });
         if !rotatable {
             self.curr_piece.rotate_counter_clockwise();
@@ -182,7 +183,8 @@ impl Board {
         self.curr_piece.rotate_counter_clockwise();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
-                && (blk.1 as usize >= BOARD_ROWS || !self.blocks[blk.1 as usize][blk.0 as usize])
+                && (blk.1 as usize >= Self::BOARD_ROWS
+                    || !self.blocks[blk.1 as usize][blk.0 as usize])
         });
         if !rotatable {
             self.curr_piece.rotate_clockwise();
@@ -192,18 +194,7 @@ impl Board {
     }
 
     fn is_inside_board(x: i32, y: i32) -> bool {
-        x >= 0 && x < BOARD_COLS as i32 && y >= 0
-    }
-
-    fn lines_to_score(&self, lines: usize) -> usize {
-        (self.level() + 1)
-            * match lines {
-                1 => 40,
-                2 => 100,
-                3 => 300,
-                4 => 1200,
-                _ => panic!("can only clear lines between 1-4"),
-            }
+        x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0
     }
 }
 
