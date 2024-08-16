@@ -540,6 +540,7 @@ mod state_game_running {
             }
         } else if inputs.down.0 {
             player_data.can_press_down = true;
+            player_data.game_timer.reset();
             player_data.fall_tick = FallTick::new(player_data.board.level(), false);
             player_data.press_down_timer.reset();
         }

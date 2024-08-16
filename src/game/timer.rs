@@ -20,6 +20,10 @@ impl GameTimer {
             false
         }
     }
+
+    pub fn reset(&mut self) {
+        self.duration = Duration::ZERO;
+    }
 }
 
 #[derive(Default)]
