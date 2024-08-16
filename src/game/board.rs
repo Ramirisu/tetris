@@ -4,8 +4,10 @@ use super::{
     score::calculate_score,
 };
 
+pub type Block2dArray = Vec<Vec<Option<PieceShape>>>;
+
 pub struct Board {
-    pub blocks: Vec<Vec<bool>>,
+    pub blocks: Block2dArray,
     curr_piece: Piece,
     curr_translation: (i32, i32),
     next_piece: Piece,
@@ -26,7 +28,7 @@ impl Board {
         let curr_piece = Piece::rand();
         let next_piece = curr_piece.rand_1h2r();
         Self {
-            blocks: vec![vec![false; Self::BOARD_COLS]; Self::BOARD_ROWS],
+            blocks: vec![vec![None; Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece,
             curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_piece,
@@ -57,7 +59,7 @@ impl Board {
     pub fn get_line_clear_indexes(&self) -> Vec<usize> {
         let mut indexes = vec![];
         for index in 0..Self::BOARD_ROWS {
-            if self.blocks[index].iter().all(|blk| *blk) {
+            if self.blocks[index].iter().all(|blk| blk.is_some()) {
                 indexes.push(index);
             }
         }
@@ -67,7 +69,7 @@ impl Board {
 
     pub fn lock_curr_piece(&mut self) {
         for blk in self.get_curr_piece_blocks() {
-            self.blocks[blk.1 as usize][blk.0 as usize] = true;
+            self.blocks[blk.1 as usize][blk.0 as usize] = Some(self.curr_piece.shape());
         }
     }
 
@@ -83,7 +85,7 @@ impl Board {
             self.tetris_count += 1;
         }
         self.blocks
-            .resize(Self::BOARD_ROWS, vec![false; Self::BOARD_COLS]);
+            .resize(Self::BOARD_ROWS, vec![None; Self::BOARD_COLS]);
     }
 
     pub fn switch_to_next_piece(&mut self) {
@@ -96,6 +98,10 @@ impl Board {
         self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
     }
 
+    pub fn get_curr_piece(&self) -> Piece {
+        self.curr_piece
+    }
+
     pub fn get_curr_piece_blocks(&self) -> [Block; 4] {
         self.curr_piece.get_blocks().map(|blk| {
             Block(
@@ -103,6 +109,10 @@ impl Board {
                 blk.1 + self.curr_translation.1,
             )
         })
+    }
+
+    pub fn get_next_piece(&self) -> Piece {
+        self.next_piece
     }
 
     pub fn get_next_piece_blocks(&self) -> [Block; 4] {
@@ -113,7 +123,7 @@ impl Board {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0 - 1, blk.1)
                 && (blk.1 as usize >= Self::BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][(blk.0 - 1) as usize])
+                    || (self.blocks[blk.1 as usize][(blk.0 - 1) as usize]).is_none())
         })
     }
 
@@ -121,7 +131,7 @@ impl Board {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0 + 1, blk.1)
                 && (blk.1 as usize >= Self::BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][(blk.0 + 1) as usize])
+                    || (self.blocks[blk.1 as usize][(blk.0 + 1) as usize]).is_none())
         })
     }
 
@@ -129,7 +139,7 @@ impl Board {
         self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
                 && blk.1 < Self::BOARD_ROWS as i32
-                && !self.blocks[blk.1 as usize][blk.0 as usize]
+                && (self.blocks[blk.1 as usize][blk.0 as usize]).is_none()
         })
     }
 
@@ -137,7 +147,7 @@ impl Board {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1 - 1)
                 && (blk.1 as usize >= Self::BOARD_ROWS
-                    || !self.blocks[(blk.1 - 1) as usize][blk.0 as usize])
+                    || (self.blocks[(blk.1 - 1) as usize][blk.0 as usize]).is_none())
         });
 
         if movable {
@@ -170,7 +180,7 @@ impl Board {
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
                 && (blk.1 as usize >= Self::BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][blk.0 as usize])
+                    || (self.blocks[blk.1 as usize][blk.0 as usize]).is_none())
         });
         if !rotatable {
             self.curr_piece.rotate_counter_clockwise();
@@ -184,7 +194,7 @@ impl Board {
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             Self::is_inside_board(blk.0, blk.1)
                 && (blk.1 as usize >= Self::BOARD_ROWS
-                    || !self.blocks[blk.1 as usize][blk.0 as usize])
+                    || (self.blocks[blk.1 as usize][blk.0 as usize]).is_none())
         });
         if !rotatable {
             self.curr_piece.rotate_clockwise();

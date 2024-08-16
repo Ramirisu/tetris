@@ -6,7 +6,8 @@ use bevy::{
 use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 use super::{
-    board::Board,
+    board::{Block2dArray, Board},
+    palette::get_color,
     piece::Block,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
@@ -63,8 +64,14 @@ struct GameEntityMarker;
 #[derive(Component)]
 struct BoardEntityMarker;
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 struct BoardBlockEntityMarker(usize, usize);
+
+impl Into<(usize, usize)> for &BoardBlockEntityMarker {
+    fn into(self) -> (usize, usize) {
+        (self.0, self.1)
+    }
+}
 
 #[derive(Component)]
 struct LinesEntityMarker;
@@ -174,11 +181,11 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
         .enumerate()
         .for_each(|(y, blks)| {
             blks.iter().enumerate().for_each(|(x, blk)| {
-                if *blk {
+                if let Some(shape) = blk {
                     commands
                         .spawn(new_block(
                             board_index_to_translation(x as i32, y as i32, BLOCK_LAYER),
-                            WHITE.into(),
+                            get_color(*shape),
                         ))
                         .insert(GameEntityMarker)
                         .insert(BoardEntityMarker)
@@ -249,7 +256,7 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
             commands
                 .spawn(new_block(
                     board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER),
-                    RED.into(),
+                    get_color(player_data.board.get_curr_piece().shape()),
                 ))
                 .insert(GameEntityMarker)
                 .insert(CurrPieceEntityMarker);
@@ -265,7 +272,7 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
             commands
                 .spawn(new_block(
                     next_piece_index_to_translation(blk.0, blk.1),
-                    RED.into(),
+                    get_color(player_data.board.get_next_piece().shape()),
                 ))
                 .insert(GameEntityMarker)
                 .insert(NextPieceEntityMarker);
@@ -338,24 +345,32 @@ fn new_texts(texts: impl IntoIterator<Item = String>, translation: Vec3) -> Text
     }
 }
 
-fn move_board_blocks<'a>(
-    iter: impl Iterator<Item = (usize, Mut<'a, Transform>)>,
-    blocks: [Block; 4],
-) {
-    for (index, mut transform) in iter {
-        let blk = blocks[index];
-        transform.translation = board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER);
+fn update_board_block(sprite: &mut Sprite, coordinate: (usize, usize), blocks: &Block2dArray) {
+    if let Some(shape) = blocks[coordinate.1][coordinate.0] {
+        sprite.color = get_color(shape);
+    } else {
+        sprite.color = BLACK.into();
     }
 }
 
-fn move_next_piece_blocks<'a>(
-    iter: impl Iterator<Item = (usize, Mut<'a, Transform>)>,
-    blocks: [Block; 4],
+fn update_curr_piece_block(
+    transform: &mut Transform,
+    sprite: &mut Sprite,
+    blk: Block,
+    color: Color,
 ) {
-    for (index, mut transform) in iter {
-        let blk = blocks[index];
-        transform.translation = next_piece_index_to_translation(blk.0, blk.1);
-    }
+    transform.translation = board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER);
+    sprite.color = color;
+}
+
+fn update_next_piece_block(
+    transform: &mut Transform,
+    sprite: &mut Sprite,
+    blk: Block,
+    color: Color,
+) {
+    transform.translation = next_piece_index_to_translation(blk.0, blk.1);
+    sprite.color = color;
 }
 
 fn update_statistic_system(
@@ -454,7 +469,7 @@ mod state_game_running {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
+        mut q_curr: Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
         mut player_data: ResMut<PlayerData>,
     ) {
         let mut inputs = GameRunningInputs {
@@ -518,9 +533,15 @@ mod state_game_running {
         }
 
         if handle_input(inputs, &time, &mut player_data) {
-            move_board_blocks(
-                q_curr.iter_mut().enumerate(),
-                player_data.board.get_curr_piece_blocks(),
+            std::iter::zip(q_curr.iter_mut(), player_data.board.get_curr_piece_blocks()).for_each(
+                |((mut transform, mut sprite), blk)| {
+                    update_curr_piece_block(
+                        &mut transform,
+                        &mut sprite,
+                        blk,
+                        get_color(player_data.board.get_curr_piece().shape()),
+                    );
+                },
             );
         }
     }
@@ -588,8 +609,10 @@ mod state_game_running {
     }
 
     pub(super) fn curr_piece_fall_system(
-        mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
-        mut q_curr: Query<&mut Transform, With<CurrPieceEntityMarker>>,
+        mut query: ParamSet<(
+            Query<(&mut Sprite, &BoardBlockEntityMarker)>,
+            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+        )>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
@@ -598,10 +621,18 @@ mod state_game_running {
             player_data.fall_tick = FallTick::new(player_data.board.level(), false);
 
             if player_data.board.move_piece_down() {
-                move_board_blocks(
-                    q_curr.iter_mut().enumerate(),
+                std::iter::zip(
+                    query.p1().iter_mut(),
                     player_data.board.get_curr_piece_blocks(),
-                );
+                )
+                .for_each(|((mut transform, mut sprite), blk)| {
+                    update_curr_piece_block(
+                        &mut transform,
+                        &mut sprite,
+                        blk,
+                        get_color(player_data.board.get_curr_piece().shape()),
+                    );
+                });
             } else if !player_data.board.is_curr_position_valid() {
                 player_state.set(PlayerState::GameOver);
             } else {
@@ -615,16 +646,13 @@ mod state_game_running {
                 player_data.entry_delay_tick = EntryDelayTick::new(min_y);
 
                 player_data.board.lock_curr_piece();
-                q_curr.iter_mut().for_each(|mut transform| {
+                query.p1().iter_mut().for_each(|(mut transform, _)| {
                     transform.translation.z = BOARD_LAYER - 1.0; // make invisible
                 });
-                for (mut sprite, index) in q_board_block.iter_mut() {
-                    if player_data.board.blocks[index.1][index.0] {
-                        sprite.color = WHITE.into();
-                    } else {
-                        sprite.color = BLACK.into();
-                    }
-                }
+
+                query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
+                    update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks);
+                });
 
                 let lines = player_data.board.get_line_clear_indexes();
                 if lines.len() > 0 {
@@ -708,10 +736,10 @@ mod state_game_entry_delay {
 
     pub(super) fn tick_system(
         time: Res<Time>,
-        mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
-        mut q_piece: ParamSet<(
-            Query<&mut Transform, With<CurrPieceEntityMarker>>,
-            Query<&mut Transform, With<NextPieceEntityMarker>>,
+        mut query: ParamSet<(
+            Query<(&mut Sprite, &BoardBlockEntityMarker)>,
+            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+            Query<(&mut Transform, &mut Sprite), With<NextPieceEntityMarker>>,
         )>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -721,22 +749,34 @@ mod state_game_entry_delay {
         if player_data.game_timer.commit(threshold) {
             player_data.board.switch_to_next_piece();
 
-            for (mut sprite, index) in q_board_block.iter_mut() {
-                if player_data.board.blocks[index.1][index.0] {
-                    sprite.color = WHITE.into();
-                } else {
-                    sprite.color = BLACK.into();
-                }
-            }
+            query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
+                update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks);
+            });
 
-            move_board_blocks(
-                q_piece.p0().iter_mut().enumerate(),
+            std::iter::zip(
+                query.p1().iter_mut(),
                 player_data.board.get_curr_piece_blocks(),
-            );
-            move_next_piece_blocks(
-                q_piece.p1().iter_mut().enumerate(),
+            )
+            .for_each(|((mut transform, mut sprite), blk)| {
+                update_curr_piece_block(
+                    &mut transform,
+                    &mut sprite,
+                    blk,
+                    get_color(player_data.board.get_curr_piece().shape()),
+                );
+            });
+            std::iter::zip(
+                query.p2().iter_mut(),
                 player_data.board.get_next_piece_blocks(),
-            );
+            )
+            .for_each(|((mut transform, mut sprite), blk)| {
+                update_next_piece_block(
+                    &mut transform,
+                    &mut sprite,
+                    blk,
+                    get_color(player_data.board.get_next_piece().shape()),
+                );
+            });
 
             player_state.set(PlayerState::GameRunning);
         }
