@@ -428,7 +428,6 @@ mod state_game_running {
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
         player_data.game_timer.tick(time.delta());
         player_data.press_down_timer.tick(time.delta());
-        player_data.das_timer.tick(time.delta());
     }
 
     pub struct GameRunningInputs {
@@ -453,6 +452,7 @@ mod state_game_running {
     }
 
     pub(super) fn handle_input_system(
+        time: Res<Time>,
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
@@ -519,7 +519,7 @@ mod state_game_running {
             };
         }
 
-        if handle_input(inputs, &mut player_data) {
+        if handle_input(inputs, &time, &mut player_data) {
             move_board_blocks(
                 q_curr.iter_mut().enumerate(),
                 player_data.board.get_curr_piece_blocks(),
@@ -527,7 +527,7 @@ mod state_game_running {
         }
     }
 
-    fn handle_input(inputs: GameRunningInputs, player_data: &mut PlayerData) -> bool {
+    fn handle_input(inputs: GameRunningInputs, time: &Time, player_data: &mut PlayerData) -> bool {
         let mut moved = false;
 
         if player_data.can_press_down {
@@ -557,7 +557,9 @@ mod state_game_running {
                 }
             } else {
                 match (inputs.left.1, inputs.right.1) {
+                    (true, true) => player_data.das_timer.tick(time.delta()),
                     (true, false) => {
+                        player_data.das_timer.tick(time.delta());
                         if !player_data.board.is_left_movable() {
                             player_data.das_timer.reset_max();
                         } else if player_data.das_timer.commit() {
@@ -565,6 +567,7 @@ mod state_game_running {
                         }
                     }
                     (false, true) => {
+                        player_data.das_timer.tick(time.delta());
                         if !player_data.board.is_right_movable() {
                             player_data.das_timer.reset_max();
                         } else if player_data.das_timer.commit() {
