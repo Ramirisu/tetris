@@ -3,6 +3,13 @@ use rand::Rng;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Block(pub i32, pub i32);
 
+const PIECE_SHAPE_T: [[Block; 4]; 4] = [
+    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
+    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(0, 1)],
+    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(0, 1)],
+    [Block(0, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
+];
+
 const PIECE_SHAPE_I: [[Block; 4]; 2] = [
     [Block(-2, 0), Block(-1, 0), Block(0, 0), Block(1, 0)],
     [Block(0, -1), Block(0, 0), Block(0, 1), Block(0, 2)],
@@ -29,13 +36,6 @@ const PIECE_SHAPE_S: [[Block; 4]; 2] = [
     [Block(1, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
 ];
 
-const PIECE_SHAPE_T: [[Block; 4]; 4] = [
-    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
-    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(0, 1)],
-    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(0, 1)],
-    [Block(0, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
-];
-
 const PIECE_SHAPE_Z: [[Block; 4]; 2] = [
     [Block(0, -1), Block(1, -1), Block(-1, 0), Block(0, 0)],
     [Block(0, -1), Block(0, 0), Block(1, 0), Block(1, 1)],
@@ -43,25 +43,25 @@ const PIECE_SHAPE_Z: [[Block; 4]; 2] = [
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum PieceShape {
-    I,
+    T,
     J,
-    L,
+    Z,
     O,
     S,
-    T,
-    Z,
+    L,
+    I,
 }
 
 impl PieceShape {
     pub fn state_len(&self) -> usize {
         match self {
-            PieceShape::I => PIECE_SHAPE_I.len(),
+            PieceShape::T => PIECE_SHAPE_T.len(),
             PieceShape::J => PIECE_SHAPE_J.len(),
-            PieceShape::L => PIECE_SHAPE_L.len(),
+            PieceShape::Z => PIECE_SHAPE_Z.len(),
             PieceShape::O => PIECE_SHAPE_O.len(),
             PieceShape::S => PIECE_SHAPE_S.len(),
-            PieceShape::T => PIECE_SHAPE_T.len(),
-            PieceShape::Z => PIECE_SHAPE_Z.len(),
+            PieceShape::L => PIECE_SHAPE_L.len(),
+            PieceShape::I => PIECE_SHAPE_I.len(),
         }
     }
 }
@@ -69,13 +69,13 @@ impl PieceShape {
 impl From<usize> for PieceShape {
     fn from(value: usize) -> Self {
         match value % 7 {
-            0 => PieceShape::I,
+            0 => PieceShape::T,
             1 => PieceShape::J,
-            2 => PieceShape::L,
+            2 => PieceShape::Z,
             3 => PieceShape::O,
             4 => PieceShape::S,
-            5 => PieceShape::T,
-            _ => PieceShape::Z,
+            5 => PieceShape::L,
+            _ => PieceShape::I,
         }
     }
 }
@@ -96,7 +96,6 @@ impl Piece {
     }
 
     pub fn rand_1h2r(&self) -> Piece {
-        // 1H2R randomizer
         let shape = rand::thread_rng().gen_range(0..8);
         if shape != self.shape as usize {
             Self::new(shape.into())
@@ -111,13 +110,13 @@ impl Piece {
 
     pub fn get_blocks(&self) -> [Block; 4] {
         match self.shape {
-            PieceShape::I => PIECE_SHAPE_I[self.state],
+            PieceShape::T => PIECE_SHAPE_T[self.state],
             PieceShape::J => PIECE_SHAPE_J[self.state],
-            PieceShape::L => PIECE_SHAPE_L[self.state],
+            PieceShape::Z => PIECE_SHAPE_Z[self.state],
             PieceShape::O => PIECE_SHAPE_O[self.state],
             PieceShape::S => PIECE_SHAPE_S[self.state],
-            PieceShape::T => PIECE_SHAPE_T[self.state],
-            PieceShape::Z => PIECE_SHAPE_Z[self.state],
+            PieceShape::L => PIECE_SHAPE_L[self.state],
+            PieceShape::I => PIECE_SHAPE_I[self.state],
         }
     }
 
