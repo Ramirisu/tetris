@@ -39,30 +39,43 @@ pub fn setup(app: &mut App) {
         );
 }
 
-const BOARD_LAYER: f32 = 0.0;
-const BLOCK_LAYER: f32 = 1.0;
-const CURR_PIECE_LAYER: f32 = 2.0;
+const BOARD_BACKGROUND_LAYER: f32 = 1.0;
+const BOARD_LAYER: f32 = 2.0;
+const BLOCK_LAYER: f32 = 3.0;
+const CURR_PIECE_LAYER: f32 = 4.0;
 
 const BLOCK_SIZE: f32 = 40.0;
 const BLOCK_PADDING: f32 = BLOCK_SIZE / 20.0;
-const WIDTH: f32 = BLOCK_SIZE * 10.0;
-const HEIGHT: f32 = BLOCK_SIZE * 20.0;
 
-const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, HEIGHT / 2.0 + BLOCK_SIZE, BOARD_LAYER);
-const SCORE_TRANSLATION: Vec3 = Vec3::new(WIDTH, HEIGHT / 3.0, BOARD_LAYER);
-const LEVEL_TRANSLATION: Vec3 = Vec3::new(WIDTH, -HEIGHT / 3.0, BOARD_LAYER);
-const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(WIDTH, 0.0, CURR_PIECE_LAYER);
-const DAS_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 5.0, BOARD_LAYER);
-const BURNED_LINES_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 2.0, BOARD_LAYER);
-const TETRIS_COUNT_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 1.0, BOARD_LAYER);
-const TETRIS_RATE_TRANSLATION: Vec3 = Vec3::new(-WIDTH, BLOCK_SIZE * 0.0, BOARD_LAYER);
-const DROUGHT_RATE_TRANSLATION: Vec3 = Vec3::new(-WIDTH, -BLOCK_SIZE * 2.0, BOARD_LAYER);
+const BOARD_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, BOARD_LAYER);
+const BOARD_WIDTH: f32 = BLOCK_SIZE * 10.0;
+const BOARD_HEIGHT: f32 = BLOCK_SIZE * 20.0;
+const BOARD_BACKGROUND_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, BOARD_BACKGROUND_LAYER);
+const BOARD_BACKGROUND_SIZE: Vec2 = Vec2::new(
+    BOARD_WIDTH + BLOCK_SIZE / 10.0,
+    BOARD_HEIGHT + BLOCK_SIZE / 10.0,
+);
+
+const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, BOARD_HEIGHT / 2.0 + BLOCK_SIZE, BOARD_LAYER);
+const SCORE_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, BOARD_HEIGHT / 3.0, BOARD_LAYER);
+const LEVEL_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, -BOARD_HEIGHT / 3.0, BOARD_LAYER);
+const NEXT_PIECE_SLOT_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, 0.0, BOARD_LAYER);
+const NEXT_PIECE_SLOT_SIZE: Vec2 = Vec2::new(BLOCK_SIZE * 6.0, BLOCK_SIZE * 6.0);
+const NEXT_PIECE_SLOT_BACKGROUND_TRANSLATION: Vec3 =
+    Vec3::new(BOARD_WIDTH, 0.0, BOARD_BACKGROUND_LAYER);
+const NEXT_PIECE_SLOT_BACKGROUND_SIZE: Vec2 = Vec2::new(
+    BLOCK_SIZE * 6.0 + BLOCK_SIZE / 10.0,
+    BLOCK_SIZE * 6.0 + BLOCK_SIZE / 10.0,
+);
+const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, 0.0, CURR_PIECE_LAYER);
+const DAS_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 5.0, BOARD_LAYER);
+const BURNED_LINES_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 2.0, BOARD_LAYER);
+const TETRIS_COUNT_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 1.0, BOARD_LAYER);
+const TETRIS_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 0.0, BOARD_LAYER);
+const DROUGHT_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, -BLOCK_SIZE * 2.0, BOARD_LAYER);
 
 #[derive(Component)]
 struct GameEntityMarker;
-
-#[derive(Component)]
-struct BoardEntityMarker;
 
 #[derive(Component, Clone, Copy)]
 struct BoardBlockEntityMarker(usize, usize);
@@ -160,18 +173,32 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: Vec3::new(0.0, 0.0, BOARD_LAYER),
+                translation: BOARD_BACKGROUND_TRANSLATION,
                 ..default()
             },
             sprite: Sprite {
-                color: BLACK.into(),
-                custom_size: Some(Vec2::new(WIDTH, HEIGHT)),
+                color: RED.into(),
+                custom_size: Some(BOARD_BACKGROUND_SIZE),
                 ..default()
             },
             ..default()
         },
         GameEntityMarker,
-        BoardEntityMarker,
+    ));
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: BOARD_TRANSLATION,
+                ..default()
+            },
+            sprite: Sprite {
+                color: BLACK.into(),
+                custom_size: Some(Vec2::new(BOARD_WIDTH, BOARD_HEIGHT)),
+                ..default()
+            },
+            ..default()
+        },
+        GameEntityMarker,
     ));
 
     player_data
@@ -188,7 +215,6 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                             get_color(*shape),
                         ))
                         .insert(GameEntityMarker)
-                        .insert(BoardEntityMarker)
                         .insert(BoardBlockEntityMarker(x, y));
                 } else {
                     commands
@@ -197,7 +223,6 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                             BLACK.into(),
                         ))
                         .insert(GameEntityMarker)
-                        .insert(BoardEntityMarker)
                         .insert(BoardBlockEntityMarker(x, y));
                 }
             })
@@ -206,17 +231,84 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
 
 fn spawn_statistic(mut commands: Commands) {
     commands.spawn((
-        new_text("", LINES_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font_size: BLOCK_SIZE,
+                    color: WHITE.into(),
+                    ..default()
+                },
+            ),
+            transform: Transform {
+                translation: LINES_TRANSLATION,
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         LinesEntityMarker,
     ));
     commands.spawn((
-        new_text("", SCORE_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "SCORE\n".into(),
+                    style: TextStyle {
+                        font_size: BLOCK_SIZE,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: BLOCK_SIZE * 2.0,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ])
+            .with_justify(JustifyText::Center),
+            transform: Transform {
+                translation: SCORE_TRANSLATION,
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         ScoreEntityMarker,
     ));
     commands.spawn((
-        new_text("", LEVEL_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "LEVEL ".into(),
+                    style: TextStyle {
+                        font_size: BLOCK_SIZE,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: BLOCK_SIZE * 2.0,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: LEVEL_TRANSLATION,
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         LevelEntityMarker,
     ));
@@ -264,6 +356,36 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
 }
 
 fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: NEXT_PIECE_SLOT_BACKGROUND_TRANSLATION,
+                ..default()
+            },
+            sprite: Sprite {
+                color: RED.into(),
+                custom_size: Some(NEXT_PIECE_SLOT_BACKGROUND_SIZE),
+                ..default()
+            },
+            ..default()
+        },
+        GameEntityMarker,
+    ));
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: NEXT_PIECE_SLOT_TRANSLATION,
+                ..default()
+            },
+            sprite: Sprite {
+                color: BLACK.into(),
+                custom_size: Some(NEXT_PIECE_SLOT_SIZE),
+                ..default()
+            },
+            ..default()
+        },
+        GameEntityMarker,
+    ));
     player_data
         .board
         .get_next_piece_blocks()
@@ -281,8 +403,8 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
 
 fn board_index_to_translation(x: i32, y: i32, z: f32) -> Vec3 {
     Vec3::new(
-        (x as f32 + 0.5) * BLOCK_SIZE - WIDTH / 2.0,
-        (y as f32 + 0.5) * BLOCK_SIZE - HEIGHT / 2.0,
+        (x as f32 + 0.5) * BLOCK_SIZE - BOARD_WIDTH / 2.0,
+        (y as f32 + 0.5) * BLOCK_SIZE - BOARD_HEIGHT / 2.0,
         z,
     )
 }
@@ -303,24 +425,6 @@ fn new_block(translation: Vec3, color: Color) -> SpriteBundle {
                 BLOCK_SIZE - BLOCK_PADDING,
                 BLOCK_SIZE - BLOCK_PADDING,
             )),
-            ..default()
-        },
-        ..default()
-    }
-}
-
-fn new_text(text: impl Into<String>, translation: Vec3) -> Text2dBundle {
-    Text2dBundle {
-        text: Text::from_section(
-            text,
-            TextStyle {
-                font_size: BLOCK_SIZE,
-                color: WHITE.into(),
-                ..default()
-            },
-        ),
-        transform: Transform {
-            translation,
             ..default()
         },
         ..default()
@@ -390,10 +494,10 @@ fn update_statistic_system(
         text.sections[0].value = format!("LINES {:04}", player_data.board.lines);
     }
     if let Ok(mut text) = set.p1().get_single_mut() {
-        text.sections[0].value = format!("SCORE {:06}", player_data.board.score);
+        text.sections[1].value = format!("{:07}", player_data.board.score);
     }
     if let Ok(mut text) = set.p2().get_single_mut() {
-        text.sections[0].value = format!("LEVEL {:02}", player_data.board.level());
+        text.sections[1].value = format!("{:02}", player_data.board.level());
     }
     if let Ok(mut text) = set.p3().get_single_mut() {
         let ticks = duration_to_ticks(player_data.das_timer.duration());

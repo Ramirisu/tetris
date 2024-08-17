@@ -14,7 +14,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1280., 960.),
+                resolution: WindowResolution::new(1280.0, 960.0),
                 ..default()
             }),
             ..default()
@@ -28,6 +28,7 @@ fn main() {
                 },
             },
         })
+        .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
         .add_systems(Startup, setup)
         .add_plugins((
