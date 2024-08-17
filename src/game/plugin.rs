@@ -16,8 +16,12 @@ use super::{
 pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
         .init_state::<PlayerState>()
-        .add_systems(OnEnter(AppState::Game), setup_screen)
-        .add_systems(OnExit(AppState::Game), despawn_all::<GameEntityMarker>)
+        .add_event::<PlaySoundEvent>()
+        .add_systems(OnEnter(AppState::Game), (load_assets, setup_screen))
+        .add_systems(
+            OnExit(AppState::Game),
+            (despawn_all::<GameEntityMarker>, unload_assets),
+        )
         .add_systems(
             Update,
             (
@@ -34,6 +38,7 @@ pub fn setup(app: &mut App) {
                     .run_if(in_state(PlayerState::GameLineClear)),
                 state_game_entry_delay::tick_system.run_if(in_state(PlayerState::GameEntryDelay)),
                 state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
+                play_sound_system,
             )
                 .run_if(in_state(AppState::Game)),
         );
@@ -73,6 +78,17 @@ const BURNED_LINES_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 2.0,
 const TETRIS_COUNT_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 1.0, BOARD_LAYER);
 const TETRIS_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 0.0, BOARD_LAYER);
 const DROUGHT_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, -BLOCK_SIZE * 2.0, BOARD_LAYER);
+
+#[derive(Resource)]
+struct AudioAssets {
+    move_curr_piece: Handle<AudioSource>,
+    rotate_curr_piece: Handle<AudioSource>,
+    lock_curr_piece: Handle<AudioSource>,
+    line_clear: Handle<AudioSource>,
+    tetris_clear: Handle<AudioSource>,
+    level_up: Handle<AudioSource>,
+    game_over: Handle<AudioSource>,
+}
 
 #[derive(Component)]
 struct GameEntityMarker;
@@ -115,6 +131,17 @@ struct CurrPieceEntityMarker;
 
 #[derive(Component)]
 struct NextPieceEntityMarker;
+
+#[derive(Event)]
+enum PlaySoundEvent {
+    MoveCurrPiece,
+    RotateCurrPiece,
+    LockCurrPiece,
+    LineClear,
+    TetrisClear,
+    LevelUp,
+    GameOver,
+}
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
 pub enum PlayerState {
@@ -160,6 +187,22 @@ impl Default for PlayerData {
     fn default() -> Self {
         Self::new(0)
     }
+}
+
+fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(AudioAssets {
+        move_curr_piece: asset_server.load("sound/sfx04.wav"),
+        rotate_curr_piece: asset_server.load("sound/sfx06.wav"),
+        lock_curr_piece: asset_server.load("sound/sfx08.wav"),
+        line_clear: asset_server.load("sound/sfx11.wav"),
+        tetris_clear: asset_server.load("sound/sfx19.wav"),
+        level_up: asset_server.load("sound/sfx07.wav"),
+        game_over: asset_server.load("sound/sfx14.wav"),
+    });
+}
+
+fn unload_assets(mut commands: Commands) {
+    commands.remove_resource::<AudioAssets>();
 }
 
 fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
@@ -537,6 +580,28 @@ fn update_statistic_system(
     }
 }
 
+fn play_sound_system(
+    mut commands: Commands,
+    audio_assets: Res<AudioAssets>,
+    mut event_reader: EventReader<PlaySoundEvent>,
+) {
+    for event in event_reader.read() {
+        let audio = match event {
+            PlaySoundEvent::MoveCurrPiece => audio_assets.move_curr_piece.clone(),
+            PlaySoundEvent::RotateCurrPiece => audio_assets.rotate_curr_piece.clone(),
+            PlaySoundEvent::LockCurrPiece => audio_assets.lock_curr_piece.clone(),
+            PlaySoundEvent::LineClear => audio_assets.line_clear.clone(),
+            PlaySoundEvent::TetrisClear => audio_assets.tetris_clear.clone(),
+            PlaySoundEvent::LevelUp => audio_assets.level_up.clone(),
+            PlaySoundEvent::GameOver => audio_assets.game_over.clone(),
+        };
+        commands.spawn(AudioBundle {
+            source: audio,
+            settings: PlaybackSettings::DESPAWN,
+        });
+    }
+}
+
 mod state_game_running {
     use state_game_line_clear::LineClearPhase;
 
@@ -574,6 +639,7 @@ mod state_game_running {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         mut q_curr: Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+        mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
     ) {
         let mut inputs = GameRunningInputs {
@@ -636,7 +702,8 @@ mod state_game_running {
             };
         }
 
-        if handle_input(inputs, &time, &mut player_data) {
+        let (moved, lr_moved, rotated) = handle_input(inputs, &time, &mut player_data);
+        if moved {
             std::iter::zip(q_curr.iter_mut(), player_data.board.get_curr_piece_blocks()).for_each(
                 |((mut transform, mut sprite), blk)| {
                     update_curr_piece_block(
@@ -648,10 +715,22 @@ mod state_game_running {
                 },
             );
         }
+        if lr_moved {
+            e_play_sound.send(PlaySoundEvent::MoveCurrPiece);
+        }
+        if rotated {
+            e_play_sound.send(PlaySoundEvent::RotateCurrPiece);
+        }
     }
 
-    fn handle_input(inputs: GameRunningInputs, time: &Time, player_data: &mut PlayerData) -> bool {
+    fn handle_input(
+        inputs: GameRunningInputs,
+        time: &Time,
+        player_data: &mut PlayerData,
+    ) -> (bool, bool, bool) {
         let mut moved = false;
+        let mut lr_moved = false;
+        let mut rotated = false;
 
         if player_data.can_press_down {
             if inputs.down.1 {
@@ -674,8 +753,8 @@ mod state_game_running {
             if inputs.left.0 || inputs.right.0 {
                 player_data.das_timer.reset();
                 match (inputs.left.0, inputs.right.0) {
-                    (true, false) => moved |= player_data.board.move_piece_left(),
-                    (false, true) => moved |= player_data.board.move_piece_right(),
+                    (true, false) => lr_moved |= player_data.board.move_piece_left(),
+                    (false, true) => lr_moved |= player_data.board.move_piece_right(),
                     _ => (),
                 }
             } else {
@@ -686,7 +765,7 @@ mod state_game_running {
                         if !player_data.board.is_left_movable() {
                             player_data.das_timer.reset_max();
                         } else if player_data.das_timer.commit() {
-                            moved |= player_data.board.move_piece_left();
+                            lr_moved |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
@@ -694,7 +773,7 @@ mod state_game_running {
                         if !player_data.board.is_right_movable() {
                             player_data.das_timer.reset_max();
                         } else if player_data.das_timer.commit() {
-                            moved |= player_data.board.move_piece_right();
+                            lr_moved |= player_data.board.move_piece_right();
                         }
                     }
                     _ => (),
@@ -703,13 +782,13 @@ mod state_game_running {
         }
 
         if inputs.rotate_clockwise {
-            moved |= player_data.board.rotate_piece_clockwise();
+            rotated |= player_data.board.rotate_piece_clockwise();
         }
         if inputs.rotate_counter_clockwise {
-            moved |= player_data.board.rotate_piece_counter_clockwise();
+            rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
-        moved
+        (moved | lr_moved | rotated, lr_moved, rotated)
     }
 
     pub(super) fn curr_piece_fall_system(
@@ -717,6 +796,7 @@ mod state_game_running {
             Query<(&mut Sprite, &BoardBlockEntityMarker)>,
             Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
         )>,
+        mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
@@ -738,6 +818,7 @@ mod state_game_running {
                     );
                 });
             } else if !player_data.board.is_curr_position_valid() {
+                e_play_sound.send(PlaySoundEvent::GameOver);
                 player_state.set(PlayerState::GameOver);
             } else {
                 player_data.can_press_down = false; // keep pressing down will not affect next piece
@@ -759,6 +840,18 @@ mod state_game_running {
                 });
 
                 let lines = player_data.board.get_line_clear_indexes();
+                match lines.len() {
+                    0 => {
+                        e_play_sound.send(PlaySoundEvent::LockCurrPiece);
+                    }
+                    1 | 2 | 3 => {
+                        e_play_sound.send(PlaySoundEvent::LineClear);
+                    }
+                    4 => {
+                        e_play_sound.send(PlaySoundEvent::TetrisClear);
+                    }
+                    _ => (),
+                }
                 if lines.len() > 0 {
                     player_data.line_clear_tick = LineClearTick::new((Board::BOARD_COLS + 1) / 2);
                     player_data.line_clear_rows = lines;
@@ -812,6 +905,7 @@ mod state_game_line_clear {
     pub(super) fn tick_system(
         time: Res<Time>,
         mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
+        mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
@@ -827,7 +921,9 @@ mod state_game_line_clear {
                     }
                 }
             } else {
-                player_data.board.clear_lines();
+                if player_data.board.clear_lines() {
+                    e_play_sound.send(PlaySoundEvent::LevelUp);
+                }
                 player_data.fall_tick = FallTick::new(player_data.board.level(), false);
                 player_state.set(PlayerState::GameEntryDelay);
             }
