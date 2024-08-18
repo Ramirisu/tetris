@@ -1,13 +1,18 @@
 use std::time::Duration;
 
-const TICKS_PER_MICROSECOND: u64 = 60_098800; // NTSC 60.0988 Hz
+const TICKS_PER_MICROSECOND: u64 = 60_000_000;
 
 pub const fn ticks_to_duration(count: u64) -> Duration {
-    Duration::from_micros(count * 1000_000_000_000 / TICKS_PER_MICROSECOND)
+    Duration::from_micros(count * 1_000_000_000_000 / TICKS_PER_MICROSECOND)
+}
+
+// 1 tick = 1000 subticks
+pub const fn sub_ticks_to_duration(count: u64) -> Duration {
+    Duration::from_micros(count * 1_000_000_000 / TICKS_PER_MICROSECOND)
 }
 
 pub fn duration_to_ticks(duration: Duration) -> u64 {
-    (duration.as_secs_f64() * TICKS_PER_MICROSECOND as f64 / 1000_000.0).round() as u64
+    (duration.as_secs_f64() * TICKS_PER_MICROSECOND as f64 / 1_000_000.0).round() as u64
 }
 
 pub struct FallTick {
@@ -18,7 +23,7 @@ pub struct FallTick {
 impl FallTick {
     pub fn new(level: usize, initial_entry_delay: bool) -> Self {
         Self {
-            threshold: ticks_to_duration(Self::get_trigger_tick(level)),
+            threshold: Self::get_trigger_tick(level),
             initial_entry_delay,
         }
     }
@@ -31,16 +36,24 @@ impl FallTick {
         }
     }
 
-    fn get_trigger_tick(level: usize) -> u64 {
-        const TABLE: [u64; 29] = [
-            48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2,
-        ];
-
-        if level < 29 {
-            TABLE[level]
-        } else {
-            1
+    fn get_trigger_tick(level: usize) -> Duration {
+        match level {
+            0 => ticks_to_duration(48),
+            1 => ticks_to_duration(43),
+            2 => ticks_to_duration(38),
+            3 => ticks_to_duration(33),
+            4 => ticks_to_duration(28),
+            5 => ticks_to_duration(23),
+            6 => ticks_to_duration(18),
+            7 => ticks_to_duration(13),
+            8 => ticks_to_duration(8),
+            9 => ticks_to_duration(6),
+            10..13 => ticks_to_duration(5),
+            13..16 => ticks_to_duration(4),
+            16..19 => ticks_to_duration(3),
+            19..29 => ticks_to_duration(2),
+            29..39 => sub_ticks_to_duration(500), // kill screen
+            _ => sub_ticks_to_duration(250),      // super kill screen
         }
     }
 

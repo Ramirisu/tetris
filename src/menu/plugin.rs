@@ -89,22 +89,37 @@ fn setup_screen(mut commands: Commands) {
                             ..default()
                         })
                         .with_children(|parent| {
-                            for level in 0..30 {
-                                parent
-                                    .spawn((
-                                        ButtonBundle {
-                                            style: button_style.clone(),
-                                            background_color: BLACK.into(),
-                                            ..default()
-                                        },
-                                        MenuButtonAction::Level(level),
-                                    ))
-                                    .with_children(|parent| {
-                                        parent.spawn(TextBundle::from_section(
-                                            format!("{}", level),
-                                            button_text_style.clone(),
-                                        ));
-                                    });
+                            let mut levels: Vec<Option<usize>> = (0..20)
+                                .map(|level| Some(level))
+                                .collect::<Vec<Option<usize>>>();
+                            levels.append(&mut vec![None, None, None, None, Some(29)]);
+                            levels.append(&mut vec![None, None, None, None, Some(39)]);
+
+                            for level in levels {
+                                if let Some(level) = level {
+                                    parent
+                                        .spawn((
+                                            ButtonBundle {
+                                                style: button_style.clone(),
+                                                background_color: BLACK.into(),
+                                                ..default()
+                                            },
+                                            MenuButtonAction::Level(level),
+                                        ))
+                                        .with_children(|parent| {
+                                            parent.spawn(TextBundle::from_section(
+                                                format!("{}", level),
+                                                button_text_style.clone(),
+                                            ));
+                                        });
+                                } else {
+                                    // placeholder
+                                    parent.spawn((ButtonBundle {
+                                        style: button_style.clone(),
+                                        background_color: Srgba::new(0.0, 0.0, 0.0, 0.0).into(),
+                                        ..default()
+                                    },));
+                                }
                             }
                         });
                 });
