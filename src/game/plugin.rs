@@ -37,6 +37,7 @@ pub fn setup(app: &mut App) {
                     .chain()
                     .run_if(in_state(PlayerState::GameLineClear)),
                 state_game_entry_delay::tick_system.run_if(in_state(PlayerState::GameEntryDelay)),
+                state_game_pause::handle_input_system.run_if(in_state(PlayerState::GamePause)),
                 state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
                 play_sound_system,
             )
@@ -48,6 +49,7 @@ const BOARD_BACKGROUND_LAYER: f32 = 1.0;
 const BOARD_LAYER: f32 = 2.0;
 const BLOCK_LAYER: f32 = 3.0;
 const CURR_PIECE_LAYER: f32 = 4.0;
+const GAME_PAUSE_SCREEN_LAYER: f32 = 5.0;
 
 const BLOCK_SIZE: f32 = 40.0;
 const BLOCK_PADDING: f32 = BLOCK_SIZE / 20.0;
@@ -60,6 +62,7 @@ const BOARD_BACKGROUND_SIZE: Vec2 = Vec2::new(
     BOARD_WIDTH + BLOCK_SIZE / 10.0,
     BOARD_HEIGHT + BLOCK_SIZE / 10.0,
 );
+const GAME_PAUSE_SCREEN_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, GAME_PAUSE_SCREEN_LAYER);
 
 const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, BOARD_HEIGHT / 2.0 + BLOCK_SIZE, BOARD_LAYER);
 const SCORE_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, BOARD_HEIGHT / 3.0, BOARD_LAYER);
@@ -101,6 +104,9 @@ impl Into<(usize, usize)> for &BoardBlockEntityMarker {
         (self.0, self.1)
     }
 }
+
+#[derive(Component)]
+struct GamePauseScreenEntityMarker;
 
 #[derive(Component)]
 struct LinesEntityMarker;
@@ -149,6 +155,7 @@ pub enum PlayerState {
     GameRunning,
     GameLineClear,
     GameEntryDelay,
+    GamePause,
     GameOver,
 }
 
@@ -207,6 +214,7 @@ fn unload_assets(mut commands: Commands) {
 
 fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
     spawn_board(commands.reborrow(), &player_data);
+    spawn_game_pause_screen(commands.reborrow());
     spawn_statistic(commands.reborrow());
     spawn_curr_piece(commands.reborrow(), &player_data);
     spawn_next_piece(commands.reborrow(), &player_data);
@@ -269,6 +277,44 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                         .insert(BoardBlockEntityMarker(x, y));
                 }
             })
+        });
+}
+
+fn spawn_game_pause_screen(mut commands: Commands) {
+    commands
+        .spawn((
+            SpriteBundle {
+                transform: Transform {
+                    translation: GAME_PAUSE_SCREEN_TRANSLATION,
+                    ..default()
+                },
+                sprite: Sprite {
+                    color: BLACK.into(),
+                    custom_size: Some(Vec2::new(BOARD_WIDTH, BOARD_HEIGHT)),
+                    ..default()
+                },
+                visibility: Visibility::Hidden,
+                ..default()
+            },
+            GameEntityMarker,
+            GamePauseScreenEntityMarker,
+        ))
+        .with_children(|parent| {
+            parent.spawn(Text2dBundle {
+                text: Text::from_section(
+                    "PRESS START\nTO CONTINUE",
+                    TextStyle {
+                        font_size: BLOCK_SIZE,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                ),
+                transform: Transform {
+                    translation: GAME_PAUSE_SCREEN_TRANSLATION,
+                    ..default()
+                },
+                ..default()
+            });
         });
 }
 
@@ -618,6 +664,7 @@ mod state_game_running {
         down: (bool, bool),  // (just_pressed, pressed)
         rotate_clockwise: bool,
         rotate_counter_clockwise: bool,
+        start: bool,
     }
 
     impl std::ops::BitOrAssign for GameRunningInputs {
@@ -630,6 +677,7 @@ mod state_game_running {
             self.down.1 |= rhs.down.1;
             self.rotate_clockwise |= rhs.rotate_clockwise;
             self.rotate_counter_clockwise |= rhs.rotate_counter_clockwise;
+            self.start |= rhs.start;
         }
     }
 
@@ -639,8 +687,10 @@ mod state_game_running {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         mut q_curr: Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+        mut q_game_pause_screen: Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
+        mut player_state: ResMut<NextState<PlayerState>>,
     ) {
         let mut inputs = GameRunningInputs {
             left: (
@@ -657,6 +707,7 @@ mod state_game_running {
             ),
             rotate_clockwise: keys.just_pressed(KeyCode::Period),
             rotate_counter_clockwise: keys.just_pressed(KeyCode::Comma),
+            start: keys.just_pressed(KeyCode::Enter),
         };
 
         if let Some(gamepad) = controller.gamepad {
@@ -699,7 +750,17 @@ mod state_game_running {
                     gamepad,
                     button_type: GamepadButtonType::West,
                 }),
+                start: buttons.just_pressed(GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::Start,
+                }),
             };
+        }
+
+        if inputs.start {
+            *q_game_pause_screen.single_mut() = Visibility::Inherited;
+            player_state.set(PlayerState::GamePause);
+            return;
         }
 
         let (moved, lr_moved, rotated) = handle_input(inputs, &time, &mut player_data);
@@ -978,6 +1039,32 @@ mod state_game_entry_delay {
                 );
             });
 
+            player_state.set(PlayerState::GameRunning);
+        }
+    }
+}
+
+mod state_game_pause {
+    use super::*;
+
+    pub(super) fn handle_input_system(
+        keys: Res<ButtonInput<KeyCode>>,
+        buttons: Res<ButtonInput<GamepadButton>>,
+        controller: Res<Controller>,
+        mut query: Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
+        mut player_state: ResMut<NextState<PlayerState>>,
+    ) {
+        let clicked = if let Some(gamepad) = controller.gamepad {
+            buttons.just_pressed(GamepadButton {
+                gamepad,
+                button_type: GamepadButtonType::Start,
+            })
+        } else {
+            false
+        };
+
+        if clicked || keys.just_pressed(KeyCode::Enter) {
+            *query.single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
         }
     }
