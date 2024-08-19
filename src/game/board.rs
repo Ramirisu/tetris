@@ -40,6 +40,10 @@ impl Board {
         }
     }
 
+    pub fn start_level(&self) -> usize {
+        self.start_level
+    }
+
     pub fn level(&self) -> usize {
         level::level(self.start_level, self.lines)
     }

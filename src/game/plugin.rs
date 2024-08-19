@@ -391,6 +391,15 @@ fn spawn_statistic(mut commands: Commands) {
                     },
                     ..default()
                 },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: BLOCK_SIZE / 1.5,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
             ]),
             transform: Transform {
                 translation: LEVEL_TRANSLATION,
@@ -587,6 +596,7 @@ fn update_statistic_system(
     }
     if let Ok(mut text) = set.p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());
+        text.sections[2].value = format!(" {:02}", player_data.board.start_level());
     }
     if let Ok(mut text) = set.p3().get_single_mut() {
         let ticks = duration_to_ticks(player_data.das_timer.duration());
