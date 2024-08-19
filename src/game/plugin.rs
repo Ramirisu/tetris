@@ -254,7 +254,7 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
 
     player_data
         .board
-        .blocks
+        .blocks()
         .iter()
         .enumerate()
         .for_each(|(y, blks)| {
@@ -580,10 +580,10 @@ fn update_statistic_system(
     player_data: ResMut<PlayerData>,
 ) {
     if let Ok(mut text) = set.p0().get_single_mut() {
-        text.sections[0].value = format!("LINES {:04}", player_data.board.lines);
+        text.sections[0].value = format!("LINES {:04}", player_data.board.lines());
     }
     if let Ok(mut text) = set.p1().get_single_mut() {
-        text.sections[1].value = format!("{:07}", player_data.board.score);
+        text.sections[1].value = format!("{:07}", player_data.board.score());
     }
     if let Ok(mut text) = set.p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());
@@ -601,7 +601,7 @@ fn update_statistic_system(
         text.sections[1].value = format!("{:4}", player_data.board.burned_lines());
     }
     if let Ok(mut text) = set.p5().get_single_mut() {
-        text.sections[1].value = format!("{:4}", player_data.board.tetris_count);
+        text.sections[1].value = format!("{:4}", player_data.board.tetris_count());
     }
     if let Ok(mut text) = set.p6().get_single_mut() {
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
@@ -615,10 +615,11 @@ fn update_statistic_system(
         }
     }
     if let Ok(mut text) = set.p7().get_single_mut() {
-        text.sections[1].value = format!("{:4}", player_data.board.drought);
-        if player_data.board.drought >= 14 {
+        let drought = player_data.board.drought();
+        text.sections[1].value = format!("{:4}", drought);
+        if drought >= 14 {
             text.sections[1].style.color = RED.into();
-        } else if player_data.board.drought >= 7 {
+        } else if drought >= 7 {
             text.sections[1].style.color = YELLOW.into();
         } else {
             text.sections[1].style.color = GREEN.into();
@@ -897,7 +898,7 @@ mod state_game_running {
                 });
 
                 query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                    update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks);
+                    update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks());
                 });
 
                 let lines = player_data.board.get_line_clear_indexes();
@@ -1011,7 +1012,7 @@ mod state_game_entry_delay {
             player_data.board.switch_to_next_piece();
 
             query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks);
+                update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks());
             });
 
             std::iter::zip(

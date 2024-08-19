@@ -7,15 +7,15 @@ use super::{
 pub type Block2dArray = Vec<Vec<Option<PieceShape>>>;
 
 pub struct Board {
-    pub blocks: Block2dArray,
+    blocks: Block2dArray,
     curr_piece: Piece,
     curr_translation: (i32, i32),
     next_piece: Piece,
     start_level: usize,
-    pub lines: usize,
-    pub score: usize,
-    pub tetris_count: usize,
-    pub drought: usize,
+    lines: usize,
+    score: usize,
+    tetris_count: usize,
+    drought: usize,
 }
 
 impl Board {
@@ -44,8 +44,20 @@ impl Board {
         level::level(self.start_level, self.lines)
     }
 
+    pub fn lines(&self) -> usize {
+        self.lines
+    }
+
+    pub fn score(&self) -> usize {
+        self.score
+    }
+
     pub fn burned_lines(&self) -> usize {
         self.lines - self.tetris_count * 4
+    }
+
+    pub fn tetris_count(&self) -> usize {
+        self.tetris_count
     }
 
     pub fn tetris_rate(&self) -> f32 {
@@ -54,6 +66,14 @@ impl Board {
         } else {
             self.tetris_count as f32 * 4.0 / self.lines as f32
         }
+    }
+
+    pub fn drought(&self) -> usize {
+        self.drought
+    }
+
+    pub fn blocks(&self) -> &Block2dArray {
+        &self.blocks
     }
 
     pub fn get_line_clear_indexes(&self) -> Vec<usize> {
