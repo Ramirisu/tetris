@@ -9,6 +9,7 @@ use super::{
     board::{Block2dArray, Board},
     palette::get_color,
     piece::Block,
+    spawn::SpawnParam,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
 };
@@ -44,44 +45,6 @@ pub fn setup(app: &mut App) {
                 .run_if(in_state(AppState::Game)),
         );
 }
-
-const BOARD_BACKGROUND_LAYER: f32 = 1.0;
-const BOARD_LAYER: f32 = 2.0;
-const BLOCK_LAYER: f32 = 3.0;
-const CURR_PIECE_LAYER: f32 = 4.0;
-const GAME_PAUSE_SCREEN_LAYER: f32 = 5.0;
-
-const BLOCK_SIZE: f32 = 40.0;
-const BLOCK_PADDING: f32 = BLOCK_SIZE / 20.0;
-
-const BOARD_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, BOARD_LAYER);
-const BOARD_WIDTH: f32 = BLOCK_SIZE * 10.0;
-const BOARD_HEIGHT: f32 = BLOCK_SIZE * 20.0;
-const BOARD_BACKGROUND_TRANSLATION: Vec3 =
-    Vec3::new(0.0, -BLOCK_SIZE / 20.0, BOARD_BACKGROUND_LAYER);
-const BOARD_BACKGROUND_SIZE: Vec2 = Vec2::new(
-    BOARD_WIDTH + BLOCK_SIZE / 10.0,
-    BOARD_HEIGHT + BLOCK_SIZE / 20.0,
-);
-const GAME_PAUSE_SCREEN_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, GAME_PAUSE_SCREEN_LAYER);
-
-const LINES_TRANSLATION: Vec3 = Vec3::new(0.0, BOARD_HEIGHT / 2.0 + BLOCK_SIZE * 2.0, BOARD_LAYER);
-const SCORE_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, BOARD_HEIGHT / 3.0, BOARD_LAYER);
-const LEVEL_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, -BOARD_HEIGHT / 3.0, BOARD_LAYER);
-const NEXT_PIECE_SLOT_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, 0.0, BOARD_LAYER);
-const NEXT_PIECE_SLOT_SIZE: Vec2 = Vec2::new(BLOCK_SIZE * 6.0, BLOCK_SIZE * 6.0);
-const NEXT_PIECE_SLOT_BACKGROUND_TRANSLATION: Vec3 =
-    Vec3::new(BOARD_WIDTH, 0.0, BOARD_BACKGROUND_LAYER);
-const NEXT_PIECE_SLOT_BACKGROUND_SIZE: Vec2 = Vec2::new(
-    BLOCK_SIZE * 6.0 + BLOCK_SIZE / 10.0,
-    BLOCK_SIZE * 6.0 + BLOCK_SIZE / 10.0,
-);
-const NEXT_PIECE_TRANSLATION: Vec3 = Vec3::new(BOARD_WIDTH, 0.0, CURR_PIECE_LAYER);
-const DAS_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 5.0, BOARD_LAYER);
-const BURNED_LINES_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 2.0, BOARD_LAYER);
-const TETRIS_COUNT_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 1.0, BOARD_LAYER);
-const TETRIS_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, BLOCK_SIZE * 0.0, BOARD_LAYER);
-const DROUGHT_RATE_TRANSLATION: Vec3 = Vec3::new(-BOARD_WIDTH, -BLOCK_SIZE * 2.0, BOARD_LAYER);
 
 #[derive(Resource)]
 struct AudioAssets {
@@ -162,6 +125,7 @@ pub enum PlayerState {
 
 #[derive(Resource)]
 pub struct PlayerData {
+    sparam: SpawnParam,
     board: Board,
     game_timer: GameTimer,
     can_press_down: bool,
@@ -177,6 +141,7 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(start_level: usize) -> Self {
         Self {
+            sparam: SpawnParam::default(),
             board: Board::new(start_level),
             game_timer: GameTimer::default(),
             can_press_down: false,
@@ -215,8 +180,8 @@ fn unload_assets(mut commands: Commands) {
 
 fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
     spawn_board(commands.reborrow(), &player_data);
-    spawn_game_pause_screen(commands.reborrow());
-    spawn_statistic(commands.reborrow());
+    spawn_game_pause_screen(commands.reborrow(), &player_data);
+    spawn_statistic(commands.reborrow(), &player_data);
     spawn_curr_piece(commands.reborrow(), &player_data);
     spawn_next_piece(commands.reborrow(), &player_data);
 }
@@ -225,12 +190,12 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: BOARD_BACKGROUND_TRANSLATION,
+                translation: player_data.sparam.board_background_translation(),
                 ..default()
             },
             sprite: Sprite {
                 color: RED.into(),
-                custom_size: Some(BOARD_BACKGROUND_SIZE),
+                custom_size: Some(player_data.sparam.board_background_size()),
                 ..default()
             },
             ..default()
@@ -240,12 +205,12 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: BOARD_TRANSLATION,
+                translation: player_data.sparam.board_translation(),
                 ..default()
             },
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(Vec2::new(BOARD_WIDTH, BOARD_HEIGHT)),
+                custom_size: Some(player_data.sparam.board_size()),
                 ..default()
             },
             ..default()
@@ -263,7 +228,13 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                 if let Some(shape) = blk {
                     commands
                         .spawn(new_block(
-                            board_index_to_translation(x as i32, y as i32, BLOCK_LAYER),
+                            board_index_to_translation(
+                                x as i32,
+                                y as i32,
+                                player_data.sparam.block_size(),
+                                player_data.sparam.block_translation_offset(),
+                            ),
+                            player_data.sparam.visible_block_size(),
                             get_color(*shape),
                         ))
                         .insert(GameEntityMarker)
@@ -271,7 +242,13 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                 } else {
                     commands
                         .spawn(new_block(
-                            board_index_to_translation(x as i32, y as i32, BLOCK_LAYER),
+                            board_index_to_translation(
+                                x as i32,
+                                y as i32,
+                                player_data.sparam.block_size(),
+                                player_data.sparam.block_translation_offset(),
+                            ),
+                            player_data.sparam.visible_block_size(),
                             BLACK.into(),
                         ))
                         .insert(GameEntityMarker)
@@ -281,17 +258,17 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
         });
 }
 
-fn spawn_game_pause_screen(mut commands: Commands) {
+fn spawn_game_pause_screen(mut commands: Commands, player_data: &PlayerData) {
     commands
         .spawn((
             SpriteBundle {
                 transform: Transform {
-                    translation: GAME_PAUSE_SCREEN_TRANSLATION,
+                    translation: player_data.sparam.game_pause_screen_translation(),
                     ..default()
                 },
                 sprite: Sprite {
                     color: BLACK.into(),
-                    custom_size: Some(Vec2::new(BOARD_WIDTH, BOARD_HEIGHT)),
+                    custom_size: Some(player_data.sparam.board_size()),
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -305,13 +282,13 @@ fn spawn_game_pause_screen(mut commands: Commands) {
                 text: Text::from_section(
                     "PRESS START\nTO CONTINUE",
                     TextStyle {
-                        font_size: BLOCK_SIZE,
+                        font_size: player_data.sparam.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                 ),
                 transform: Transform {
-                    translation: GAME_PAUSE_SCREEN_TRANSLATION,
+                    translation: player_data.sparam.game_pause_screen_translation(),
                     ..default()
                 },
                 ..default()
@@ -319,19 +296,19 @@ fn spawn_game_pause_screen(mut commands: Commands) {
         });
 }
 
-fn spawn_statistic(mut commands: Commands) {
+fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         Text2dBundle {
             text: Text::from_section(
                 "",
                 TextStyle {
-                    font_size: BLOCK_SIZE,
+                    font_size: player_data.sparam.unit(),
                     color: WHITE.into(),
                     ..default()
                 },
             ),
             transform: Transform {
-                translation: LINES_TRANSLATION,
+                translation: player_data.sparam.lines_translation(),
                 ..default()
             },
             ..default()
@@ -345,7 +322,7 @@ fn spawn_statistic(mut commands: Commands) {
                 TextSection {
                     value: "SCORE\n".into(),
                     style: TextStyle {
-                        font_size: BLOCK_SIZE,
+                        font_size: player_data.sparam.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
@@ -354,7 +331,7 @@ fn spawn_statistic(mut commands: Commands) {
                 TextSection {
                     value: "".into(),
                     style: TextStyle {
-                        font_size: BLOCK_SIZE * 2.0,
+                        font_size: player_data.sparam.unit() * 2.0,
                         color: WHITE.into(),
                         ..default()
                     },
@@ -363,7 +340,7 @@ fn spawn_statistic(mut commands: Commands) {
             ])
             .with_justify(JustifyText::Center),
             transform: Transform {
-                translation: SCORE_TRANSLATION,
+                translation: player_data.sparam.score_translation(),
                 ..default()
             },
             ..default()
@@ -377,7 +354,7 @@ fn spawn_statistic(mut commands: Commands) {
                 TextSection {
                     value: "LEVEL ".into(),
                     style: TextStyle {
-                        font_size: BLOCK_SIZE,
+                        font_size: player_data.sparam.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
@@ -386,7 +363,7 @@ fn spawn_statistic(mut commands: Commands) {
                 TextSection {
                     value: "".into(),
                     style: TextStyle {
-                        font_size: BLOCK_SIZE * 2.0,
+                        font_size: player_data.sparam.unit() * 2.0,
                         color: WHITE.into(),
                         ..default()
                     },
@@ -395,7 +372,7 @@ fn spawn_statistic(mut commands: Commands) {
                 TextSection {
                     value: "".into(),
                     style: TextStyle {
-                        font_size: BLOCK_SIZE / 1.5,
+                        font_size: player_data.sparam.unit() / 1.5,
                         color: WHITE.into(),
                         ..default()
                     },
@@ -403,7 +380,7 @@ fn spawn_statistic(mut commands: Commands) {
                 },
             ]),
             transform: Transform {
-                translation: LEVEL_TRANSLATION,
+                translation: player_data.sparam.level_translation(),
                 ..default()
             },
             ..default()
@@ -412,27 +389,157 @@ fn spawn_statistic(mut commands: Commands) {
         LevelEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["DAS ".into(), "".into()], DAS_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "DAS ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.das_translation(),
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         DASEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["BRN ".into(), "".into()], BURNED_LINES_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "BRN ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.burned_translation(),
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         BurnedLinesEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["TRT ".into(), "".into()], TETRIS_COUNT_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "TRT ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.tetris_count_translation(),
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         TetrisCountEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["TRT ".into(), "".into()], TETRIS_RATE_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "TRT ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.tetris_rate_translation(),
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         TetrisRateEntityMarker,
     ));
     commands.spawn((
-        new_texts(vec!["DRT ".into(), "".into()], DROUGHT_RATE_TRANSLATION),
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "DRT ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.drought_translation(),
+                ..default()
+            },
+            ..default()
+        },
         GameEntityMarker,
         DroughtEntityMarker,
     ));
@@ -446,7 +553,13 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
         .for_each(|blk| {
             commands
                 .spawn(new_block(
-                    board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER),
+                    board_index_to_translation(
+                        blk.0,
+                        blk.1,
+                        player_data.sparam.block_size(),
+                        player_data.sparam.curr_piece_translation(),
+                    ),
+                    player_data.sparam.visible_block_size(),
                     get_color(player_data.board.get_curr_piece().shape()),
                 ))
                 .insert(GameEntityMarker)
@@ -458,12 +571,12 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: NEXT_PIECE_SLOT_BACKGROUND_TRANSLATION,
+                translation: player_data.sparam.next_piece_slot_background_translation(),
                 ..default()
             },
             sprite: Sprite {
                 color: RED.into(),
-                custom_size: Some(NEXT_PIECE_SLOT_BACKGROUND_SIZE),
+                custom_size: Some(player_data.sparam.next_piece_slot_background_size()),
                 ..default()
             },
             ..default()
@@ -473,12 +586,12 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
-                translation: NEXT_PIECE_SLOT_TRANSLATION,
+                translation: player_data.sparam.next_piece_slot_translation(),
                 ..default()
             },
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(NEXT_PIECE_SLOT_SIZE),
+                custom_size: Some(player_data.sparam.next_piece_slot_size()),
                 ..default()
             },
             ..default()
@@ -492,7 +605,13 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
         .for_each(|blk| {
             commands
                 .spawn(new_block(
-                    next_piece_index_to_translation(blk.0, blk.1),
+                    next_piece_index_to_translation(
+                        blk.0,
+                        blk.1,
+                        player_data.sparam.block_size(),
+                        player_data.sparam.next_piece_translation(),
+                    ),
+                    player_data.sparam.visible_block_size(),
                     get_color(player_data.board.get_next_piece().shape()),
                 ))
                 .insert(GameEntityMarker)
@@ -500,19 +619,15 @@ fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
         });
 }
 
-fn board_index_to_translation(x: i32, y: i32, z: f32) -> Vec3 {
-    Vec3::new(
-        (x as f32 + 0.5) * BLOCK_SIZE - BOARD_WIDTH / 2.0,
-        (y as f32 + 0.5) * BLOCK_SIZE - BOARD_HEIGHT / 2.0,
-        z,
-    )
+fn board_index_to_translation(x: i32, y: i32, size: Vec2, offset: Vec3) -> Vec3 {
+    Vec3::new((x as f32 + 0.5) * size.x, (y as f32 + 0.5) * size.y, 0.0) + offset
 }
 
-fn next_piece_index_to_translation(x: i32, y: i32) -> Vec3 {
-    Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 0.0) + NEXT_PIECE_TRANSLATION
+fn next_piece_index_to_translation(x: i32, y: i32, size: Vec2, origin: Vec3) -> Vec3 {
+    Vec3::new(x as f32 * size.x, y as f32 * size.y, 0.0) + origin
 }
 
-fn new_block(translation: Vec3, color: Color) -> SpriteBundle {
+fn new_block(translation: Vec3, size: Vec2, color: Color) -> SpriteBundle {
     SpriteBundle {
         transform: Transform {
             translation,
@@ -520,28 +635,7 @@ fn new_block(translation: Vec3, color: Color) -> SpriteBundle {
         },
         sprite: Sprite {
             color,
-            custom_size: Some(Vec2::new(
-                BLOCK_SIZE - BLOCK_PADDING,
-                BLOCK_SIZE - BLOCK_PADDING,
-            )),
-            ..default()
-        },
-        ..default()
-    }
-}
-
-fn new_texts(texts: impl IntoIterator<Item = String>, translation: Vec3) -> Text2dBundle {
-    Text2dBundle {
-        text: Text::from_sections(texts.into_iter().map(|text| TextSection {
-            value: text,
-            style: TextStyle {
-                font_size: BLOCK_SIZE,
-                color: WHITE.into(),
-                ..default()
-            },
-        })),
-        transform: Transform {
-            translation,
+            custom_size: Some(size),
             ..default()
         },
         ..default()
@@ -561,8 +655,10 @@ fn update_curr_piece_block(
     sprite: &mut Sprite,
     blk: Block,
     color: Color,
+    size: Vec2,
+    offset: Vec3,
 ) {
-    transform.translation = board_index_to_translation(blk.0, blk.1, CURR_PIECE_LAYER);
+    transform.translation = board_index_to_translation(blk.0, blk.1, size, offset);
     sprite.color = color;
 }
 
@@ -571,8 +667,10 @@ fn update_next_piece_block(
     sprite: &mut Sprite,
     blk: Block,
     color: Color,
+    size: Vec2,
+    origin: Vec3,
 ) {
-    transform.translation = next_piece_index_to_translation(blk.0, blk.1);
+    transform.translation = next_piece_index_to_translation(blk.0, blk.1, size, origin);
     sprite.color = color;
 }
 
@@ -784,6 +882,8 @@ mod state_game_running {
                         &mut sprite,
                         blk,
                         get_color(player_data.board.get_curr_piece().shape()),
+                        player_data.sparam.block_size(),
+                        player_data.sparam.curr_piece_translation(),
                     );
                 },
             );
@@ -888,6 +988,8 @@ mod state_game_running {
                         &mut sprite,
                         blk,
                         get_color(player_data.board.get_curr_piece().shape()),
+                        player_data.sparam.block_size(),
+                        player_data.sparam.curr_piece_translation(),
                     );
                 });
             } else if !player_data.board.is_curr_position_valid() {
@@ -905,7 +1007,8 @@ mod state_game_running {
 
                 player_data.board.lock_curr_piece();
                 query.p1().iter_mut().for_each(|(mut transform, _)| {
-                    transform.translation.z = BOARD_LAYER - 1.0; // make invisible
+                    // make invisible
+                    transform.translation.z = player_data.sparam.board_translation().z - 1.0;
                 });
 
                 query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
@@ -1036,6 +1139,8 @@ mod state_game_entry_delay {
                     &mut sprite,
                     blk,
                     get_color(player_data.board.get_curr_piece().shape()),
+                    player_data.sparam.block_size(),
+                    player_data.sparam.curr_piece_translation(),
                 );
             });
             std::iter::zip(
@@ -1048,6 +1153,8 @@ mod state_game_entry_delay {
                     &mut sprite,
                     blk,
                     get_color(player_data.board.get_next_piece().shape()),
+                    player_data.sparam.block_size(),
+                    player_data.sparam.next_piece_translation(),
                 );
             });
 
