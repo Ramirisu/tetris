@@ -14,7 +14,7 @@ pub struct SpawnParam {
 
 impl SpawnParam {
     pub fn new() -> Self {
-        Self { unit: 38.0 }
+        Self { unit: 40.0 }
     }
 
     pub fn unit(&self) -> f32 {
@@ -70,11 +70,7 @@ impl SpawnParam {
     }
 
     pub fn lines_translation(&self) -> Vec3 {
-        Vec3::new(
-            0.0,
-            self.board_height() / 2.0 + self.unit * 2.0,
-            BOARD_LAYER,
-        )
+        Vec3::new(-self.board_width(), self.board_height() / 3.0, BOARD_LAYER)
     }
 
     pub fn score_translation(&self) -> Vec3 {
@@ -105,10 +101,6 @@ impl SpawnParam {
         Vec3::new(self.board_width(), 0.0, CURR_PIECE_LAYER)
     }
 
-    pub fn das_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 5.0, BOARD_LAYER)
-    }
-
     pub fn burned_translation(&self) -> Vec3 {
         Vec3::new(-self.board_width(), self.unit * 2.0, BOARD_LAYER)
     }
@@ -123,6 +115,10 @@ impl SpawnParam {
 
     pub fn drought_translation(&self) -> Vec3 {
         Vec3::new(-self.board_width(), -self.unit * 2.0, BOARD_LAYER)
+    }
+
+    pub fn das_translation(&self) -> Vec3 {
+        Vec3::new(-self.board_width(), -self.unit * 4.0, BOARD_LAYER)
     }
 }
 

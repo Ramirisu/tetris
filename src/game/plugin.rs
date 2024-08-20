@@ -299,14 +299,27 @@ fn spawn_game_pause_screen(mut commands: Commands, player_data: &PlayerData) {
 fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         Text2dBundle {
-            text: Text::from_section(
-                "",
-                TextStyle {
-                    font_size: player_data.sparam.unit(),
-                    color: WHITE.into(),
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "LINES\n".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
                     ..default()
                 },
-            ),
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit() * 2.0,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ])
+            .with_justify(JustifyText::Center),
             transform: Transform {
                 translation: player_data.sparam.lines_translation(),
                 ..default()
@@ -387,37 +400,6 @@ fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
         },
         GameEntityMarker,
         LevelEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections(vec![
-                TextSection {
-                    value: "DAS ".into(),
-                    style: TextStyle {
-                        font_size: player_data.sparam.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection {
-                    value: "".into(),
-                    style: TextStyle {
-                        font_size: player_data.sparam.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-            ]),
-            transform: Transform {
-                translation: player_data.sparam.das_translation(),
-                ..default()
-            },
-            ..default()
-        },
-        GameEntityMarker,
-        DASEntityMarker,
     ));
     commands.spawn((
         Text2dBundle {
@@ -542,6 +524,37 @@ fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
         },
         GameEntityMarker,
         DroughtEntityMarker,
+    ));
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "DAS ".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection {
+                    value: "".into(),
+                    style: TextStyle {
+                        font_size: player_data.sparam.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ]),
+            transform: Transform {
+                translation: player_data.sparam.das_translation(),
+                ..default()
+            },
+            ..default()
+        },
+        GameEntityMarker,
+        DASEntityMarker,
     ));
 }
 
@@ -679,16 +692,16 @@ fn update_statistic_system(
         Query<&mut Text, With<LinesEntityMarker>>,
         Query<&mut Text, With<ScoreEntityMarker>>,
         Query<&mut Text, With<LevelEntityMarker>>,
-        Query<&mut Text, With<DASEntityMarker>>,
         Query<&mut Text, With<BurnedLinesEntityMarker>>,
         Query<&mut Text, With<TetrisCountEntityMarker>>,
         Query<&mut Text, With<TetrisRateEntityMarker>>,
         Query<&mut Text, With<DroughtEntityMarker>>,
+        Query<&mut Text, With<DASEntityMarker>>,
     )>,
     player_data: ResMut<PlayerData>,
 ) {
     if let Ok(mut text) = set.p0().get_single_mut() {
-        text.sections[0].value = format!("LINES {:04}", player_data.board.lines());
+        text.sections[1].value = format!("{:04}", player_data.board.lines());
     }
     if let Ok(mut text) = set.p1().get_single_mut() {
         text.sections[1].value = format!("{:07}", player_data.board.score());
@@ -698,21 +711,12 @@ fn update_statistic_system(
         text.sections[2].value = format!(" {:02}", player_data.board.start_level());
     }
     if let Ok(mut text) = set.p3().get_single_mut() {
-        let ticks = duration_to_ticks(player_data.das_timer.duration());
-        text.sections[1].value = format!("{:02}", ticks);
-        if ticks >= 10 {
-            text.sections[1].style.color = GREEN.into();
-        } else {
-            text.sections[1].style.color = RED.into();
-        }
-    }
-    if let Ok(mut text) = set.p4().get_single_mut() {
         text.sections[1].value = format!("{:4}", player_data.board.burned_lines());
     }
-    if let Ok(mut text) = set.p5().get_single_mut() {
+    if let Ok(mut text) = set.p4().get_single_mut() {
         text.sections[1].value = format!("{:4}", player_data.board.tetris_count());
     }
-    if let Ok(mut text) = set.p6().get_single_mut() {
+    if let Ok(mut text) = set.p5().get_single_mut() {
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
         text.sections[1].value = format!("{:3}%", rate);
         if rate >= 80 {
@@ -723,7 +727,7 @@ fn update_statistic_system(
             text.sections[1].style.color = RED.into();
         }
     }
-    if let Ok(mut text) = set.p7().get_single_mut() {
+    if let Ok(mut text) = set.p6().get_single_mut() {
         let drought = player_data.board.drought();
         text.sections[1].value = format!("{:4}", drought);
         if drought >= 14 {
@@ -732,6 +736,15 @@ fn update_statistic_system(
             text.sections[1].style.color = YELLOW.into();
         } else {
             text.sections[1].style.color = GREEN.into();
+        }
+    }
+    if let Ok(mut text) = set.p7().get_single_mut() {
+        let ticks = duration_to_ticks(player_data.das_timer.duration());
+        text.sections[1].value = format!("{:02}", ticks);
+        if ticks >= 10 {
+            text.sections[1].style.color = GREEN.into();
+        } else {
+            text.sections[1].style.color = RED.into();
         }
     }
 }
