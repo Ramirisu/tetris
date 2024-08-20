@@ -179,14 +179,6 @@ fn unload_assets(mut commands: Commands) {
 }
 
 fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
-    spawn_board(commands.reborrow(), &player_data);
-    spawn_game_pause_screen(commands.reborrow(), &player_data);
-    spawn_statistic(commands.reborrow(), &player_data);
-    spawn_curr_piece(commands.reborrow(), &player_data);
-    spawn_next_piece(commands.reborrow(), &player_data);
-}
-
-fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -256,9 +248,7 @@ fn spawn_board(mut commands: Commands, player_data: &PlayerData) {
                 }
             })
         });
-}
 
-fn spawn_game_pause_screen(mut commands: Commands, player_data: &PlayerData) {
     commands
         .spawn((
             SpriteBundle {
@@ -294,9 +284,7 @@ fn spawn_game_pause_screen(mut commands: Commands, player_data: &PlayerData) {
                 ..default()
             });
         });
-}
 
-fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         Text2dBundle {
             text: Text::from_sections(vec![
@@ -556,9 +544,7 @@ fn spawn_statistic(mut commands: Commands, player_data: &PlayerData) {
         GameEntityMarker,
         DASEntityMarker,
     ));
-}
 
-fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
     player_data
         .board
         .get_curr_piece_blocks()
@@ -578,9 +564,7 @@ fn spawn_curr_piece(mut commands: Commands, player_data: &PlayerData) {
                 .insert(GameEntityMarker)
                 .insert(CurrPieceEntityMarker);
         });
-}
 
-fn spawn_next_piece(mut commands: Commands, player_data: &PlayerData) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -688,7 +672,7 @@ fn update_next_piece_block(
 }
 
 fn update_statistic_system(
-    mut set: ParamSet<(
+    mut query: ParamSet<(
         Query<&mut Text, With<LinesEntityMarker>>,
         Query<&mut Text, With<ScoreEntityMarker>>,
         Query<&mut Text, With<LevelEntityMarker>>,
@@ -700,23 +684,23 @@ fn update_statistic_system(
     )>,
     player_data: ResMut<PlayerData>,
 ) {
-    if let Ok(mut text) = set.p0().get_single_mut() {
+    if let Ok(mut text) = query.p0().get_single_mut() {
         text.sections[1].value = format!("{:04}", player_data.board.lines());
     }
-    if let Ok(mut text) = set.p1().get_single_mut() {
+    if let Ok(mut text) = query.p1().get_single_mut() {
         text.sections[1].value = format!("{:07}", player_data.board.score());
     }
-    if let Ok(mut text) = set.p2().get_single_mut() {
+    if let Ok(mut text) = query.p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());
         text.sections[2].value = format!(" {:02}", player_data.board.start_level());
     }
-    if let Ok(mut text) = set.p3().get_single_mut() {
+    if let Ok(mut text) = query.p3().get_single_mut() {
         text.sections[1].value = format!("{:4}", player_data.board.burned_lines());
     }
-    if let Ok(mut text) = set.p4().get_single_mut() {
+    if let Ok(mut text) = query.p4().get_single_mut() {
         text.sections[1].value = format!("{:4}", player_data.board.tetris_count());
     }
-    if let Ok(mut text) = set.p5().get_single_mut() {
+    if let Ok(mut text) = query.p5().get_single_mut() {
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
         text.sections[1].value = format!("{:3}%", rate);
         if rate >= 80 {
@@ -727,7 +711,7 @@ fn update_statistic_system(
             text.sections[1].style.color = RED.into();
         }
     }
-    if let Ok(mut text) = set.p6().get_single_mut() {
+    if let Ok(mut text) = query.p6().get_single_mut() {
         let drought = player_data.board.drought();
         text.sections[1].value = format!("{:4}", drought);
         if drought >= 14 {
@@ -738,7 +722,7 @@ fn update_statistic_system(
             text.sections[1].style.color = GREEN.into();
         }
     }
-    if let Ok(mut text) = set.p7().get_single_mut() {
+    if let Ok(mut text) = query.p7().get_single_mut() {
         let ticks = duration_to_ticks(player_data.das_timer.duration());
         text.sections[1].value = format!("{:02}", ticks);
         if ticks >= 10 {
@@ -809,8 +793,10 @@ mod state_game_running {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        mut q_curr: Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
-        mut q_game_pause_screen: Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
+        mut query: ParamSet<(
+            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+            Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
+        )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -881,25 +867,27 @@ mod state_game_running {
         }
 
         if inputs.start {
-            *q_game_pause_screen.single_mut() = Visibility::Inherited;
+            *query.p1().single_mut() = Visibility::Inherited;
             player_state.set(PlayerState::GamePause);
             return;
         }
 
         let (moved, lr_moved, rotated) = handle_input(inputs, &time, &mut player_data);
         if moved {
-            std::iter::zip(q_curr.iter_mut(), player_data.board.get_curr_piece_blocks()).for_each(
-                |((mut transform, mut sprite), blk)| {
-                    update_curr_piece_block(
-                        &mut transform,
-                        &mut sprite,
-                        blk,
-                        get_color(player_data.board.get_curr_piece().shape()),
-                        player_data.sparam.block_size(),
-                        player_data.sparam.curr_piece_translation(),
-                    );
-                },
-            );
+            std::iter::zip(
+                query.p0().iter_mut(),
+                player_data.board.get_curr_piece_blocks(),
+            )
+            .for_each(|((mut transform, mut sprite), blk)| {
+                update_curr_piece_block(
+                    &mut transform,
+                    &mut sprite,
+                    blk,
+                    get_color(player_data.board.get_curr_piece().shape()),
+                    player_data.sparam.block_size(),
+                    player_data.sparam.curr_piece_translation(),
+                );
+            });
         }
         if lr_moved {
             e_play_sound.send(PlaySoundEvent::MoveCurrPiece);
@@ -1093,7 +1081,7 @@ mod state_game_line_clear {
 
     pub(super) fn tick_system(
         time: Res<Time>,
-        mut q_board_block: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
+        mut query: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -1102,7 +1090,7 @@ mod state_game_line_clear {
         let threshold = player_data.line_clear_tick.threshold();
         if player_data.game_timer.commit(threshold) {
             if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
-                for (mut sprite, index) in q_board_block.iter_mut() {
+                for (mut sprite, index) in query.iter_mut() {
                     if (index.0 == left || index.0 == right)
                         && player_data.line_clear_rows.contains(&index.1)
                     {
