@@ -25,19 +25,21 @@ impl Board {
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
     pub fn new(start_level: usize) -> Self {
-        let curr_piece = Piece::rand();
-        let next_piece = curr_piece.rand_1h2r();
-        Self {
+        let mut board = Self {
             blocks: vec![vec![None; Self::BOARD_COLS]; Self::BOARD_ROWS],
-            curr_piece,
+            curr_piece: Piece::rand(),
             curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
-            next_piece,
+            next_piece: Piece::rand(),
             start_level,
             lines: 0,
             score: 0,
             tetris_count: 0,
             drought: 0,
-        }
+        };
+
+        // auto apply `drought` and `rand_1h2r`
+        board.switch_to_next_piece();
+        board
     }
 
     pub fn start_level(&self) -> usize {
@@ -117,13 +119,13 @@ impl Board {
     }
 
     pub fn switch_to_next_piece(&mut self) {
+        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
+        self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
         if self.curr_piece.shape() == PieceShape::I {
             self.drought = 0;
         } else {
             self.drought += 1;
         }
-        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
-        self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
     }
 
     pub fn get_curr_piece(&self) -> Piece {
