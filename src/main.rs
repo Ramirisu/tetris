@@ -26,7 +26,7 @@ fn main() {
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
-                    font_size: 40.0,
+                    font_size: 20.0,
                     color: GREEN.into(),
                     font: default(),
                 },
