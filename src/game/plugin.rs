@@ -70,7 +70,7 @@ impl Into<(usize, usize)> for &BoardBlockEntityMarker {
 }
 
 #[derive(Component)]
-struct GamePauseScreenEntityMarker;
+struct BoardCoverEntityMarker;
 
 #[derive(Component)]
 struct LinesEntityMarker;
@@ -101,6 +101,9 @@ struct CurrPieceEntityMarker;
 
 #[derive(Component)]
 struct NextPieceEntityMarker;
+
+#[derive(Component)]
+struct NextPieceSlotCoverEntityMarker;
 
 #[derive(Event)]
 enum PlaySoundEvent {
@@ -253,7 +256,7 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         .spawn((
             SpriteBundle {
                 transform: Transform {
-                    translation: player_data.sparam.game_pause_screen_translation(),
+                    translation: player_data.sparam.board_cover_translation(),
                     ..default()
                 },
                 sprite: Sprite {
@@ -265,7 +268,7 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
                 ..default()
             },
             GameEntityMarker,
-            GamePauseScreenEntityMarker,
+            BoardCoverEntityMarker,
         ))
         .with_children(|parent| {
             parent.spawn(Text2dBundle {
@@ -278,7 +281,7 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
                     },
                 ),
                 transform: Transform {
-                    translation: player_data.sparam.game_pause_screen_translation(),
+                    translation: player_data.sparam.board_cover_translation(),
                     ..default()
                 },
                 ..default()
@@ -614,6 +617,23 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
                 .insert(GameEntityMarker)
                 .insert(NextPieceEntityMarker);
         });
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: player_data.sparam.next_piece_slot_cover_translation(),
+                ..default()
+            },
+            sprite: Sprite {
+                color: BLACK.into(),
+                custom_size: Some(player_data.sparam.next_piece_slot_size()),
+                ..default()
+            },
+            visibility: Visibility::Hidden,
+            ..default()
+        },
+        GameEntityMarker,
+        NextPieceSlotCoverEntityMarker,
+    ));
 }
 
 fn board_index_to_translation(x: i32, y: i32, size: Vec2, offset: Vec3) -> Vec3 {
@@ -795,7 +815,8 @@ mod state_game_running {
         controller: Res<Controller>,
         mut query: ParamSet<(
             Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
-            Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
+            Query<&mut Visibility, With<BoardCoverEntityMarker>>,
+            Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
@@ -868,6 +889,7 @@ mod state_game_running {
 
         if inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
+            *query.p2().single_mut() = Visibility::Inherited;
             player_state.set(PlayerState::GamePause);
             return;
         }
@@ -1171,7 +1193,10 @@ mod state_game_pause {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        mut query: Query<&mut Visibility, With<GamePauseScreenEntityMarker>>,
+        mut query: ParamSet<(
+            Query<&mut Visibility, With<BoardCoverEntityMarker>>,
+            Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
+        )>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
         let clicked = if let Some(gamepad) = controller.gamepad {
@@ -1184,7 +1209,8 @@ mod state_game_pause {
         };
 
         if clicked || keys.just_pressed(KeyCode::Enter) {
-            *query.single_mut() = Visibility::Hidden;
+            *query.p0().single_mut() = Visibility::Hidden;
+            *query.p1().single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
         }
     }

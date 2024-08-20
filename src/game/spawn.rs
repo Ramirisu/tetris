@@ -6,7 +6,7 @@ const BOARD_BACKGROUND_LAYER: f32 = 1.0;
 const BOARD_LAYER: f32 = 2.0;
 const BLOCK_LAYER: f32 = 3.0;
 const CURR_PIECE_LAYER: f32 = 4.0;
-const GAME_PAUSE_SCREEN_LAYER: f32 = 5.0;
+const COVER_LAYER: f32 = 5.0;
 
 pub struct SpawnParam {
     unit: f32,
@@ -65,8 +65,8 @@ impl SpawnParam {
         Vec3::new(0.0, -self.unit / 20.0, BOARD_BACKGROUND_LAYER)
     }
 
-    pub fn game_pause_screen_translation(&self) -> Vec3 {
-        Vec3::new(0.0, 0.0, GAME_PAUSE_SCREEN_LAYER)
+    pub fn board_cover_translation(&self) -> Vec3 {
+        Vec3::new(0.0, 0.0, COVER_LAYER)
     }
 
     pub fn lines_translation(&self) -> Vec3 {
@@ -99,6 +99,10 @@ impl SpawnParam {
 
     pub fn next_piece_translation(&self) -> Vec3 {
         Vec3::new(self.board_width(), 0.0, CURR_PIECE_LAYER)
+    }
+
+    pub fn next_piece_slot_cover_translation(&self) -> Vec3 {
+        Vec3::new(self.board_width(), 0.0, COVER_LAYER)
     }
 
     pub fn burned_translation(&self) -> Vec3 {
