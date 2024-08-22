@@ -21,21 +21,21 @@ impl SpawnParam {
         self.unit
     }
 
+    fn block_width(&self) -> f32 {
+        self.unit
+    }
+
+    fn block_height(&self) -> f32 {
+        self.unit
+    }
+
     pub fn block_size(&self) -> Vec2 {
-        Vec2::new(self.unit, self.unit)
+        Vec2::new(self.block_width(), self.block_height())
     }
 
     pub fn visible_block_size(&self) -> Vec2 {
         let padding = self.unit / 10.0;
         Vec2::new(self.unit - padding, self.unit - padding)
-    }
-
-    pub fn block_translation_offset(&self) -> Vec3 {
-        (self.board_size() / -2.0).extend(BLOCK_LAYER)
-    }
-
-    pub fn curr_piece_translation(&self) -> Vec3 {
-        (self.board_size() / -2.0).extend(CURR_PIECE_LAYER)
     }
 
     pub fn board_translation(&self) -> Vec3 {
@@ -69,6 +69,22 @@ impl SpawnParam {
         Vec3::new(0.0, 0.0, COVER_LAYER)
     }
 
+    pub fn board_block_translation(&self, x: i32, y: i32) -> Vec3 {
+        (Vec2::new(
+            (x as f32 + 0.5) * self.block_width(),
+            (y as f32 + 0.5) * self.block_height(),
+        ) + (self.board_size() / -2.0))
+            .extend(BLOCK_LAYER)
+    }
+
+    pub fn curr_piece_translation(&self, x: i32, y: i32) -> Vec3 {
+        (Vec2::new(
+            (x as f32 + 0.5) * self.block_width(),
+            (y as f32 + 0.5) * self.block_height(),
+        ) + (self.board_size() / -2.0))
+            .extend(CURR_PIECE_LAYER)
+    }
+
     pub fn lines_translation(&self) -> Vec3 {
         Vec3::new(-self.board_width(), self.board_height() / 3.0, BOARD_LAYER)
     }
@@ -79,6 +95,14 @@ impl SpawnParam {
 
     pub fn level_translation(&self) -> Vec3 {
         Vec3::new(self.board_width(), -self.board_height() / 3.0, BOARD_LAYER)
+    }
+
+    pub fn next_piece_translation(&self, x: i32, y: i32) -> Vec3 {
+        (Vec2::new(
+            (x as f32) * self.block_width(),
+            (y as f32) * self.block_height(),
+        ) + Vec2::new(self.board_width(), 0.0))
+        .extend(CURR_PIECE_LAYER)
     }
 
     pub fn next_piece_slot_translation(&self) -> Vec3 {
@@ -95,10 +119,6 @@ impl SpawnParam {
 
     pub fn next_piece_slot_background_size(&self) -> Vec2 {
         Vec2::new(self.unit * 6.1, self.unit * 6.1)
-    }
-
-    pub fn next_piece_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), 0.0, CURR_PIECE_LAYER)
     }
 
     pub fn next_piece_slot_cover_translation(&self) -> Vec3 {

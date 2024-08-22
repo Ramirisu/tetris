@@ -8,7 +8,6 @@ use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 use super::{
     board::{Block2dArray, Board},
     palette::get_color,
-    piece::Block,
     spawn::SpawnParam,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
@@ -223,12 +222,9 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
                 if let Some(shape) = blk {
                     commands
                         .spawn(new_block(
-                            board_index_to_translation(
-                                x as i32,
-                                y as i32,
-                                player_data.sparam.block_size(),
-                                player_data.sparam.block_translation_offset(),
-                            ),
+                            player_data
+                                .sparam
+                                .board_block_translation(x as i32, y as i32),
                             player_data.sparam.visible_block_size(),
                             get_color(*shape),
                         ))
@@ -237,12 +233,9 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
                 } else {
                     commands
                         .spawn(new_block(
-                            board_index_to_translation(
-                                x as i32,
-                                y as i32,
-                                player_data.sparam.block_size(),
-                                player_data.sparam.block_translation_offset(),
-                            ),
+                            player_data
+                                .sparam
+                                .board_block_translation(x as i32, y as i32),
                             player_data.sparam.visible_block_size(),
                             BLACK.into(),
                         ))
@@ -555,12 +548,7 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         .for_each(|blk| {
             commands
                 .spawn(new_block(
-                    board_index_to_translation(
-                        blk.0,
-                        blk.1,
-                        player_data.sparam.block_size(),
-                        player_data.sparam.curr_piece_translation(),
-                    ),
+                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
                     player_data.sparam.visible_block_size(),
                     get_color(player_data.board.get_curr_piece().shape()),
                 ))
@@ -605,12 +593,7 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         .for_each(|blk| {
             commands
                 .spawn(new_block(
-                    next_piece_index_to_translation(
-                        blk.0,
-                        blk.1,
-                        player_data.sparam.block_size(),
-                        player_data.sparam.next_piece_translation(),
-                    ),
+                    player_data.sparam.next_piece_translation(blk.0, blk.1),
                     player_data.sparam.visible_block_size(),
                     get_color(player_data.board.get_next_piece().shape()),
                 ))
@@ -634,14 +617,6 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         GameEntityMarker,
         NextPieceSlotCoverEntityMarker,
     ));
-}
-
-fn board_index_to_translation(x: i32, y: i32, size: Vec2, offset: Vec3) -> Vec3 {
-    Vec3::new((x as f32 + 0.5) * size.x, (y as f32 + 0.5) * size.y, 0.0) + offset
-}
-
-fn next_piece_index_to_translation(x: i32, y: i32, size: Vec2, origin: Vec3) -> Vec3 {
-    Vec3::new(x as f32 * size.x, y as f32 * size.y, 0.0) + origin
 }
 
 fn new_block(translation: Vec3, size: Vec2, color: Color) -> SpriteBundle {
@@ -670,24 +645,20 @@ fn update_board_block(sprite: &mut Sprite, coordinate: (usize, usize), blocks: &
 fn update_curr_piece_block(
     transform: &mut Transform,
     sprite: &mut Sprite,
-    blk: Block,
     color: Color,
-    size: Vec2,
-    offset: Vec3,
+    translation: Vec3,
 ) {
-    transform.translation = board_index_to_translation(blk.0, blk.1, size, offset);
+    transform.translation = translation;
     sprite.color = color;
 }
 
 fn update_next_piece_block(
     transform: &mut Transform,
     sprite: &mut Sprite,
-    blk: Block,
     color: Color,
-    size: Vec2,
-    origin: Vec3,
+    translation: Vec3,
 ) {
-    transform.translation = next_piece_index_to_translation(blk.0, blk.1, size, origin);
+    transform.translation = translation;
     sprite.color = color;
 }
 
@@ -904,10 +875,8 @@ mod state_game_running {
                 update_curr_piece_block(
                     &mut transform,
                     &mut sprite,
-                    blk,
                     get_color(player_data.board.get_curr_piece().shape()),
-                    player_data.sparam.block_size(),
-                    player_data.sparam.curr_piece_translation(),
+                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
                 );
             });
         }
@@ -1009,10 +978,8 @@ mod state_game_running {
                     update_curr_piece_block(
                         &mut transform,
                         &mut sprite,
-                        blk,
                         get_color(player_data.board.get_curr_piece().shape()),
-                        player_data.sparam.block_size(),
-                        player_data.sparam.curr_piece_translation(),
+                        player_data.sparam.curr_piece_translation(blk.0, blk.1),
                     );
                 });
             } else if !player_data.board.is_curr_position_valid() {
@@ -1112,9 +1079,9 @@ mod state_game_line_clear {
         let threshold = player_data.line_clear_tick.threshold();
         if player_data.game_timer.commit(threshold) {
             if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
-                for (mut sprite, index) in query.iter_mut() {
-                    if (index.0 == left || index.0 == right)
-                        && player_data.line_clear_rows.contains(&index.1)
+                for (mut sprite, coordinate) in query.iter_mut() {
+                    if (coordinate.0 == left || coordinate.0 == right)
+                        && player_data.line_clear_rows.contains(&coordinate.1)
                     {
                         sprite.color = BLACK.into();
                     }
@@ -1160,10 +1127,8 @@ mod state_game_entry_delay {
                 update_curr_piece_block(
                     &mut transform,
                     &mut sprite,
-                    blk,
                     get_color(player_data.board.get_curr_piece().shape()),
-                    player_data.sparam.block_size(),
-                    player_data.sparam.curr_piece_translation(),
+                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
                 );
             });
             std::iter::zip(
@@ -1174,10 +1139,8 @@ mod state_game_entry_delay {
                 update_next_piece_block(
                     &mut transform,
                     &mut sprite,
-                    blk,
                     get_color(player_data.board.get_next_piece().shape()),
-                    player_data.sparam.block_size(),
-                    player_data.sparam.next_piece_translation(),
+                    player_data.sparam.next_piece_translation(blk.0, blk.1),
                 );
             });
 
