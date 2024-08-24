@@ -52,8 +52,8 @@ impl FallTick {
             13..16 => ticks_to_duration(4),
             16..19 => ticks_to_duration(3),
             19..29 => ticks_to_duration(2),
-            29..39 => sub_ticks_to_duration(500), // kill screen
-            _ => sub_ticks_to_duration(250),      // super kill screen
+            29..39 => ticks_to_duration(1),  // kill screen
+            _ => sub_ticks_to_duration(500), // super kill screen
         }
     }
 
