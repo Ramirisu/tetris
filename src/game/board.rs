@@ -19,7 +19,8 @@ pub struct Board {
 }
 
 impl Board {
-    pub const BOARD_ROWS: usize = 20;
+    const INTERNAL_BOARD_ROWS: usize = 22;
+    pub const BOARD_ROWS: usize = Self::INTERNAL_BOARD_ROWS - 2;
     pub const BOARD_COLS: usize = 10;
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
@@ -78,8 +79,8 @@ impl Board {
         self.drought
     }
 
-    pub fn blocks(&self) -> &Block2dArray {
-        &self.blocks
+    pub fn block(&self, x: i32, y: i32) -> Option<PieceShape> {
+        self.blocks[y as usize][x as usize]
     }
 
     pub fn get_line_clear_indexes(&self) -> Vec<usize> {
@@ -151,33 +152,33 @@ impl Board {
 
     pub fn is_left_movable(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0 - 1, blk.1)
-                && (blk.1 as usize >= Self::BOARD_ROWS
-                    || (self.blocks[blk.1 as usize][(blk.0 - 1) as usize]).is_none())
+            let x = blk.0 - 1;
+            let y = blk.1;
+            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         })
     }
 
     pub fn is_right_movable(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0 + 1, blk.1)
-                && (blk.1 as usize >= Self::BOARD_ROWS
-                    || (self.blocks[blk.1 as usize][(blk.0 + 1) as usize]).is_none())
+            let x = blk.0 + 1;
+            let y = blk.1;
+            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         })
     }
 
     pub fn is_curr_position_valid(&self) -> bool {
         self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0, blk.1)
-                && blk.1 < Self::BOARD_ROWS as i32
-                && (self.blocks[blk.1 as usize][blk.0 as usize]).is_none()
+            let x = blk.0;
+            let y = blk.1;
+            Self::is_inside(x, y) && self.block(x, y).is_none()
         })
     }
 
     pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0, blk.1 - 1)
-                && (blk.1 as usize >= Self::BOARD_ROWS
-                    || (self.blocks[(blk.1 - 1) as usize][blk.0 as usize]).is_none())
+            let x = blk.0;
+            let y = blk.1 - 1;
+            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         });
 
         if movable {
@@ -208,9 +209,9 @@ impl Board {
     pub fn rotate_piece_clockwise(&mut self) -> bool {
         self.curr_piece.rotate_clockwise();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0, blk.1)
-                && (blk.1 as usize >= Self::BOARD_ROWS
-                    || (self.blocks[blk.1 as usize][blk.0 as usize]).is_none())
+            let x = blk.0;
+            let y = blk.1;
+            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         });
         if !rotatable {
             self.curr_piece.rotate_counter_clockwise();
@@ -222,9 +223,9 @@ impl Board {
     pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
         self.curr_piece.rotate_counter_clockwise();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
-            Self::is_inside_board(blk.0, blk.1)
-                && (blk.1 as usize >= Self::BOARD_ROWS
-                    || (self.blocks[blk.1 as usize][blk.0 as usize]).is_none())
+            let x = blk.0;
+            let y = blk.1;
+            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         });
         if !rotatable {
             self.curr_piece.rotate_clockwise();
@@ -233,8 +234,8 @@ impl Board {
         rotatable
     }
 
-    fn is_inside_board(x: i32, y: i32) -> bool {
-        x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0
+    fn is_inside(x: i32, y: i32) -> bool {
+        x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0 && y < Self::INTERNAL_BOARD_ROWS as i32
     }
 }
 

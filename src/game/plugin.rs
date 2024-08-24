@@ -6,8 +6,9 @@ use bevy::{
 use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 use super::{
-    board::{Block2dArray, Board},
+    board::Board,
     palette::get_color,
+    piece::PieceShape,
     spawn::SpawnParam,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
@@ -212,38 +213,33 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         GameEntityMarker,
     ));
 
-    player_data
-        .board
-        .blocks()
-        .iter()
-        .enumerate()
-        .for_each(|(y, blks)| {
-            blks.iter().enumerate().for_each(|(x, blk)| {
-                if let Some(shape) = blk {
-                    commands
-                        .spawn(new_block(
-                            player_data
-                                .sparam
-                                .board_block_translation(x as i32, y as i32),
-                            player_data.sparam.visible_block_size(),
-                            get_color(*shape),
-                        ))
-                        .insert(GameEntityMarker)
-                        .insert(BoardBlockEntityMarker(x, y));
-                } else {
-                    commands
-                        .spawn(new_block(
-                            player_data
-                                .sparam
-                                .board_block_translation(x as i32, y as i32),
-                            player_data.sparam.visible_block_size(),
-                            BLACK.into(),
-                        ))
-                        .insert(GameEntityMarker)
-                        .insert(BoardBlockEntityMarker(x, y));
-                }
-            })
-        });
+    for y in 0..Board::BOARD_ROWS {
+        for x in 0..Board::BOARD_COLS {
+            if let Some(shape) = player_data.board.block(x as i32, y as i32) {
+                commands
+                    .spawn(new_block(
+                        player_data
+                            .sparam
+                            .board_block_translation(x as i32, y as i32),
+                        player_data.sparam.visible_block_size(),
+                        get_color(shape),
+                    ))
+                    .insert(GameEntityMarker)
+                    .insert(BoardBlockEntityMarker(x, y));
+            } else {
+                commands
+                    .spawn(new_block(
+                        player_data
+                            .sparam
+                            .board_block_translation(x as i32, y as i32),
+                        player_data.sparam.visible_block_size(),
+                        BLACK.into(),
+                    ))
+                    .insert(GameEntityMarker)
+                    .insert(BoardBlockEntityMarker(x, y));
+            }
+        }
+    }
 
     commands
         .spawn((
@@ -634,8 +630,8 @@ fn new_block(translation: Vec3, size: Vec2, color: Color) -> SpriteBundle {
     }
 }
 
-fn update_board_block(sprite: &mut Sprite, coordinate: (usize, usize), blocks: &Block2dArray) {
-    if let Some(shape) = blocks[coordinate.1][coordinate.0] {
+fn update_board_block(sprite: &mut Sprite, shape: Option<PieceShape>) {
+    if let Some(shape) = shape {
         sprite.color = get_color(shape);
     } else {
         sprite.color = BLACK.into();
@@ -1002,7 +998,12 @@ mod state_game_running {
                 });
 
                 query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                    update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks());
+                    update_board_block(
+                        &mut sprite,
+                        player_data
+                            .board
+                            .block(coordinate.0 as i32, coordinate.1 as i32),
+                    );
                 });
 
                 let lines = player_data.board.get_line_clear_indexes();
@@ -1116,7 +1117,12 @@ mod state_game_entry_delay {
             player_data.board.switch_to_next_piece();
 
             query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                update_board_block(&mut sprite, coordinate.into(), &player_data.board.blocks());
+                update_board_block(
+                    &mut sprite,
+                    player_data
+                        .board
+                        .block(coordinate.0 as i32, coordinate.1 as i32),
+                )
             });
 
             std::iter::zip(
