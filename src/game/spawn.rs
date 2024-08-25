@@ -125,20 +125,8 @@ impl SpawnParam {
         Vec3::new(self.board_width(), 0.0, COVER_LAYER)
     }
 
-    pub fn burned_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 2.0, BOARD_LAYER)
-    }
-
-    pub fn tetris_count_translation(&self) -> Vec3 {
+    pub fn tetris_translation(&self) -> Vec3 {
         Vec3::new(-self.board_width(), self.unit * 1.0, BOARD_LAYER)
-    }
-
-    pub fn tetris_rate_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 0.0, BOARD_LAYER)
-    }
-
-    pub fn drought_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), -self.unit * 2.0, BOARD_LAYER)
     }
 
     pub fn das_translation(&self) -> Vec3 {

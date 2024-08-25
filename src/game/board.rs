@@ -14,7 +14,10 @@ pub struct Board {
     start_level: usize,
     lines: usize,
     score: usize,
-    tetris_count: usize,
+    single: usize,
+    double: usize,
+    triple: usize,
+    tetris: usize,
     drought: usize,
 }
 
@@ -34,7 +37,10 @@ impl Board {
             start_level,
             lines: 0,
             score: 0,
-            tetris_count: 0,
+            single: 0,
+            double: 0,
+            triple: 0,
+            tetris: 0,
             drought: 0,
         };
 
@@ -60,18 +66,30 @@ impl Board {
     }
 
     pub fn burned_lines(&self) -> usize {
-        self.lines - self.tetris_count * 4
+        self.lines - self.tetris * 4
     }
 
-    pub fn tetris_count(&self) -> usize {
-        self.tetris_count
+    pub fn single(&self) -> usize {
+        self.single
+    }
+
+    pub fn double(&self) -> usize {
+        self.double
+    }
+
+    pub fn triple(&self) -> usize {
+        self.triple
+    }
+
+    pub fn tetris(&self) -> usize {
+        self.tetris
     }
 
     pub fn tetris_rate(&self) -> f32 {
         if self.lines == 0 {
             0.0
         } else {
-            self.tetris_count as f32 * 4.0 / self.lines as f32
+            self.tetris as f32 * 4.0 / self.lines as f32
         }
     }
 
@@ -110,8 +128,20 @@ impl Board {
 
         self.score += calculate_score(indexes.len(), self.level());
         self.lines += indexes.len();
-        if indexes.len() == 4 {
-            self.tetris_count += 1;
+        match indexes.len() {
+            1 => {
+                self.single += 1;
+            }
+            2 => {
+                self.double += 1;
+            }
+            3 => {
+                self.triple += 1;
+            }
+            4 => {
+                self.tetris += 1;
+            }
+            _ => (),
         }
         self.blocks
             .resize(Self::BOARD_ROWS, vec![None; Self::BOARD_COLS]);
