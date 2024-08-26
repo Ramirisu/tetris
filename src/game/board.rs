@@ -22,9 +22,9 @@ pub struct Board {
 }
 
 impl Board {
-    const INTERNAL_BOARD_ROWS: usize = 22;
-    pub const BOARD_ROWS: usize = Self::INTERNAL_BOARD_ROWS - 2;
+    pub const BOARD_ROWS: usize = 20;
     pub const BOARD_COLS: usize = 10;
+    const INTERNAL_BOARD_ROWS: usize = Self::BOARD_ROWS + 2;
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
@@ -200,7 +200,7 @@ impl Board {
         self.get_curr_piece_blocks().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
-            Self::is_inside(x, y) && self.block(x, y).is_none()
+            Self::is_inside(x, y) && y < Self::BOARD_ROWS as i32 && self.block(x, y).is_none()
         })
     }
 
