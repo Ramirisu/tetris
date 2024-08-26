@@ -164,7 +164,7 @@ impl Board {
     }
 
     pub fn get_curr_piece_blocks(&self) -> [Block; 4] {
-        self.curr_piece.get_blocks().map(|blk| {
+        self.curr_piece.to_blocks().map(|blk| {
             Block(
                 blk.0 + self.curr_translation.0,
                 blk.1 + self.curr_translation.1,
@@ -174,10 +174,6 @@ impl Board {
 
     pub fn get_next_piece(&self) -> Piece {
         self.next_piece
-    }
-
-    pub fn get_next_piece_blocks(&self) -> [Block; 4] {
-        self.next_piece.get_blocks()
     }
 
     pub fn is_left_movable(&self) -> bool {
@@ -237,28 +233,28 @@ impl Board {
     }
 
     pub fn rotate_piece_clockwise(&mut self) -> bool {
-        self.curr_piece.rotate_clockwise();
+        self.curr_piece.next_state();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
             Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         });
         if !rotatable {
-            self.curr_piece.rotate_counter_clockwise();
+            self.curr_piece.prev_state();
         }
 
         rotatable
     }
 
     pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
-        self.curr_piece.rotate_counter_clockwise();
+        self.curr_piece.prev_state();
         let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
             Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
         });
         if !rotatable {
-            self.curr_piece.rotate_clockwise();
+            self.curr_piece.next_state();
         }
 
         rotatable

@@ -8,11 +8,11 @@ const BLOCK_LAYER: f32 = 3.0;
 const CURR_PIECE_LAYER: f32 = 4.0;
 const COVER_LAYER: f32 = 5.0;
 
-pub struct SpawnParam {
+pub struct RenderConfig {
     unit: f32,
 }
 
-impl SpawnParam {
+impl RenderConfig {
     pub fn new() -> Self {
         Self { unit: 40.0 }
     }
@@ -134,7 +134,7 @@ impl SpawnParam {
     }
 }
 
-impl Default for SpawnParam {
+impl Default for RenderConfig {
     fn default() -> Self {
         Self::new()
     }

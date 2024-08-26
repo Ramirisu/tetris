@@ -3,7 +3,7 @@ mod level;
 mod palette;
 mod piece;
 pub mod plugin;
+mod render;
 mod score;
-mod spawn;
 mod tick;
 mod timer;

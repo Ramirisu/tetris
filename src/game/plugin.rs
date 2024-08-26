@@ -9,7 +9,7 @@ use super::{
     board::Board,
     palette::{get_block_image, get_default_block_image},
     piece::PieceShape,
-    spawn::SpawnParam,
+    render::RenderConfig,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
 };
@@ -154,7 +154,7 @@ pub enum PlayerState {
 
 #[derive(Resource)]
 pub struct PlayerData {
-    sparam: SpawnParam,
+    rc: RenderConfig,
     board: Board,
     game_timer: GameTimer,
     can_press_down: bool,
@@ -170,7 +170,7 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(start_level: usize) -> Self {
         Self {
-            sparam: SpawnParam::default(),
+            rc: RenderConfig::default(),
             board: Board::new(start_level),
             game_timer: GameTimer::default(),
             can_press_down: false,
@@ -231,13 +231,10 @@ fn setup_screen(
 ) {
     commands.spawn((
         SpriteBundle {
-            transform: Transform {
-                translation: player_data.sparam.board_background_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.board_background_translation()),
             sprite: Sprite {
                 color: RED.into(),
-                custom_size: Some(player_data.sparam.board_background_size()),
+                custom_size: Some(player_data.rc.board_background_size()),
                 ..default()
             },
             ..default()
@@ -246,13 +243,10 @@ fn setup_screen(
     ));
     commands.spawn((
         SpriteBundle {
-            transform: Transform {
-                translation: player_data.sparam.board_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.board_translation()),
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(player_data.sparam.board_size()),
+                custom_size: Some(player_data.rc.board_size()),
                 ..default()
             },
             ..default()
@@ -265,12 +259,10 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        player_data
-                            .sparam
-                            .board_block_translation(x as i32, y as i32),
+                        player_data.rc.board_block_translation(x as i32, y as i32),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_block_size()),
                         ..default()
                     },
                     texture: block_image_assets.get_default(),
@@ -285,13 +277,10 @@ fn setup_screen(
     commands
         .spawn((
             SpriteBundle {
-                transform: Transform {
-                    translation: player_data.sparam.board_cover_translation(),
-                    ..default()
-                },
+                transform: Transform::from_translation(player_data.rc.board_cover_translation()),
                 sprite: Sprite {
                     color: BLACK.into(),
-                    custom_size: Some(player_data.sparam.board_size()),
+                    custom_size: Some(player_data.rc.board_size()),
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -305,15 +294,12 @@ fn setup_screen(
                 text: Text::from_section(
                     "PRESS START\nTO CONTINUE",
                     TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                 ),
-                transform: Transform {
-                    translation: player_data.sparam.board_cover_translation(),
-                    ..default()
-                },
+                transform: Transform::from_translation(player_data.rc.board_cover_translation()),
                 ..default()
             });
         });
@@ -324,23 +310,20 @@ fn setup_screen(
                 TextSection {
                     value: "LINES\n".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit() * 2.0,
+                    font_size: player_data.rc.unit() * 2.0,
                     color: WHITE.into(),
                     ..default()
                 }),
             ])
             .with_justify(JustifyText::Center),
-            transform: Transform {
-                translation: player_data.sparam.lines_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.lines_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -352,23 +335,20 @@ fn setup_screen(
                 TextSection {
                     value: "SCORE\n".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit() * 2.0,
+                    font_size: player_data.rc.unit() * 2.0,
                     color: WHITE.into(),
                     ..default()
                 }),
             ])
             .with_justify(JustifyText::Center),
-            transform: Transform {
-                translation: player_data.sparam.score_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.score_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -380,27 +360,24 @@ fn setup_screen(
                 TextSection {
                     value: "LEVEL ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit() * 2.0,
+                    font_size: player_data.rc.unit() * 2.0,
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit() / 1.5,
+                    font_size: player_data.rc.unit() / 1.5,
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform {
-                translation: player_data.sparam.level_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.level_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -412,106 +389,103 @@ fn setup_screen(
                 TextSection {
                     value: "BRN ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: " 1X ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: " 2X ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: " 3X ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: "TRT ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: "TRT ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection {
                     value: "DRT ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform {
-                translation: player_data.sparam.tetris_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.tetris_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -523,22 +497,19 @@ fn setup_screen(
                 TextSection {
                     value: "DAS ".into(),
                     style: TextStyle {
-                        font_size: player_data.sparam.unit(),
+                        font_size: player_data.rc.unit(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: player_data.sparam.unit(),
+                    font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform {
-                translation: player_data.sparam.das_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.das_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -553,10 +524,10 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        player_data.sparam.curr_piece_translation(blk.0, blk.1),
+                        player_data.rc.curr_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_block_size()),
                         ..default()
                     },
                     texture: block_image_assets
@@ -570,13 +541,12 @@ fn setup_screen(
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform {
-                translation: player_data.sparam.next_piece_slot_background_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(
+                player_data.rc.next_piece_slot_background_translation(),
+            ),
             sprite: Sprite {
                 color: RED.into(),
-                custom_size: Some(player_data.sparam.next_piece_slot_background_size()),
+                custom_size: Some(player_data.rc.next_piece_slot_background_size()),
                 ..default()
             },
             ..default()
@@ -585,13 +555,10 @@ fn setup_screen(
     ));
     commands.spawn((
         SpriteBundle {
-            transform: Transform {
-                translation: player_data.sparam.next_piece_slot_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(player_data.rc.next_piece_slot_translation()),
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(player_data.sparam.next_piece_slot_size()),
+                custom_size: Some(player_data.rc.next_piece_slot_size()),
                 ..default()
             },
             ..default()
@@ -600,16 +567,17 @@ fn setup_screen(
     ));
     player_data
         .board
-        .get_next_piece_blocks()
+        .get_next_piece()
+        .to_blocks()
         .iter()
         .for_each(|blk| {
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        player_data.sparam.next_piece_translation(blk.0, blk.1),
+                        player_data.rc.next_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_block_size()),
                         ..default()
                     },
                     texture: block_image_assets
@@ -622,13 +590,12 @@ fn setup_screen(
         });
     commands.spawn((
         SpriteBundle {
-            transform: Transform {
-                translation: player_data.sparam.next_piece_slot_cover_translation(),
-                ..default()
-            },
+            transform: Transform::from_translation(
+                player_data.rc.next_piece_slot_cover_translation(),
+            ),
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(player_data.sparam.next_piece_slot_size()),
+                custom_size: Some(player_data.rc.next_piece_slot_size()),
                 ..default()
             },
             visibility: Visibility::Hidden,
@@ -846,7 +813,7 @@ mod state_game_running {
             )
             .for_each(|((mut transform, mut image), blk)| {
                 *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
-                transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
+                transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
         }
         if lr_moved {
@@ -947,7 +914,7 @@ mod state_game_running {
                 .for_each(|((mut transform, mut image), blk)| {
                     *image =
                         block_image_assets.get_image(player_data.board.get_curr_piece().shape());
-                    transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
+                    transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
                 e_play_sound.send(PlaySoundEvent::GameOver);
@@ -965,7 +932,7 @@ mod state_game_running {
                 player_data.board.lock_curr_piece();
                 query.p1().iter_mut().for_each(|(mut transform, _)| {
                     // make invisible
-                    transform.translation.z = player_data.sparam.board_translation().z - 1.0;
+                    transform.translation.z = player_data.rc.board_translation().z - 1.0;
                 });
 
                 query.p0().iter_mut().for_each(|(mut image, coordinate)| {
@@ -1121,15 +1088,15 @@ mod state_game_entry_delay {
             )
             .for_each(|((mut transform, mut image), blk)| {
                 *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
-                transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
+                transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
             std::iter::zip(
                 query.p2().iter_mut(),
-                player_data.board.get_next_piece_blocks(),
+                player_data.board.get_next_piece().to_blocks(),
             )
             .for_each(|((mut transform, mut image), blk)| {
                 *image = block_image_assets.get_image(player_data.board.get_next_piece().shape());
-                transform.translation = player_data.sparam.next_piece_translation(blk.0, blk.1);
+                transform.translation = player_data.rc.next_piece_translation(blk.0, blk.1);
             });
 
             player_state.set(PlayerState::GameRunning);

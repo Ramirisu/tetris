@@ -3,40 +3,40 @@ use rand::Rng;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Block(pub i32, pub i32);
 
-const PIECE_SHAPE_T: [[Block; 4]; 4] = [
+const PIECE_SHAPE_T: &[[Block; 4]; 4] = &[
     [Block(0, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
     [Block(0, -1), Block(-1, 0), Block(0, 0), Block(0, 1)],
     [Block(-1, 0), Block(0, 0), Block(1, 0), Block(0, 1)],
     [Block(0, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
 ];
 
-const PIECE_SHAPE_I: [[Block; 4]; 2] = [
+const PIECE_SHAPE_I: &[[Block; 4]; 2] = &[
     [Block(-2, 0), Block(-1, 0), Block(0, 0), Block(1, 0)],
     [Block(0, -1), Block(0, 0), Block(0, 1), Block(0, 2)],
 ];
 
-const PIECE_SHAPE_J: [[Block; 4]; 4] = [
+const PIECE_SHAPE_J: &[[Block; 4]; 4] = &[
     [Block(-1, 0), Block(0, 0), Block(1, 0), Block(1, -1)],
     [Block(-1, -1), Block(0, -1), Block(0, 0), Block(0, 1)],
     [Block(-1, 0), Block(0, 0), Block(1, 0), Block(-1, 1)],
     [Block(0, -1), Block(0, 0), Block(0, 1), Block(1, 1)],
 ];
 
-const PIECE_SHAPE_L: [[Block; 4]; 4] = [
+const PIECE_SHAPE_L: &[[Block; 4]; 4] = &[
     [Block(-1, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
     [Block(0, -1), Block(0, 0), Block(-1, 1), Block(0, 1)],
     [Block(-1, 0), Block(0, 0), Block(1, 0), Block(1, 1)],
     [Block(0, -1), Block(1, -1), Block(0, 0), Block(0, 1)],
 ];
 
-const PIECE_SHAPE_O: [[Block; 4]; 1] = [[Block(-1, -1), Block(0, -1), Block(-1, 0), Block(0, 0)]];
+const PIECE_SHAPE_O: &[[Block; 4]; 1] = &[[Block(-1, -1), Block(0, -1), Block(-1, 0), Block(0, 0)]];
 
-const PIECE_SHAPE_S: [[Block; 4]; 2] = [
+const PIECE_SHAPE_S: &[[Block; 4]; 2] = &[
     [Block(-1, -1), Block(0, -1), Block(0, 0), Block(1, 0)],
     [Block(1, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
 ];
 
-const PIECE_SHAPE_Z: [[Block; 4]; 2] = [
+const PIECE_SHAPE_Z: &[[Block; 4]; 2] = &[
     [Block(0, -1), Block(1, -1), Block(-1, 0), Block(0, 0)],
     [Block(0, -1), Block(0, 0), Block(1, 0), Block(1, 1)],
 ];
@@ -53,7 +53,7 @@ pub enum PieceShape {
 }
 
 impl PieceShape {
-    pub fn state_len(&self) -> usize {
+    pub fn len(&self) -> usize {
         match self {
             PieceShape::T => PIECE_SHAPE_T.len(),
             PieceShape::J => PIECE_SHAPE_J.len(),
@@ -121,7 +121,7 @@ impl Piece {
         self.shape
     }
 
-    pub fn get_blocks(&self) -> [Block; 4] {
+    pub fn to_blocks(&self) -> [Block; 4] {
         match self.shape {
             PieceShape::T => PIECE_SHAPE_T[self.state],
             PieceShape::J => PIECE_SHAPE_J[self.state],
@@ -133,11 +133,11 @@ impl Piece {
         }
     }
 
-    pub fn rotate_clockwise(&mut self) {
-        self.state = (self.state + 1) % self.shape.state_len();
+    pub fn next_state(&mut self) {
+        self.state = (self.state + 1) % self.shape.len();
     }
 
-    pub fn rotate_counter_clockwise(&mut self) {
-        self.state = (self.state + self.shape.state_len() - 1) % self.shape.state_len();
+    pub fn prev_state(&mut self) {
+        self.state = (self.state + self.shape.len() - 1) % self.shape.len();
     }
 }
