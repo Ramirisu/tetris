@@ -64,6 +64,19 @@ impl PieceShape {
             PieceShape::I => PIECE_SHAPE_I.len(),
         }
     }
+
+    pub fn iter() -> std::slice::Iter<'static, PieceShape> {
+        const SHAPES: [PieceShape; 7] = [
+            PieceShape::T,
+            PieceShape::J,
+            PieceShape::Z,
+            PieceShape::O,
+            PieceShape::S,
+            PieceShape::L,
+            PieceShape::I,
+        ];
+        SHAPES.iter()
+    }
 }
 
 impl From<usize> for PieceShape {

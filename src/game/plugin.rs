@@ -7,7 +7,7 @@ use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 use super::{
     board::Board,
-    palette::get_color,
+    palette::{get_block_image, get_default_block_image},
     piece::PieceShape,
     spawn::SpawnParam,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
@@ -18,10 +18,18 @@ pub fn setup(app: &mut App) {
     app.insert_resource(PlayerData::default())
         .init_state::<PlayerState>()
         .add_event::<PlaySoundEvent>()
-        .add_systems(OnEnter(AppState::Game), (load_assets, setup_screen))
+        .add_systems(
+            OnEnter(AppState::Game),
+            (load_audio_assets, load_block_image_assets, setup_screen).chain(),
+        )
         .add_systems(
             OnExit(AppState::Game),
-            (despawn_all::<GameEntityMarker>, unload_assets),
+            (
+                despawn_all::<GameEntityMarker>,
+                unload_block_image_assets,
+                unload_audio_assets,
+            )
+                .chain(),
         )
         .add_systems(
             Update,
@@ -37,6 +45,8 @@ pub fn setup(app: &mut App) {
                 (state_game_line_clear::tick_system, update_statistic_system)
                     .chain()
                     .run_if(in_state(PlayerState::GameLineClear)),
+                state_game_update_assets::update_block_image_assets
+                    .run_if(in_state(PlayerState::GameUpdateBlockImageAssets)),
                 state_game_entry_delay::tick_system.run_if(in_state(PlayerState::GameEntryDelay)),
                 state_game_pause::handle_input_system.run_if(in_state(PlayerState::GamePause)),
                 state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
@@ -55,6 +65,30 @@ struct AudioAssets {
     tetris_clear: Handle<AudioSource>,
     level_up: Handle<AudioSource>,
     game_over: Handle<AudioSource>,
+}
+
+#[derive(Resource)]
+struct BlockImageAssets {
+    images: Vec<Handle<Image>>,
+    default: Handle<Image>,
+}
+
+impl BlockImageAssets {
+    pub fn get_image(&self, shape: PieceShape) -> Handle<Image> {
+        self.images[shape as usize].clone()
+    }
+
+    pub fn get_default(&self) -> Handle<Image> {
+        self.default.clone()
+    }
+
+    pub fn get_image_or_default(&self, shape: Option<PieceShape>) -> Handle<Image> {
+        if let Some(shape) = shape {
+            self.get_image(shape)
+        } else {
+            self.get_default()
+        }
+    }
 }
 
 #[derive(Component)]
@@ -112,6 +146,7 @@ pub enum PlayerState {
     #[default]
     GameRunning,
     GameLineClear,
+    GameUpdateBlockImageAssets,
     GameEntryDelay,
     GamePause,
     GameOver,
@@ -156,7 +191,7 @@ impl Default for PlayerData {
     }
 }
 
-fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_audio_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AudioAssets {
         move_curr_piece: asset_server.load("sound/sfx04.wav"),
         rotate_curr_piece: asset_server.load("sound/sfx06.wav"),
@@ -168,11 +203,32 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn unload_assets(mut commands: Commands) {
+fn unload_audio_assets(mut commands: Commands) {
     commands.remove_resource::<AudioAssets>();
 }
 
-fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
+fn load_block_image_assets(
+    mut commands: Commands,
+    mut image_assets: ResMut<Assets<Image>>,
+    player_data: Res<PlayerData>,
+) {
+    commands.insert_resource(BlockImageAssets {
+        images: PieceShape::iter()
+            .map(|shape| image_assets.add(get_block_image(*shape, player_data.board.level())))
+            .collect(),
+        default: image_assets.add(get_default_block_image()),
+    });
+}
+
+fn unload_block_image_assets(mut commands: Commands) {
+    commands.remove_resource::<BlockImageAssets>();
+}
+
+fn setup_screen(
+    mut commands: Commands,
+    player_data: ResMut<PlayerData>,
+    block_image_assets: Res<BlockImageAssets>,
+) {
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -206,29 +262,23 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
 
     for y in 0..Board::BOARD_ROWS {
         for x in 0..Board::BOARD_COLS {
-            if let Some(shape) = player_data.board.block(x as i32, y as i32) {
-                commands
-                    .spawn(new_block(
+            commands.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(
                         player_data
                             .sparam
                             .board_block_translation(x as i32, y as i32),
-                        player_data.sparam.visible_block_size(),
-                        get_color(shape),
-                    ))
-                    .insert(GameEntityMarker)
-                    .insert(BoardBlockEntityMarker(x, y));
-            } else {
-                commands
-                    .spawn(new_block(
-                        player_data
-                            .sparam
-                            .board_block_translation(x as i32, y as i32),
-                        player_data.sparam.visible_block_size(),
-                        BLACK.into(),
-                    ))
-                    .insert(GameEntityMarker)
-                    .insert(BoardBlockEntityMarker(x, y));
-            }
+                    ),
+                    sprite: Sprite {
+                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        ..default()
+                    },
+                    texture: block_image_assets.get_default(),
+                    ..default()
+                },
+                GameEntityMarker,
+                BoardBlockEntityMarker(x, y),
+            ));
         }
     }
 
@@ -500,14 +550,22 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         .get_curr_piece_blocks()
         .iter()
         .for_each(|blk| {
-            commands
-                .spawn(new_block(
-                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
-                    player_data.sparam.visible_block_size(),
-                    get_color(player_data.board.get_curr_piece().shape()),
-                ))
-                .insert(GameEntityMarker)
-                .insert(CurrPieceEntityMarker);
+            commands.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(
+                        player_data.sparam.curr_piece_translation(blk.0, blk.1),
+                    ),
+                    sprite: Sprite {
+                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        ..default()
+                    },
+                    texture: block_image_assets
+                        .get_image(player_data.board.get_curr_piece().shape()),
+                    ..default()
+                },
+                GameEntityMarker,
+                CurrPieceEntityMarker,
+            ));
         });
 
     commands.spawn((
@@ -545,14 +603,22 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         .get_next_piece_blocks()
         .iter()
         .for_each(|blk| {
-            commands
-                .spawn(new_block(
-                    player_data.sparam.next_piece_translation(blk.0, blk.1),
-                    player_data.sparam.visible_block_size(),
-                    get_color(player_data.board.get_next_piece().shape()),
-                ))
-                .insert(GameEntityMarker)
-                .insert(NextPieceEntityMarker);
+            commands.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(
+                        player_data.sparam.next_piece_translation(blk.0, blk.1),
+                    ),
+                    sprite: Sprite {
+                        custom_size: Some(player_data.sparam.visible_block_size()),
+                        ..default()
+                    },
+                    texture: block_image_assets
+                        .get_image(player_data.board.get_next_piece().shape()),
+                    ..default()
+                },
+                GameEntityMarker,
+                NextPieceEntityMarker,
+            ));
         });
     commands.spawn((
         SpriteBundle {
@@ -571,49 +637,6 @@ fn setup_screen(mut commands: Commands, player_data: ResMut<PlayerData>) {
         GameEntityMarker,
         NextPieceSlotCoverEntityMarker,
     ));
-}
-
-fn new_block(translation: Vec3, size: Vec2, color: Color) -> SpriteBundle {
-    SpriteBundle {
-        transform: Transform {
-            translation,
-            ..default()
-        },
-        sprite: Sprite {
-            color,
-            custom_size: Some(size),
-            ..default()
-        },
-        ..default()
-    }
-}
-
-fn update_board_block(sprite: &mut Sprite, shape: Option<PieceShape>) {
-    if let Some(shape) = shape {
-        sprite.color = get_color(shape);
-    } else {
-        sprite.color = BLACK.into();
-    }
-}
-
-fn update_curr_piece_block(
-    transform: &mut Transform,
-    sprite: &mut Sprite,
-    color: Color,
-    translation: Vec3,
-) {
-    transform.translation = translation;
-    sprite.color = color;
-}
-
-fn update_next_piece_block(
-    transform: &mut Transform,
-    sprite: &mut Sprite,
-    color: Color,
-    translation: Vec3,
-) {
-    transform.translation = translation;
-    sprite.color = color;
 }
 
 fn update_statistic_system(
@@ -734,13 +757,14 @@ mod state_game_running {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         mut query: ParamSet<(
-            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+            Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
             Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        block_image_assets: Res<BlockImageAssets>,
     ) {
         let mut inputs = GameRunningInputs {
             left: (
@@ -820,13 +844,9 @@ mod state_game_running {
                 query.p0().iter_mut(),
                 player_data.board.get_curr_piece_blocks(),
             )
-            .for_each(|((mut transform, mut sprite), blk)| {
-                update_curr_piece_block(
-                    &mut transform,
-                    &mut sprite,
-                    get_color(player_data.board.get_curr_piece().shape()),
-                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
-                );
+            .for_each(|((mut transform, mut image), blk)| {
+                *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
             });
         }
         if lr_moved {
@@ -907,12 +927,13 @@ mod state_game_running {
 
     pub(super) fn curr_piece_fall_system(
         mut query: ParamSet<(
-            Query<(&mut Sprite, &BoardBlockEntityMarker)>,
-            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+            Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
+            Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        block_image_assets: Res<BlockImageAssets>,
     ) {
         let threshold = player_data.fall_tick.threshold();
         if player_data.game_timer.commit(threshold) {
@@ -923,13 +944,10 @@ mod state_game_running {
                     query.p1().iter_mut(),
                     player_data.board.get_curr_piece_blocks(),
                 )
-                .for_each(|((mut transform, mut sprite), blk)| {
-                    update_curr_piece_block(
-                        &mut transform,
-                        &mut sprite,
-                        get_color(player_data.board.get_curr_piece().shape()),
-                        player_data.sparam.curr_piece_translation(blk.0, blk.1),
-                    );
+                .for_each(|((mut transform, mut image), blk)| {
+                    *image =
+                        block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                    transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
                 e_play_sound.send(PlaySoundEvent::GameOver);
@@ -950,9 +968,8 @@ mod state_game_running {
                     transform.translation.z = player_data.sparam.board_translation().z - 1.0;
                 });
 
-                query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                    update_board_block(
-                        &mut sprite,
+                query.p0().iter_mut().for_each(|(mut image, coordinate)| {
+                    *image = block_image_assets.get_image_or_default(
                         player_data
                             .board
                             .block(coordinate.0 as i32, coordinate.1 as i32),
@@ -1024,20 +1041,21 @@ mod state_game_line_clear {
 
     pub(super) fn tick_system(
         time: Res<Time>,
-        mut query: Query<(&mut Sprite, &BoardBlockEntityMarker)>,
+        mut query: Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        block_image_assets: Res<BlockImageAssets>,
     ) {
         player_data.game_timer.tick(time.delta());
         let threshold = player_data.line_clear_tick.threshold();
         if player_data.game_timer.commit(threshold) {
             if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
-                for (mut sprite, coordinate) in query.iter_mut() {
+                for (mut image, coordinate) in query.iter_mut() {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
-                        sprite.color = BLACK.into();
+                        *image = block_image_assets.get_default();
                     }
                 }
             } else {
@@ -1045,9 +1063,28 @@ mod state_game_line_clear {
                     e_play_sound.send(PlaySoundEvent::LevelUp);
                 }
                 player_data.fall_tick = FallTick::new(player_data.board.level(), false);
-                player_state.set(PlayerState::GameEntryDelay);
+                player_state.set(PlayerState::GameUpdateBlockImageAssets);
             }
         }
+    }
+}
+
+mod state_game_update_assets {
+    use super::*;
+
+    pub(super) fn update_block_image_assets(
+        mut player_state: ResMut<NextState<PlayerState>>,
+        mut image_assets: ResMut<Assets<Image>>,
+        mut block_image_assets: ResMut<BlockImageAssets>,
+        player_data: Res<PlayerData>,
+    ) {
+        *block_image_assets = BlockImageAssets {
+            images: PieceShape::iter()
+                .map(|shape| image_assets.add(get_block_image(*shape, player_data.board.level())))
+                .collect(),
+            default: image_assets.add(get_default_block_image()),
+        };
+        player_state.set(PlayerState::GameEntryDelay);
     }
 }
 
@@ -1057,50 +1094,42 @@ mod state_game_entry_delay {
     pub(super) fn tick_system(
         time: Res<Time>,
         mut query: ParamSet<(
-            Query<(&mut Sprite, &BoardBlockEntityMarker)>,
-            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
-            Query<(&mut Transform, &mut Sprite), With<NextPieceEntityMarker>>,
+            Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
+            Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
+            Query<(&mut Transform, &mut Handle<Image>), With<NextPieceEntityMarker>>,
         )>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        block_image_assets: Res<BlockImageAssets>,
     ) {
         player_data.game_timer.tick(time.delta());
         let threshold = player_data.entry_delay_tick.threshold();
         if player_data.game_timer.commit(threshold) {
             player_data.board.switch_to_next_piece();
 
-            query.p0().iter_mut().for_each(|(mut sprite, coordinate)| {
-                update_board_block(
-                    &mut sprite,
+            query.p0().iter_mut().for_each(|(mut image, coordinate)| {
+                *image = block_image_assets.get_image_or_default(
                     player_data
                         .board
                         .block(coordinate.0 as i32, coordinate.1 as i32),
-                )
+                );
             });
 
             std::iter::zip(
                 query.p1().iter_mut(),
                 player_data.board.get_curr_piece_blocks(),
             )
-            .for_each(|((mut transform, mut sprite), blk)| {
-                update_curr_piece_block(
-                    &mut transform,
-                    &mut sprite,
-                    get_color(player_data.board.get_curr_piece().shape()),
-                    player_data.sparam.curr_piece_translation(blk.0, blk.1),
-                );
+            .for_each(|((mut transform, mut image), blk)| {
+                *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                transform.translation = player_data.sparam.curr_piece_translation(blk.0, blk.1);
             });
             std::iter::zip(
                 query.p2().iter_mut(),
                 player_data.board.get_next_piece_blocks(),
             )
-            .for_each(|((mut transform, mut sprite), blk)| {
-                update_next_piece_block(
-                    &mut transform,
-                    &mut sprite,
-                    get_color(player_data.board.get_next_piece().shape()),
-                    player_data.sparam.next_piece_translation(blk.0, blk.1),
-                );
+            .for_each(|((mut transform, mut image), blk)| {
+                *image = block_image_assets.get_image(player_data.board.get_next_piece().shape());
+                transform.translation = player_data.sparam.next_piece_translation(blk.0, blk.1);
             });
 
             player_state.set(PlayerState::GameRunning);
