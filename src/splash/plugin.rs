@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{app_state::AppState, utility::despawn_all};
+use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 pub fn setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::Splash), setup_screen)
@@ -82,10 +82,18 @@ fn setup_screen(mut commands: Commands) {
 
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<MouseButton>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    if keys.just_pressed(KeyCode::Enter) || buttons.just_pressed(MouseButton::Left) {
+    let mut pressed = keys.just_pressed(KeyCode::Enter);
+    if let Some(gamepad) = controller.gamepad {
+        pressed |= buttons.just_pressed(GamepadButton {
+            gamepad,
+            button_type: GamepadButtonType::Start,
+        })
+    }
+    if pressed {
         app_state.set(AppState::Menu);
     }
 }

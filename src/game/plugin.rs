@@ -735,19 +735,19 @@ mod state_game_running {
     ) {
         let mut inputs = GameRunningInputs {
             left: (
-                keys.just_pressed(KeyCode::KeyA),
-                keys.pressed(KeyCode::KeyA),
+                keys.just_pressed(KeyCode::ArrowLeft),
+                keys.pressed(KeyCode::ArrowLeft),
             ),
             right: (
-                keys.just_pressed(KeyCode::KeyD),
-                keys.pressed(KeyCode::KeyD),
+                keys.just_pressed(KeyCode::ArrowRight),
+                keys.pressed(KeyCode::ArrowRight),
             ),
             down: (
-                keys.just_pressed(KeyCode::KeyS),
-                keys.pressed(KeyCode::KeyS),
+                keys.just_pressed(KeyCode::ArrowDown),
+                keys.pressed(KeyCode::ArrowDown),
             ),
-            rotate_clockwise: keys.just_pressed(KeyCode::Period),
-            rotate_counter_clockwise: keys.just_pressed(KeyCode::Comma),
+            rotate_clockwise: keys.just_pressed(KeyCode::KeyX),
+            rotate_counter_clockwise: keys.just_pressed(KeyCode::KeyZ),
             start: keys.just_pressed(KeyCode::Enter),
         };
 
@@ -785,11 +785,11 @@ mod state_game_running {
                 ),
                 rotate_clockwise: buttons.just_pressed(GamepadButton {
                     gamepad,
-                    button_type: GamepadButtonType::South,
+                    button_type: GamepadButtonType::East,
                 }),
                 rotate_counter_clockwise: buttons.just_pressed(GamepadButton {
                     gamepad,
-                    button_type: GamepadButtonType::West,
+                    button_type: GamepadButtonType::South,
                 }),
                 start: buttons.just_pressed(GamepadButton {
                     gamepad,

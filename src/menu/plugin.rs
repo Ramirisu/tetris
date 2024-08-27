@@ -271,10 +271,10 @@ fn handle_input_system(
     mut player_data: ResMut<PlayerData>,
 ) {
     let mut inputs = MenuInputs {
-        left: keys.just_pressed(KeyCode::KeyA),
-        right: keys.just_pressed(KeyCode::KeyD),
-        up: keys.just_pressed(KeyCode::KeyW),
-        down: keys.just_pressed(KeyCode::KeyS),
+        left: keys.just_pressed(KeyCode::ArrowLeft),
+        right: keys.just_pressed(KeyCode::ArrowRight),
+        up: keys.just_pressed(KeyCode::ArrowUp),
+        down: keys.just_pressed(KeyCode::ArrowDown),
         start: keys.just_pressed(KeyCode::Enter),
     };
 
