@@ -81,15 +81,15 @@ impl RenderConfig {
     }
 
     pub fn lines_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.board_height() / 3.0, BOARD_LAYER)
+        Vec3::new(-self.board_width(), self.unit * 8.0, BOARD_LAYER)
     }
 
     pub fn score_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), self.board_height() / 3.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), self.unit * 8.0, BOARD_LAYER)
     }
 
     pub fn level_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.board_height() / 3.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), -self.unit * 6.0, BOARD_LAYER)
     }
 
     pub fn next_piece_translation(&self, x: i32, y: i32) -> Vec3 {
@@ -120,12 +120,12 @@ impl RenderConfig {
         Vec3::new(self.board_width(), 0.0, COVER_LAYER)
     }
 
-    pub fn tetris_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 1.0, BOARD_LAYER)
+    pub fn statistics_translation(&self) -> Vec3 {
+        Vec3::new(-self.board_width(), self.unit * 2.0, BOARD_LAYER)
     }
 
     pub fn das_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), -self.unit * 4.0, BOARD_LAYER)
+        Vec3::new(-self.board_width(), -self.unit * 3.0, BOARD_LAYER)
     }
 }
 

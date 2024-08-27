@@ -38,11 +38,11 @@ pub fn setup(app: &mut App) {
                     state_game_running::tick_system,
                     state_game_running::handle_input_system,
                     state_game_running::curr_piece_fall_system,
-                    update_statistic_system,
+                    update_statistics_system,
                 )
                     .chain()
                     .run_if(in_state(PlayerState::GameRunning)),
-                (state_game_line_clear::tick_system, update_statistic_system)
+                (state_game_line_clear::tick_system, update_statistics_system)
                     .chain()
                     .run_if(in_state(PlayerState::GameLineClear)),
                 state_game_update_assets::update_square_image_assets
@@ -119,7 +119,7 @@ struct LevelEntityMarker;
 struct DASEntityMarker;
 
 #[derive(Component)]
-struct TetrisEntityMarker;
+struct StatisticsEntityMarker;
 
 #[derive(Component)]
 struct CurrPieceEntityMarker;
@@ -487,11 +487,11 @@ fn setup_screen(
                     ..default()
                 }),
             ]),
-            transform: Transform::from_translation(player_data.rc.tetris_translation()),
+            transform: Transform::from_translation(player_data.rc.statistics_translation()),
             ..default()
         },
         GameEntityMarker,
-        TetrisEntityMarker,
+        StatisticsEntityMarker,
     ));
     commands.spawn((
         Text2dBundle {
@@ -608,12 +608,12 @@ fn setup_screen(
     ));
 }
 
-fn update_statistic_system(
+fn update_statistics_system(
     mut query: ParamSet<(
         Query<&mut Text, With<LinesEntityMarker>>,
         Query<&mut Text, With<ScoreEntityMarker>>,
         Query<&mut Text, With<LevelEntityMarker>>,
-        Query<&mut Text, With<TetrisEntityMarker>>,
+        Query<&mut Text, With<StatisticsEntityMarker>>,
         Query<&mut Text, With<DASEntityMarker>>,
     )>,
     player_data: ResMut<PlayerData>,
