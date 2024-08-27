@@ -262,7 +262,7 @@ fn setup_screen(
                         player_data.rc.board_square_translation(x as i32, y as i32),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_square_size()),
+                        custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
                     texture: square_image_assets.get_default(),
@@ -527,7 +527,7 @@ fn setup_screen(
                         player_data.rc.curr_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_square_size()),
+                        custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
                     texture: square_image_assets
@@ -577,7 +577,7 @@ fn setup_screen(
                         player_data.rc.next_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_square_size()),
+                        custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
                     texture: square_image_assets

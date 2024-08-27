@@ -14,7 +14,7 @@ pub struct RenderConfig {
 
 impl RenderConfig {
     pub fn new() -> Self {
-        Self { unit: 40.0 }
+        Self { unit: 36.0 }
     }
 
     pub fn unit(&self) -> f32 {
@@ -31,11 +31,6 @@ impl RenderConfig {
 
     pub fn square_size(&self) -> Vec2 {
         Vec2::new(self.square_width(), self.square_height())
-    }
-
-    pub fn visible_square_size(&self) -> Vec2 {
-        let padding = self.unit / 10.0;
-        Vec2::new(self.unit - padding, self.unit - padding)
     }
 
     pub fn board_translation(&self) -> Vec3 {

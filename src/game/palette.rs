@@ -59,8 +59,11 @@ enum SquarePattern {
     Z,
 }
 
+const SQUARE_IMAGE_ROWS: usize = 9;
+const SQUARE_IMAGE_COLS: usize = 9;
+
 struct SquareImage {
-    buffer: [[Srgba; 8]; 8],
+    buffer: [[Srgba; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS],
 }
 
 impl SquareImage {
@@ -70,46 +73,49 @@ impl SquareImage {
             SquarePattern::Y => &Self::SQUARE_PATTERN_Y,
             SquarePattern::Z => &Self::SQUARE_PATTERN_Z,
         };
-        let mut buffer = [[Srgba::BLACK; 8]; 8];
-        for y in 0..8 {
-            for x in 0..8 {
+        let mut buffer = [[Srgba::BLACK; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS];
+        for y in 0..SQUARE_IMAGE_ROWS {
+            for x in 0..SQUARE_IMAGE_COLS {
                 buffer[y][x] = colors[pattern[y][x] as usize];
             }
         }
         Self { buffer }
     }
 
-    const SQUARE_PATTERN_X: [[u8; 8]; 8] = [
-        [1, 3, 3, 3, 3, 3, 3, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 1, 1, 1, 1, 1, 1, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
+    const SQUARE_PATTERN_X: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+        [1, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    const SQUARE_PATTERN_Y: [[u8; 8]; 8] = [
-        [1, 2, 2, 2, 2, 2, 2, 2],
-        [2, 1, 1, 2, 2, 2, 2, 2],
-        [2, 1, 2, 2, 2, 2, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2],
+    const SQUARE_PATTERN_Y: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+        [1, 2, 2, 2, 2, 2, 2, 2, 0],
+        [2, 1, 1, 2, 2, 2, 2, 2, 0],
+        [2, 1, 2, 2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    const SQUARE_PATTERN_Z: [[u8; 8]; 8] = [
-        [1, 3, 3, 3, 3, 3, 3, 3],
-        [3, 1, 1, 3, 3, 3, 3, 3],
-        [3, 1, 3, 3, 3, 3, 3, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3],
+    const SQUARE_PATTERN_Z: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+        [1, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 1, 1, 3, 3, 3, 3, 3, 0],
+        [3, 1, 3, 3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 }
 
@@ -117,8 +123,8 @@ impl Into<DynamicImage> for SquareImage {
     fn into(self) -> DynamicImage {
         DynamicImage::ImageRgb32F(
             Rgb32FImage::from_vec(
-                8,
-                8,
+                SQUARE_IMAGE_COLS as u32,
+                SQUARE_IMAGE_ROWS as u32,
                 self.buffer
                     .iter()
                     .flat_map(|rows| rows.iter().flat_map(|color| color.to_f32_array_no_alpha()))
