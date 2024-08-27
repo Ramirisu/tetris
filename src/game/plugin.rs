@@ -157,6 +157,7 @@ pub struct PlayerData {
     rc: RenderConfig,
     board: Board,
     game_timer: GameTimer,
+    lock_curr_piece_immediately: bool,
     can_press_down: bool,
     press_down_timer: PressDownTimer,
     das_timer: DelayAutoShiftTimer,
@@ -173,6 +174,7 @@ impl PlayerData {
             rc: RenderConfig::default(),
             board: Board::new(start_level),
             game_timer: GameTimer::default(),
+            lock_curr_piece_immediately: false,
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
@@ -829,14 +831,15 @@ mod state_game_running {
         time: &Time,
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
-        let mut moved = false;
+        let mut down_moved = false;
         let mut lr_moved = false;
         let mut rotated = false;
 
         if player_data.can_press_down {
             if inputs.down.1 {
                 if player_data.press_down_timer.commit() {
-                    moved |= player_data.board.move_piece_down();
+                    down_moved |= player_data.board.move_piece_down();
+                    player_data.lock_curr_piece_immediately = !down_moved;
                 }
             } else {
                 player_data.can_press_down = false;
@@ -889,7 +892,7 @@ mod state_game_running {
             rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
-        (moved | lr_moved | rotated, lr_moved, rotated)
+        (down_moved | lr_moved | rotated, lr_moved, rotated)
     }
 
     pub(super) fn curr_piece_fall_system(
@@ -902,8 +905,16 @@ mod state_game_running {
         mut player_state: ResMut<NextState<PlayerState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
-        let threshold = player_data.fall_tick.threshold();
-        if player_data.game_timer.commit(threshold) {
+        let lock = {
+            if std::mem::replace(&mut player_data.lock_curr_piece_immediately, false) {
+                player_data.game_timer.reset();
+                true
+            } else {
+                let threshold = player_data.fall_tick.threshold();
+                player_data.game_timer.commit(threshold)
+            }
+        };
+        if lock {
             player_data.fall_tick = FallTick::new(player_data.board.level(), false);
 
             if player_data.board.move_piece_down() {
