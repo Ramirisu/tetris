@@ -10,21 +10,21 @@ use image::{DynamicImage, Rgb32FImage};
 
 use super::piece::PieceShape;
 
-pub fn get_block_image(shape: PieceShape, level: usize) -> Image {
+pub fn get_square_image(shape: PieceShape, level: usize) -> Image {
     let palette = get_level_palette(level);
     match shape {
-        PieceShape::T => get_block_image_from_pattern(BlockPatternType::X, palette),
-        PieceShape::J => get_block_image_from_pattern(BlockPatternType::Z, palette),
-        PieceShape::Z => get_block_image_from_pattern(BlockPatternType::Y, palette),
-        PieceShape::O => get_block_image_from_pattern(BlockPatternType::X, palette),
-        PieceShape::S => get_block_image_from_pattern(BlockPatternType::Z, palette),
-        PieceShape::L => get_block_image_from_pattern(BlockPatternType::Y, palette),
-        PieceShape::I => get_block_image_from_pattern(BlockPatternType::X, palette),
+        PieceShape::T => get_square_image_from_pattern(SquarePattern::X, palette),
+        PieceShape::J => get_square_image_from_pattern(SquarePattern::Z, palette),
+        PieceShape::Z => get_square_image_from_pattern(SquarePattern::Y, palette),
+        PieceShape::O => get_square_image_from_pattern(SquarePattern::X, palette),
+        PieceShape::S => get_square_image_from_pattern(SquarePattern::Z, palette),
+        PieceShape::L => get_square_image_from_pattern(SquarePattern::Y, palette),
+        PieceShape::I => get_square_image_from_pattern(SquarePattern::X, palette),
     }
 }
 
-pub fn get_default_block_image() -> Image {
-    get_block_image_from_pattern(BlockPatternType::X, &[BLACK, BLACK, BLACK, BLACK])
+pub fn get_default_square_image() -> Image {
+    get_square_image_from_pattern(SquarePattern::X, &[BLACK, BLACK, BLACK, BLACK])
 }
 
 fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
@@ -43,8 +43,8 @@ fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
     &PALETTES[level % 10]
 }
 
-fn get_block_image_from_pattern(t: BlockPatternType, colors: &[Srgba; 4]) -> Image {
-    let image: DynamicImage = BlockImage::new(t, colors).into();
+fn get_square_image_from_pattern(pattern: SquarePattern, colors: &[Srgba; 4]) -> Image {
+    let image: DynamicImage = SquareImage::new(pattern, colors).into();
     Image::from_dynamic(
         image,
         true,
@@ -53,22 +53,22 @@ fn get_block_image_from_pattern(t: BlockPatternType, colors: &[Srgba; 4]) -> Ima
 }
 
 #[derive(Clone, Copy)]
-enum BlockPatternType {
+enum SquarePattern {
     X,
     Y,
     Z,
 }
 
-struct BlockImage {
+struct SquareImage {
     buffer: [[Srgba; 8]; 8],
 }
 
-impl BlockImage {
-    pub fn new(pattern: BlockPatternType, colors: &[Srgba; 4]) -> Self {
+impl SquareImage {
+    pub fn new(pattern: SquarePattern, colors: &[Srgba; 4]) -> Self {
         let pattern = match pattern {
-            BlockPatternType::X => &Self::BLOCK_PATTERN_X,
-            BlockPatternType::Y => &Self::BLOCK_PATTERN_Y,
-            BlockPatternType::Z => &Self::BLOCK_PATTERN_Z,
+            SquarePattern::X => &Self::SQUARE_PATTERN_X,
+            SquarePattern::Y => &Self::SQUARE_PATTERN_Y,
+            SquarePattern::Z => &Self::SQUARE_PATTERN_Z,
         };
         let mut buffer = [[Srgba::BLACK; 8]; 8];
         for y in 0..8 {
@@ -79,7 +79,7 @@ impl BlockImage {
         Self { buffer }
     }
 
-    const BLOCK_PATTERN_X: [[u8; 8]; 8] = [
+    const SQUARE_PATTERN_X: [[u8; 8]; 8] = [
         [1, 3, 3, 3, 3, 3, 3, 3],
         [3, 1, 1, 1, 1, 1, 1, 3],
         [3, 1, 1, 1, 1, 1, 1, 3],
@@ -90,7 +90,7 @@ impl BlockImage {
         [3, 3, 3, 3, 3, 3, 3, 3],
     ];
 
-    const BLOCK_PATTERN_Y: [[u8; 8]; 8] = [
+    const SQUARE_PATTERN_Y: [[u8; 8]; 8] = [
         [1, 2, 2, 2, 2, 2, 2, 2],
         [2, 1, 1, 2, 2, 2, 2, 2],
         [2, 1, 2, 2, 2, 2, 2, 2],
@@ -101,7 +101,7 @@ impl BlockImage {
         [2, 2, 2, 2, 2, 2, 2, 2],
     ];
 
-    const BLOCK_PATTERN_Z: [[u8; 8]; 8] = [
+    const SQUARE_PATTERN_Z: [[u8; 8]; 8] = [
         [1, 3, 3, 3, 3, 3, 3, 3],
         [3, 1, 1, 3, 3, 3, 3, 3],
         [3, 1, 3, 3, 3, 3, 3, 3],
@@ -113,7 +113,7 @@ impl BlockImage {
     ];
 }
 
-impl Into<DynamicImage> for BlockImage {
+impl Into<DynamicImage> for SquareImage {
     fn into(self) -> DynamicImage {
         DynamicImage::ImageRgb32F(
             Rgb32FImage::from_vec(

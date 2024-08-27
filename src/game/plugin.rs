@@ -7,7 +7,7 @@ use crate::{app_state::AppState, controller::Controller, utility::despawn_all};
 
 use super::{
     board::Board,
-    palette::{get_block_image, get_default_block_image},
+    palette::{get_default_square_image, get_square_image},
     piece::PieceShape,
     render::RenderConfig,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
@@ -20,13 +20,13 @@ pub fn setup(app: &mut App) {
         .add_event::<PlaySoundEvent>()
         .add_systems(
             OnEnter(AppState::Game),
-            (load_audio_assets, load_block_image_assets, setup_screen).chain(),
+            (load_audio_assets, load_square_image_assets, setup_screen).chain(),
         )
         .add_systems(
             OnExit(AppState::Game),
             (
                 despawn_all::<GameEntityMarker>,
-                unload_block_image_assets,
+                unload_square_image_assets,
                 unload_audio_assets,
             )
                 .chain(),
@@ -45,8 +45,8 @@ pub fn setup(app: &mut App) {
                 (state_game_line_clear::tick_system, update_statistic_system)
                     .chain()
                     .run_if(in_state(PlayerState::GameLineClear)),
-                state_game_update_assets::update_block_image_assets
-                    .run_if(in_state(PlayerState::GameUpdateBlockImageAssets)),
+                state_game_update_assets::update_square_image_assets
+                    .run_if(in_state(PlayerState::GameUpdateSquareImageAssets)),
                 state_game_entry_delay::tick_system.run_if(in_state(PlayerState::GameEntryDelay)),
                 state_game_pause::handle_input_system.run_if(in_state(PlayerState::GamePause)),
                 state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
@@ -68,12 +68,12 @@ struct AudioAssets {
 }
 
 #[derive(Resource)]
-struct BlockImageAssets {
+struct SquareImageAssets {
     images: Vec<Handle<Image>>,
     default: Handle<Image>,
 }
 
-impl BlockImageAssets {
+impl SquareImageAssets {
     pub fn get_image(&self, shape: PieceShape) -> Handle<Image> {
         self.images[shape as usize].clone()
     }
@@ -95,9 +95,9 @@ impl BlockImageAssets {
 struct GameEntityMarker;
 
 #[derive(Component, Clone, Copy)]
-struct BoardBlockEntityMarker(usize, usize);
+struct BoardSquareEntityMarker(usize, usize);
 
-impl Into<(usize, usize)> for &BoardBlockEntityMarker {
+impl Into<(usize, usize)> for &BoardSquareEntityMarker {
     fn into(self) -> (usize, usize) {
         (self.0, self.1)
     }
@@ -146,7 +146,7 @@ pub enum PlayerState {
     #[default]
     GameRunning,
     GameLineClear,
-    GameUpdateBlockImageAssets,
+    GameUpdateSquareImageAssets,
     GameEntryDelay,
     GamePause,
     GameOver,
@@ -207,27 +207,27 @@ fn unload_audio_assets(mut commands: Commands) {
     commands.remove_resource::<AudioAssets>();
 }
 
-fn load_block_image_assets(
+fn load_square_image_assets(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
     player_data: Res<PlayerData>,
 ) {
-    commands.insert_resource(BlockImageAssets {
+    commands.insert_resource(SquareImageAssets {
         images: PieceShape::iter()
-            .map(|shape| image_assets.add(get_block_image(*shape, player_data.board.level())))
+            .map(|shape| image_assets.add(get_square_image(*shape, player_data.board.level())))
             .collect(),
-        default: image_assets.add(get_default_block_image()),
+        default: image_assets.add(get_default_square_image()),
     });
 }
 
-fn unload_block_image_assets(mut commands: Commands) {
-    commands.remove_resource::<BlockImageAssets>();
+fn unload_square_image_assets(mut commands: Commands) {
+    commands.remove_resource::<SquareImageAssets>();
 }
 
 fn setup_screen(
     mut commands: Commands,
     player_data: ResMut<PlayerData>,
-    block_image_assets: Res<BlockImageAssets>,
+    square_image_assets: Res<SquareImageAssets>,
 ) {
     commands.spawn((
         SpriteBundle {
@@ -259,17 +259,17 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        player_data.rc.board_block_translation(x as i32, y as i32),
+                        player_data.rc.board_square_translation(x as i32, y as i32),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_square_size()),
                         ..default()
                     },
-                    texture: block_image_assets.get_default(),
+                    texture: square_image_assets.get_default(),
                     ..default()
                 },
                 GameEntityMarker,
-                BoardBlockEntityMarker(x, y),
+                BoardSquareEntityMarker(x, y),
             ));
         }
     }
@@ -518,7 +518,7 @@ fn setup_screen(
 
     player_data
         .board
-        .get_curr_piece_blocks()
+        .get_curr_piece_squares()
         .iter()
         .for_each(|blk| {
             commands.spawn((
@@ -527,10 +527,10 @@ fn setup_screen(
                         player_data.rc.curr_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_square_size()),
                         ..default()
                     },
-                    texture: block_image_assets
+                    texture: square_image_assets
                         .get_image(player_data.board.get_curr_piece().shape()),
                     ..default()
                 },
@@ -568,7 +568,7 @@ fn setup_screen(
     player_data
         .board
         .get_next_piece()
-        .to_blocks()
+        .to_squares()
         .iter()
         .for_each(|blk| {
             commands.spawn((
@@ -577,10 +577,10 @@ fn setup_screen(
                         player_data.rc.next_piece_translation(blk.0, blk.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(player_data.rc.visible_block_size()),
+                        custom_size: Some(player_data.rc.visible_square_size()),
                         ..default()
                     },
-                    texture: block_image_assets
+                    texture: square_image_assets
                         .get_image(player_data.board.get_next_piece().shape()),
                     ..default()
                 },
@@ -731,7 +731,7 @@ mod state_game_running {
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
-        block_image_assets: Res<BlockImageAssets>,
+        square_image_assets: Res<SquareImageAssets>,
     ) {
         let mut inputs = GameRunningInputs {
             left: (
@@ -809,10 +809,10 @@ mod state_game_running {
         if moved {
             std::iter::zip(
                 query.p0().iter_mut(),
-                player_data.board.get_curr_piece_blocks(),
+                player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                *image = square_image_assets.get_image(player_data.board.get_curr_piece().shape());
                 transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
         }
@@ -894,13 +894,13 @@ mod state_game_running {
 
     pub(super) fn curr_piece_fall_system(
         mut query: ParamSet<(
-            Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
+            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
-        block_image_assets: Res<BlockImageAssets>,
+        square_image_assets: Res<SquareImageAssets>,
     ) {
         let threshold = player_data.fall_tick.threshold();
         if player_data.game_timer.commit(threshold) {
@@ -909,11 +909,11 @@ mod state_game_running {
             if player_data.board.move_piece_down() {
                 std::iter::zip(
                     query.p1().iter_mut(),
-                    player_data.board.get_curr_piece_blocks(),
+                    player_data.board.get_curr_piece_squares(),
                 )
                 .for_each(|((mut transform, mut image), blk)| {
                     *image =
-                        block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                        square_image_assets.get_image(player_data.board.get_curr_piece().shape());
                     transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
@@ -924,7 +924,7 @@ mod state_game_running {
 
                 let min_y = player_data
                     .board
-                    .get_curr_piece_blocks()
+                    .get_curr_piece_squares()
                     .iter()
                     .fold(19, |acc, blk| acc.min(blk.1 as u64));
                 player_data.entry_delay_tick = EntryDelayTick::new(min_y);
@@ -936,10 +936,10 @@ mod state_game_running {
                 });
 
                 query.p0().iter_mut().for_each(|(mut image, coordinate)| {
-                    *image = block_image_assets.get_image_or_default(
+                    *image = square_image_assets.get_image_or_default(
                         player_data
                             .board
-                            .block(coordinate.0 as i32, coordinate.1 as i32),
+                            .get_square(coordinate.0 as i32, coordinate.1 as i32),
                     );
                 });
 
@@ -1008,11 +1008,11 @@ mod state_game_line_clear {
 
     pub(super) fn tick_system(
         time: Res<Time>,
-        mut query: Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
+        mut query: Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
-        block_image_assets: Res<BlockImageAssets>,
+        square_image_assets: Res<SquareImageAssets>,
     ) {
         player_data.game_timer.tick(time.delta());
         let threshold = player_data.line_clear_tick.threshold();
@@ -1022,7 +1022,7 @@ mod state_game_line_clear {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
-                        *image = block_image_assets.get_default();
+                        *image = square_image_assets.get_default();
                     }
                 }
             } else {
@@ -1030,7 +1030,7 @@ mod state_game_line_clear {
                     e_play_sound.send(PlaySoundEvent::LevelUp);
                 }
                 player_data.fall_tick = FallTick::new(player_data.board.level(), false);
-                player_state.set(PlayerState::GameUpdateBlockImageAssets);
+                player_state.set(PlayerState::GameUpdateSquareImageAssets);
             }
         }
     }
@@ -1039,17 +1039,17 @@ mod state_game_line_clear {
 mod state_game_update_assets {
     use super::*;
 
-    pub(super) fn update_block_image_assets(
+    pub(super) fn update_square_image_assets(
         mut player_state: ResMut<NextState<PlayerState>>,
         mut image_assets: ResMut<Assets<Image>>,
-        mut block_image_assets: ResMut<BlockImageAssets>,
+        mut square_image_assets: ResMut<SquareImageAssets>,
         player_data: Res<PlayerData>,
     ) {
-        *block_image_assets = BlockImageAssets {
+        *square_image_assets = SquareImageAssets {
             images: PieceShape::iter()
-                .map(|shape| image_assets.add(get_block_image(*shape, player_data.board.level())))
+                .map(|shape| image_assets.add(get_square_image(*shape, player_data.board.level())))
                 .collect(),
-            default: image_assets.add(get_default_block_image()),
+            default: image_assets.add(get_default_square_image()),
         };
         player_state.set(PlayerState::GameEntryDelay);
     }
@@ -1061,13 +1061,13 @@ mod state_game_entry_delay {
     pub(super) fn tick_system(
         time: Res<Time>,
         mut query: ParamSet<(
-            Query<(&mut Handle<Image>, &BoardBlockEntityMarker)>,
+            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<(&mut Transform, &mut Handle<Image>), With<NextPieceEntityMarker>>,
         )>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
-        block_image_assets: Res<BlockImageAssets>,
+        square_image_assets: Res<SquareImageAssets>,
     ) {
         player_data.game_timer.tick(time.delta());
         let threshold = player_data.entry_delay_tick.threshold();
@@ -1075,27 +1075,27 @@ mod state_game_entry_delay {
             player_data.board.switch_to_next_piece();
 
             query.p0().iter_mut().for_each(|(mut image, coordinate)| {
-                *image = block_image_assets.get_image_or_default(
+                *image = square_image_assets.get_image_or_default(
                     player_data
                         .board
-                        .block(coordinate.0 as i32, coordinate.1 as i32),
+                        .get_square(coordinate.0 as i32, coordinate.1 as i32),
                 );
             });
 
             std::iter::zip(
                 query.p1().iter_mut(),
-                player_data.board.get_curr_piece_blocks(),
+                player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = block_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                *image = square_image_assets.get_image(player_data.board.get_curr_piece().shape());
                 transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
             std::iter::zip(
                 query.p2().iter_mut(),
-                player_data.board.get_next_piece().to_blocks(),
+                player_data.board.get_next_piece().to_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = block_image_assets.get_image(player_data.board.get_next_piece().shape());
+                *image = square_image_assets.get_image(player_data.board.get_next_piece().shape());
                 transform.translation = player_data.rc.next_piece_translation(blk.0, blk.1);
             });
 

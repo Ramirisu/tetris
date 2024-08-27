@@ -4,7 +4,7 @@ use super::board::Board;
 
 const BOARD_BACKGROUND_LAYER: f32 = 1.0;
 const BOARD_LAYER: f32 = 2.0;
-const BLOCK_LAYER: f32 = 3.0;
+const SQUARE_LAYER: f32 = 3.0;
 const CURR_PIECE_LAYER: f32 = 4.0;
 const COVER_LAYER: f32 = 5.0;
 
@@ -21,19 +21,19 @@ impl RenderConfig {
         self.unit
     }
 
-    fn block_width(&self) -> f32 {
+    fn square_width(&self) -> f32 {
         self.unit
     }
 
-    fn block_height(&self) -> f32 {
+    fn square_height(&self) -> f32 {
         self.unit
     }
 
-    pub fn block_size(&self) -> Vec2 {
-        Vec2::new(self.block_width(), self.block_height())
+    pub fn square_size(&self) -> Vec2 {
+        Vec2::new(self.square_width(), self.square_height())
     }
 
-    pub fn visible_block_size(&self) -> Vec2 {
+    pub fn visible_square_size(&self) -> Vec2 {
         let padding = self.unit / 10.0;
         Vec2::new(self.unit - padding, self.unit - padding)
     }
@@ -69,18 +69,18 @@ impl RenderConfig {
         Vec3::new(0.0, 0.0, COVER_LAYER)
     }
 
-    pub fn board_block_translation(&self, x: i32, y: i32) -> Vec3 {
+    pub fn board_square_translation(&self, x: i32, y: i32) -> Vec3 {
         (Vec2::new(
-            (x as f32 + 0.5) * self.block_width(),
-            (y as f32 + 0.5) * self.block_height(),
+            (x as f32 + 0.5) * self.square_width(),
+            (y as f32 + 0.5) * self.square_height(),
         ) + (self.board_size() / -2.0))
-            .extend(BLOCK_LAYER)
+            .extend(SQUARE_LAYER)
     }
 
     pub fn curr_piece_translation(&self, x: i32, y: i32) -> Vec3 {
         (Vec2::new(
-            (x as f32 + 0.5) * self.block_width(),
-            (y as f32 + 0.5) * self.block_height(),
+            (x as f32 + 0.5) * self.square_width(),
+            (y as f32 + 0.5) * self.square_height(),
         ) + (self.board_size() / -2.0))
             .extend(CURR_PIECE_LAYER)
     }
@@ -99,8 +99,8 @@ impl RenderConfig {
 
     pub fn next_piece_translation(&self, x: i32, y: i32) -> Vec3 {
         (Vec2::new(
-            (x as f32) * self.block_width(),
-            (y as f32) * self.block_height(),
+            (x as f32) * self.square_width(),
+            (y as f32) * self.square_height(),
         ) + Vec2::new(self.board_width(), 0.0))
         .extend(CURR_PIECE_LAYER)
     }

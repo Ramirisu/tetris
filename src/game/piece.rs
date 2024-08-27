@@ -1,44 +1,45 @@
 use rand::Rng;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Block(pub i32, pub i32);
+pub struct Square(pub i32, pub i32);
 
-const PIECE_SHAPE_T: &[[Block; 4]; 4] = &[
-    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
-    [Block(0, -1), Block(-1, 0), Block(0, 0), Block(0, 1)],
-    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(0, 1)],
-    [Block(0, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
+const PIECE_SHAPE_T: &[[Square; 4]; 4] = &[
+    [Square(0, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
+    [Square(0, -1), Square(-1, 0), Square(0, 0), Square(0, 1)],
+    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(0, 1)],
+    [Square(0, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
 ];
 
-const PIECE_SHAPE_I: &[[Block; 4]; 2] = &[
-    [Block(-2, 0), Block(-1, 0), Block(0, 0), Block(1, 0)],
-    [Block(0, -1), Block(0, 0), Block(0, 1), Block(0, 2)],
+const PIECE_SHAPE_I: &[[Square; 4]; 2] = &[
+    [Square(-2, 0), Square(-1, 0), Square(0, 0), Square(1, 0)],
+    [Square(0, -1), Square(0, 0), Square(0, 1), Square(0, 2)],
 ];
 
-const PIECE_SHAPE_J: &[[Block; 4]; 4] = &[
-    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(1, -1)],
-    [Block(-1, -1), Block(0, -1), Block(0, 0), Block(0, 1)],
-    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(-1, 1)],
-    [Block(0, -1), Block(0, 0), Block(0, 1), Block(1, 1)],
+const PIECE_SHAPE_J: &[[Square; 4]; 4] = &[
+    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, -1)],
+    [Square(-1, -1), Square(0, -1), Square(0, 0), Square(0, 1)],
+    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(-1, 1)],
+    [Square(0, -1), Square(0, 0), Square(0, 1), Square(1, 1)],
 ];
 
-const PIECE_SHAPE_L: &[[Block; 4]; 4] = &[
-    [Block(-1, -1), Block(-1, 0), Block(0, 0), Block(1, 0)],
-    [Block(0, -1), Block(0, 0), Block(-1, 1), Block(0, 1)],
-    [Block(-1, 0), Block(0, 0), Block(1, 0), Block(1, 1)],
-    [Block(0, -1), Block(1, -1), Block(0, 0), Block(0, 1)],
+const PIECE_SHAPE_L: &[[Square; 4]; 4] = &[
+    [Square(-1, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
+    [Square(0, -1), Square(0, 0), Square(-1, 1), Square(0, 1)],
+    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, 1)],
+    [Square(0, -1), Square(1, -1), Square(0, 0), Square(0, 1)],
 ];
 
-const PIECE_SHAPE_O: &[[Block; 4]; 1] = &[[Block(-1, -1), Block(0, -1), Block(-1, 0), Block(0, 0)]];
+const PIECE_SHAPE_O: &[[Square; 4]; 1] =
+    &[[Square(-1, -1), Square(0, -1), Square(-1, 0), Square(0, 0)]];
 
-const PIECE_SHAPE_S: &[[Block; 4]; 2] = &[
-    [Block(-1, -1), Block(0, -1), Block(0, 0), Block(1, 0)],
-    [Block(1, -1), Block(0, 0), Block(1, 0), Block(0, 1)],
+const PIECE_SHAPE_S: &[[Square; 4]; 2] = &[
+    [Square(-1, -1), Square(0, -1), Square(0, 0), Square(1, 0)],
+    [Square(1, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
 ];
 
-const PIECE_SHAPE_Z: &[[Block; 4]; 2] = &[
-    [Block(0, -1), Block(1, -1), Block(-1, 0), Block(0, 0)],
-    [Block(0, -1), Block(0, 0), Block(1, 0), Block(1, 1)],
+const PIECE_SHAPE_Z: &[[Square; 4]; 2] = &[
+    [Square(0, -1), Square(1, -1), Square(-1, 0), Square(0, 0)],
+    [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -121,7 +122,7 @@ impl Piece {
         self.shape
     }
 
-    pub fn to_blocks(&self) -> [Block; 4] {
+    pub fn to_squares(&self) -> [Square; 4] {
         match self.shape {
             PieceShape::T => PIECE_SHAPE_T[self.state],
             PieceShape::J => PIECE_SHAPE_J[self.state],

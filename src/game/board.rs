@@ -1,13 +1,11 @@
 use super::{
-    level,
-    piece::{Block, Piece, PieceShape},
-    score::calculate_score,
+    level::get_level,
+    piece::{Piece, PieceShape, Square},
+    score::get_score,
 };
 
-pub type Block2dArray = Vec<Vec<Option<PieceShape>>>;
-
 pub struct Board {
-    blocks: Block2dArray,
+    squares: Vec<Vec<Option<PieceShape>>>,
     curr_piece: Piece,
     curr_translation: (i32, i32),
     next_piece: Piece,
@@ -30,7 +28,7 @@ impl Board {
 
     pub fn new(start_level: usize) -> Self {
         let mut board = Self {
-            blocks: vec![vec![None; Self::BOARD_COLS]; Self::BOARD_ROWS],
+            squares: vec![vec![None; Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece: Piece::rand(),
             curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_piece: Piece::rand(),
@@ -54,7 +52,7 @@ impl Board {
     }
 
     pub fn level(&self) -> usize {
-        level::level(self.start_level, self.lines)
+        get_level(self.start_level, self.lines)
     }
 
     pub fn lines(&self) -> usize {
@@ -97,14 +95,14 @@ impl Board {
         self.drought
     }
 
-    pub fn block(&self, x: i32, y: i32) -> Option<PieceShape> {
-        self.blocks[y as usize][x as usize]
+    pub fn get_square(&self, x: i32, y: i32) -> Option<PieceShape> {
+        self.squares[y as usize][x as usize]
     }
 
     pub fn get_line_clear_indexes(&self) -> Vec<usize> {
         let mut indexes = vec![];
         for index in 0..Self::BOARD_ROWS {
-            if self.blocks[index].iter().all(|blk| blk.is_some()) {
+            if self.squares[index].iter().all(|blk| blk.is_some()) {
                 indexes.push(index);
             }
         }
@@ -113,20 +111,20 @@ impl Board {
     }
 
     pub fn lock_curr_piece(&mut self) {
-        for blk in self.get_curr_piece_blocks() {
-            self.blocks[blk.1 as usize][blk.0 as usize] = Some(self.curr_piece.shape());
+        for blk in self.get_curr_piece_squares() {
+            self.squares[blk.1 as usize][blk.0 as usize] = Some(self.curr_piece.shape());
         }
     }
 
     pub fn clear_lines(&mut self) -> bool {
         let indexes = self.get_line_clear_indexes();
         indexes.iter().rev().for_each(|index| {
-            self.blocks.remove(*index);
+            self.squares.remove(*index);
         });
 
         let old_level = self.level();
 
-        self.score += calculate_score(indexes.len(), self.level());
+        self.score += get_score(indexes.len(), self.level());
         self.lines += indexes.len();
         match indexes.len() {
             1 => {
@@ -143,7 +141,7 @@ impl Board {
             }
             _ => (),
         }
-        self.blocks
+        self.squares
             .resize(Self::BOARD_ROWS, vec![None; Self::BOARD_COLS]);
 
         self.level() > old_level
@@ -163,9 +161,9 @@ impl Board {
         self.curr_piece
     }
 
-    pub fn get_curr_piece_blocks(&self) -> [Block; 4] {
-        self.curr_piece.to_blocks().map(|blk| {
-            Block(
+    pub fn get_curr_piece_squares(&self) -> [Square; 4] {
+        self.curr_piece.to_squares().map(|blk| {
+            Square(
                 blk.0 + self.curr_translation.0,
                 blk.1 + self.curr_translation.1,
             )
@@ -177,34 +175,37 @@ impl Board {
     }
 
     pub fn is_left_movable(&self) -> bool {
-        self.get_curr_piece_blocks().iter().all(|blk| {
+        self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0 - 1;
             let y = blk.1;
-            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
+            Self::is_inside(x, y)
+                && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_none())
         })
     }
 
     pub fn is_right_movable(&self) -> bool {
-        self.get_curr_piece_blocks().iter().all(|blk| {
+        self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0 + 1;
             let y = blk.1;
-            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
+            Self::is_inside(x, y)
+                && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_none())
         })
     }
 
     pub fn is_curr_position_valid(&self) -> bool {
-        self.get_curr_piece_blocks().iter().all(|blk| {
+        self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
-            Self::is_inside(x, y) && y < Self::BOARD_ROWS as i32 && self.block(x, y).is_none()
+            Self::is_inside(x, y) && y < Self::BOARD_ROWS as i32 && self.get_square(x, y).is_none()
         })
     }
 
     pub fn move_piece_down(&mut self) -> bool {
-        let movable = self.get_curr_piece_blocks().iter().all(|blk| {
+        let movable = self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1 - 1;
-            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
+            Self::is_inside(x, y)
+                && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_none())
         });
 
         if movable {
@@ -234,10 +235,11 @@ impl Board {
 
     pub fn rotate_piece_clockwise(&mut self) -> bool {
         self.curr_piece.next_state();
-        let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
+        let rotatable = self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
-            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
+            Self::is_inside(x, y)
+                && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_none())
         });
         if !rotatable {
             self.curr_piece.prev_state();
@@ -248,10 +250,11 @@ impl Board {
 
     pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
         self.curr_piece.prev_state();
-        let rotatable = self.get_curr_piece_blocks().iter().all(|blk| {
+        let rotatable = self.get_curr_piece_squares().iter().all(|blk| {
             let x = blk.0;
             let y = blk.1;
-            Self::is_inside(x, y) && (y >= Self::BOARD_ROWS as i32 || self.block(x, y).is_none())
+            Self::is_inside(x, y)
+                && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_none())
         });
         if !rotatable {
             self.curr_piece.next_state();

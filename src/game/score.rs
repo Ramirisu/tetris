@@ -1,4 +1,4 @@
-pub fn calculate_score(lines: usize, level: usize) -> usize {
+pub fn get_score(lines: usize, level: usize) -> usize {
     (level + 1)
         * match lines {
             0 => 0,
