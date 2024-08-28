@@ -1,7 +1,7 @@
 mod board;
 mod level;
-mod palette;
-mod piece;
+pub mod palette;
+pub mod piece;
 pub mod plugin;
 mod render;
 mod score;
