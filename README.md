@@ -1,5 +1,7 @@
 # Tetris
 
+[![Build](https://github.com/Ramirisu/tetris/actions/workflows/build.yml/badge.svg)](https://github.com/Ramirisu/tetris/actions/workflows/build.yml)
+
 A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
 ## Features
@@ -9,7 +11,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
   - [x] Initial Entry Delay (96 ticks)
   - [x] Entry Delay (10 ~ 18 ticks)
   - [x] Line Clear Delay (18 ticks)
-  - [x] 1H2R Random Generator
+  - [x] 1H2R Random Generator for Next Piece
   - [x] Normal Color Palettes
   - [ ] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
@@ -19,6 +21,18 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
 - Platform
   - [x] High FPS Support
   - [x] Cross-platform (Web/Windows/Linux/MacOS)
+
+## Keybindings
+
+| Action                    | Keyboard | Controller (NES) |
+| :------------------------ | :------: | :--------------: |
+| Move Up                   |    ↑     |        ↑         |
+| Move Down                 |    ↓     |        ↓         |
+| Move Left                 |    ←     |        ←         |
+| Move Right                |    →     |        →         |
+| Rotate Clockwisely        |    X     |        A         |
+| Rotate Counterclockwisely |    Z     |        B         |
+| Start                     |  Enter   |      Start       |
 
 ## License
 
