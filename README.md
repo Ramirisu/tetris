@@ -25,16 +25,17 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
 ## Keybindings
 
-| Action                    | Keyboard | Controller (NES) |
-| :------------------------ | :------: | :--------------: |
-| Move Up                   |    ↑     |        ↑         |
-| Move Down                 |    ↓     |        ↓         |
-| Move Left                 |    ←     |        ←         |
-| Move Right                |    →     |        →         |
-| Rotate Clockwisely        |    X     |        A         |
-| Rotate Counterclockwisely |    Z     |        B         |
-| Start                     |  Enter   |      Start       |
-| Soft Reset                |   Esc    |                  |
+| Action                             | Keyboard | Controller (NES) | Note                                                                  |
+| :--------------------------------- | :------: | :--------------: | :-------------------------------------------------------------------- |
+| Move Up                            |    ↑     |        ↑         |                                                                       |
+| Move Down                          |    ↓     |        ↓         |                                                                       |
+| Move Left                          |    ←     |        ←         |                                                                       |
+| Move Right                         |    →     |        →         |                                                                       |
+| Rotate Clockwisely                 |    X     |        A         |                                                                       |
+| Rotate Counterclockwisely          |    Z     |        B         |                                                                       |
+| Start/Pause/Resume                 |  Enter   |      Start       |                                                                       |
+| Soft Reset                         |   Esc    |      Select      |                                                                       |
+| Windowed/FullScreen (Desktop Only) |   F11    |                  | FullScreen Mode will disable VSync automatically to maximize the FPS. |
 
 ## License
 

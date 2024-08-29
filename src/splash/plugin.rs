@@ -126,14 +126,14 @@ fn handle_input_system(
     controller: Res<Controller>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    let mut pressed = keys.just_pressed(KeyCode::Enter);
-    for gamepad in &controller.gamepad {
-        pressed |= buttons.just_pressed(GamepadButton {
-            gamepad: *gamepad,
-            button_type: GamepadButtonType::Start,
+    if keys.just_pressed(KeyCode::Enter)
+        || controller.gamepads.iter().any(|gamepad| {
+            buttons.just_pressed(GamepadButton {
+                gamepad: *gamepad,
+                button_type: GamepadButtonType::Start,
+            })
         })
-    }
-    if pressed {
+    {
         app_state.set(AppState::Menu);
     }
 }

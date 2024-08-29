@@ -10,7 +10,7 @@ pub fn setup(app: &mut App) {
 
 #[derive(Resource, Default)]
 pub struct Controller {
-    pub gamepad: Vec<Gamepad>,
+    pub gamepads: Vec<Gamepad>,
 }
 
 fn controller_connection_system(
@@ -24,20 +24,20 @@ fn controller_connection_system(
         match &event.connection {
             GamepadConnection::Connected(_) => {
                 match controller
-                    .gamepad
+                    .gamepads
                     .binary_search_by(|gamepad| gamepad.id.cmp(&event.gamepad.id))
                 {
                     Ok(_) => (),
-                    Err(pos) => controller.gamepad.insert(pos, event.gamepad),
+                    Err(pos) => controller.gamepads.insert(pos, event.gamepad),
                 };
             }
             GamepadConnection::Disconnected => {
                 match controller
-                    .gamepad
+                    .gamepads
                     .binary_search_by(|gamepad| gamepad.id.cmp(&event.gamepad.id))
                 {
                     Ok(pos) => {
-                        controller.gamepad.remove(pos);
+                        controller.gamepads.remove(pos);
                     }
                     Err(_) => (),
                 };

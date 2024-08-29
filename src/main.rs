@@ -12,6 +12,7 @@ mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
+use controller::Controller;
 
 fn main() {
     App::new()
@@ -38,7 +39,7 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
         .add_systems(Startup, setup_camera)
-        .add_systems(Update, global_handle_input_system)
+        .add_systems(Update, handle_input_system)
         .add_plugins((
             controller::setup,
             splash::plugin::setup,
@@ -52,12 +53,21 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
-fn global_handle_input_system(
+fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
     mut app_state: ResMut<NextState<AppState>>,
     #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
 ) {
-    if keys.just_pressed(KeyCode::Escape) {
+    if keys.just_pressed(KeyCode::Escape)
+        || controller.gamepads.iter().any(|gamepad| {
+            buttons.just_pressed(GamepadButton {
+                gamepad: *gamepad,
+                button_type: GamepadButtonType::Select,
+            })
+        })
+    {
         app_state.set(AppState::Splash);
     }
 

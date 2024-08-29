@@ -753,7 +753,7 @@ mod state_game_running {
             start: keys.just_pressed(KeyCode::Enter),
         };
 
-        for gamepad in &controller.gamepad {
+        for gamepad in &controller.gamepads {
             inputs |= GameRunningInputs {
                 left: (
                     buttons.just_pressed(GamepadButton {
@@ -1128,7 +1128,7 @@ mod state_game_pause {
         )>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        let clicked = controller.gamepad.iter().any(|gamepad| {
+        let clicked = controller.gamepads.iter().any(|gamepad| {
             buttons.just_pressed(GamepadButton {
                 gamepad: *gamepad,
                 button_type: GamepadButtonType::Start,
@@ -1152,7 +1152,7 @@ mod state_game_over {
         controller: Res<Controller>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
-        let clicked = controller.gamepad.iter().any(|gamepad| {
+        let clicked = controller.gamepads.iter().any(|gamepad| {
             buttons.just_pressed(GamepadButton {
                 gamepad: *gamepad,
                 button_type: GamepadButtonType::Start,

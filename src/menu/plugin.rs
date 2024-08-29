@@ -278,7 +278,7 @@ fn handle_input_system(
         start: keys.just_pressed(KeyCode::Enter),
     };
 
-    for gamepad in &controller.gamepad {
+    for gamepad in &controller.gamepads {
         inputs |= MenuInputs {
             left: buttons.just_pressed(GamepadButton {
                 gamepad: *gamepad,
