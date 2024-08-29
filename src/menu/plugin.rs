@@ -1,5 +1,5 @@
 use bevy::{
-    color::palettes::css::{BLUE, CRIMSON, GOLD, GREEN, WHITE},
+    color::palettes::css::{BLACK, BLUE, CRIMSON, GOLD, GREEN, WHITE},
     prelude::*,
 };
 
@@ -69,23 +69,6 @@ impl Default for MenuData {
 }
 
 fn setup_screen(mut commands: Commands) {
-    let button_style = Style {
-        width: Val::Px(60.0),
-        height: Val::Px(60.0),
-        margin: UiRect::all(Val::Px(5.0)),
-        padding: UiRect::all(Val::Px(20.0)),
-        border: UiRect::all(Val::Px(5.0)),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    };
-
-    let button_text_style = TextStyle {
-        font_size: 40.0,
-        color: CRIMSON.into(),
-        ..default()
-    };
-
     commands
         .spawn((
             NodeBundle {
@@ -136,8 +119,13 @@ fn setup_screen(mut commands: Commands) {
                             style: Style {
                                 display: Display::Grid,
                                 grid_template_columns: vec![GridTrack::auto(); 5],
+                                row_gap: Val::Px(5.0),
+                                column_gap: Val::Px(5.0),
+                                border: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
+                            background_color: GREEN.into(),
+                            border_color: GREEN.into(),
                             ..default()
                         })
                         .with_children(|parent| {
@@ -146,9 +134,15 @@ fn setup_screen(mut commands: Commands) {
                                     if let Some(level) = col {
                                         parent
                                             .spawn((
-                                                ButtonBundle {
-                                                    style: button_style.clone(),
-                                                    border_color: GREEN.into(),
+                                                NodeBundle {
+                                                    style: Style {
+                                                        width: Val::Px(60.0),
+                                                        height: Val::Px(60.0),
+                                                        align_items: AlignItems::Center,
+                                                        justify_content: JustifyContent::Center,
+                                                        ..default()
+                                                    },
+                                                    background_color: BLUE.into(),
                                                     ..default()
                                                 },
                                                 LevelButtonEntityMarker {
@@ -158,14 +152,25 @@ fn setup_screen(mut commands: Commands) {
                                             .with_children(|parent| {
                                                 parent.spawn(TextBundle::from_section(
                                                     format!("{}", level),
-                                                    button_text_style.clone(),
+                                                    TextStyle {
+                                                        font_size: 40.0,
+                                                        color: CRIMSON.into(),
+                                                        ..default()
+                                                    },
                                                 ));
                                             });
                                     } else {
-                                        parent.spawn((ButtonBundle {
-                                            style: button_style.clone(),
+                                        parent.spawn(NodeBundle {
+                                            style: Style {
+                                                width: Val::Px(60.0),
+                                                height: Val::Px(60.0),
+                                                align_items: AlignItems::Center,
+                                                justify_content: JustifyContent::Center,
+                                                ..default()
+                                            },
+                                            background_color: BLACK.into(),
                                             ..default()
-                                        },));
+                                        });
                                     }
                                 }
                             }
@@ -216,11 +221,7 @@ fn play_sound_system(
 
 fn style_system(
     time: Res<Time>,
-    mut query: Query<(
-        &mut BorderColor,
-        &mut BackgroundColor,
-        &LevelButtonEntityMarker,
-    )>,
+    mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
     menu_data: Res<MenuData>,
 ) {
     fn sin(elapsed: f32) -> f32 {
@@ -228,18 +229,14 @@ fn style_system(
         (((elapsed * SPEED).sin() + 1.0) / 4.0 + 0.5).clamp(0.5, 1.0)
     }
 
-    query
-        .iter_mut()
-        .for_each(|(mut border_color, mut bg_color, level_button)| {
-            if level_button.cordinate == menu_data.selected_level {
-                let color = GOLD * sin(time.elapsed_seconds());
-                *border_color = GREEN.into();
-                *bg_color = color.into();
-            } else {
-                *border_color = GREEN.into();
-                *bg_color = BackgroundColor::DEFAULT;
-            }
-        });
+    query.iter_mut().for_each(|(mut bg_color, level_button)| {
+        if level_button.cordinate == menu_data.selected_level {
+            let color = GOLD * sin(time.elapsed_seconds());
+            *bg_color = color.into();
+        } else {
+            *bg_color = BLACK.into();
+        }
+    });
 }
 
 pub struct MenuInputs {
