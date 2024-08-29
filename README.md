@@ -1,6 +1,7 @@
 # Tetris
 
 [![Build](https://github.com/Ramirisu/tetris/actions/workflows/build.yml/badge.svg)](https://github.com/Ramirisu/tetris/actions/workflows/build.yml)
+[![dependency status](https://deps.rs/repo/github/Ramirisu/tetris/status.svg)](https://deps.rs/repo/github/Ramirisu/tetris)
 
 A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
@@ -33,6 +34,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
 | Rotate Clockwisely        |    X     |        A         |
 | Rotate Counterclockwisely |    Z     |        B         |
 | Start                     |  Enter   |      Start       |
+| Soft Reset                |   Esc    |                  |
 
 ## License
 
