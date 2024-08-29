@@ -753,48 +753,48 @@ mod state_game_running {
             start: keys.just_pressed(KeyCode::Enter),
         };
 
-        if let Some(gamepad) = controller.gamepad {
+        for gamepad in &controller.gamepad {
             inputs |= GameRunningInputs {
                 left: (
                     buttons.just_pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadLeft,
                     }),
                     buttons.pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadLeft,
                     }),
                 ),
                 right: (
                     buttons.just_pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadRight,
                     }),
                     buttons.pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadRight,
                     }),
                 ),
                 down: (
                     buttons.just_pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadDown,
                     }),
                     buttons.pressed(GamepadButton {
-                        gamepad,
+                        gamepad: *gamepad,
                         button_type: GamepadButtonType::DPadDown,
                     }),
                 ),
                 rotate_clockwise: buttons.just_pressed(GamepadButton {
-                    gamepad,
+                    gamepad: *gamepad,
                     button_type: GamepadButtonType::East,
                 }),
                 rotate_counter_clockwise: buttons.just_pressed(GamepadButton {
-                    gamepad,
+                    gamepad: *gamepad,
                     button_type: GamepadButtonType::South,
                 }),
                 start: buttons.just_pressed(GamepadButton {
-                    gamepad,
+                    gamepad: *gamepad,
                     button_type: GamepadButtonType::Start,
                 }),
             };
@@ -1128,14 +1128,12 @@ mod state_game_pause {
         )>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        let clicked = if let Some(gamepad) = controller.gamepad {
+        let clicked = controller.gamepad.iter().any(|gamepad| {
             buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::Start,
             })
-        } else {
-            false
-        };
+        });
 
         if clicked || keys.just_pressed(KeyCode::Enter) {
             *query.p0().single_mut() = Visibility::Hidden;
@@ -1154,14 +1152,12 @@ mod state_game_over {
         controller: Res<Controller>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
-        let clicked = if let Some(gamepad) = controller.gamepad {
+        let clicked = controller.gamepad.iter().any(|gamepad| {
             buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::Start,
             })
-        } else {
-            false
-        };
+        });
 
         if clicked || keys.just_pressed(KeyCode::Enter) {
             app_state.set(AppState::Menu);

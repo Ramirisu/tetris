@@ -278,26 +278,26 @@ fn handle_input_system(
         start: keys.just_pressed(KeyCode::Enter),
     };
 
-    if let Some(gamepad) = controller.gamepad {
+    for gamepad in &controller.gamepad {
         inputs |= MenuInputs {
             left: buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::DPadLeft,
             }),
             right: buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::DPadRight,
             }),
             up: buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::DPadUp,
             }),
             down: buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::DPadDown,
             }),
             start: buttons.just_pressed(GamepadButton {
-                gamepad,
+                gamepad: *gamepad,
                 button_type: GamepadButtonType::Start,
             }),
         };
