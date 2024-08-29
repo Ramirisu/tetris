@@ -1,7 +1,11 @@
-use bevy::{color::palettes::css::GREEN, prelude::*, window::WindowResolution};
+use bevy::{
+    color::palettes::css::GREEN,
+    prelude::*,
+    window::{PresentMode, WindowResolution},
+};
 
 #[cfg(not(target_arch = "wasm32"))]
-use bevy::window::{PresentMode, WindowMode};
+use bevy::window::WindowMode;
 
 mod app_state;
 mod controller;
@@ -21,6 +25,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(1280.0, 1000.0),
+                        present_mode: PresentMode::AutoNoVsync,
                         ..default()
                     }),
                     ..default()
@@ -77,11 +82,9 @@ fn handle_input_system(
         match window.mode {
             WindowMode::Windowed => {
                 window.mode = WindowMode::Fullscreen;
-                window.present_mode = PresentMode::AutoNoVsync;
             }
             WindowMode::Fullscreen => {
                 window.mode = WindowMode::Windowed;
-                window.present_mode = PresentMode::AutoVsync;
             }
             _ => (),
         }
