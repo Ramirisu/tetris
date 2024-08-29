@@ -27,15 +27,51 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
 | Action                                         | Keyboard | Controller (NES) |
 | :--------------------------------------------- | :------: | :--------------: |
-| Move Up                                        |    ↑     |        ↑         |
-| Move Down                                      |    ↓     |        ↓         |
 | Move Left                                      |    ←     |        ←         |
 | Move Right                                     |    →     |        →         |
+| Soft Drop                                      |    ↓     |        ↓         |
 | Rotate Clockwisely                             |    X     |        A         |
 | Rotate Counterclockwisely                      |    Z     |        B         |
 | Start/Pause/Resume                             |  Enter   |      Start       |
 | Soft Reset                                     |   Esc    |      Select      |
 | Toggle Windowed/FullScreen Mode (Desktop Only) |   F11    |                  |
+
+## Build & Run
+
+#### Web
+
+```sh
+
+cargo build --release --target wasm32-unknown-unknown
+wasm-bindgen --no-typescript --target web --out-dir ./dist/tetris --out-name "tetris" ./target/wasm32-unknown-unknown/release/tetris.wasm
+cp -r ./assets ./dist/assets
+
+# Start a web server to serve the files under "./dist"
+
+```
+
+#### Linux
+
+Ubuntu
+
+```sh
+
+apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+cargo build --release && cargo run --release
+
+```
+
+#### Windows
+
+```sh
+
+cargo build --release && cargo run --release
+
+```
+
+#### MacOS
+
+TODO:
 
 ## License
 
