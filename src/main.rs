@@ -8,6 +8,7 @@ use bevy::{
 use bevy::window::WindowMode;
 
 mod app_state;
+mod audio;
 mod controller;
 mod game;
 mod menu;
@@ -47,6 +48,7 @@ fn main() {
         .add_systems(Update, handle_input_system)
         .add_plugins((
             controller::setup,
+            audio::plugin::setup,
             splash::plugin::setup,
             menu::plugin::setup,
             game::plugin::setup,

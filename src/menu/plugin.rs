@@ -5,6 +5,7 @@ use bevy::{
 
 use crate::{
     app_state::AppState,
+    audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::plugin::{PlayerData, PlayerState},
     utility::despawn_all,
@@ -12,27 +13,14 @@ use crate::{
 
 pub fn setup(app: &mut App) {
     app.insert_resource(MenuData::default())
-        .add_event::<PlaySoundEvent>()
-        .add_systems(
-            OnEnter(AppState::Menu),
-            (load_audio_assets, setup_screen).chain(),
-        )
+        .add_systems(OnEnter(AppState::Menu), setup_screen)
         .add_systems(
             Update,
-            (style_system, handle_input_system, play_sound_system)
+            (update_ui_system, handle_input_system)
                 .chain()
                 .run_if(in_state(AppState::Menu)),
         )
-        .add_systems(
-            OnExit(AppState::Menu),
-            (despawn_all::<MenuEntityMarker>, unload_audio_assets).chain(),
-        );
-}
-
-#[derive(Resource)]
-struct AudioAssets {
-    move_cursor: Handle<AudioSource>,
-    start_game: Handle<AudioSource>,
+        .add_systems(OnExit(AppState::Menu), despawn_all::<MenuEntityMarker>);
 }
 
 #[derive(Component)]
@@ -41,12 +29,6 @@ struct MenuEntityMarker;
 #[derive(Component)]
 struct LevelButtonEntityMarker {
     cordinate: (i32, i32),
-}
-
-#[derive(Event)]
-enum PlaySoundEvent {
-    MoveCursor,
-    StartGame,
 }
 
 #[derive(Resource)]
@@ -179,17 +161,6 @@ fn setup_screen(mut commands: Commands) {
         });
 }
 
-fn load_audio_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(AudioAssets {
-        move_cursor: asset_server.load("sound/sfx02.wav"),
-        start_game: asset_server.load("sound/sfx03.wav"),
-    });
-}
-
-fn unload_audio_assets(mut commands: Commands) {
-    commands.remove_resource::<AudioAssets>();
-}
-
 const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
     [Some(0), Some(1), Some(2), Some(3), Some(4)],
     [Some(5), Some(6), Some(7), Some(8), Some(9)],
@@ -202,24 +173,7 @@ const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
 const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
 
-fn play_sound_system(
-    mut commands: Commands,
-    audio_assets: Res<AudioAssets>,
-    mut event_reader: EventReader<PlaySoundEvent>,
-) {
-    for event in event_reader.read() {
-        let audio = match event {
-            PlaySoundEvent::MoveCursor => audio_assets.move_cursor.clone(),
-            PlaySoundEvent::StartGame => audio_assets.start_game.clone(),
-        };
-        commands.spawn(AudioBundle {
-            source: audio,
-            settings: PlaybackSettings::DESPAWN,
-        });
-    }
-}
-
-fn style_system(
+fn update_ui_system(
     time: Res<Time>,
     mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
     menu_data: Res<MenuData>,
