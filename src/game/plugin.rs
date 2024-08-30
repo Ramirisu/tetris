@@ -169,7 +169,7 @@ pub struct PlayerData {
 }
 
 impl PlayerData {
-    pub fn new(start_level: usize) -> Self {
+    pub fn new(start_level: usize, lv39_linecap: bool) -> Self {
         Self {
             rc: RenderConfig::default(),
             board: Board::new(start_level),
@@ -178,7 +178,7 @@ impl PlayerData {
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(start_level, true),
+            fall_tick: FallTick::new(start_level, lv39_linecap),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: state_game_line_clear::LineClearPhase::default(),
@@ -189,7 +189,7 @@ impl PlayerData {
 
 impl Default for PlayerData {
     fn default() -> Self {
-        Self::new(0)
+        Self::new(0, false)
     }
 }
 
@@ -847,7 +847,7 @@ mod state_game_running {
         } else if inputs.down.0 {
             player_data.can_press_down = true;
             player_data.game_timer.reset();
-            player_data.fall_tick = FallTick::new(player_data.board.level(), false);
+            player_data.fall_tick.set_level(player_data.board.level());
             player_data.press_down_timer.reset();
         }
 
@@ -915,7 +915,8 @@ mod state_game_running {
             }
         };
         if lock {
-            player_data.fall_tick = FallTick::new(player_data.board.level(), false);
+            let new_level = player_data.board.level();
+            player_data.fall_tick.set_level(new_level);
 
             if player_data.board.move_piece_down() {
                 std::iter::zip(
@@ -1040,7 +1041,8 @@ mod state_game_line_clear {
                 if player_data.board.clear_lines() {
                     e_play_sound.send(PlaySoundEvent::LevelUp);
                 }
-                player_data.fall_tick = FallTick::new(player_data.board.level(), false);
+                let new_level = player_data.board.level();
+                player_data.fall_tick.set_level(new_level);
                 player_state.set(PlayerState::GameUpdateSquareImageAssets);
             }
         }

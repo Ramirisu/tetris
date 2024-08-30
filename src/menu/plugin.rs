@@ -45,7 +45,7 @@ struct LevelButtonEntityMarker {
 
 #[derive(Event)]
 enum PlaySoundEvent {
-    MoveCurosr,
+    MoveCursor,
     StartGame,
 }
 
@@ -209,7 +209,7 @@ fn play_sound_system(
 ) {
     for event in event_reader.read() {
         let audio = match event {
-            PlaySoundEvent::MoveCurosr => audio_assets.move_cursor.clone(),
+            PlaySoundEvent::MoveCursor => audio_assets.move_cursor.clone(),
             PlaySoundEvent::StartGame => audio_assets.start_game.clone(),
         };
         commands.spawn(AudioBundle {
@@ -307,7 +307,7 @@ fn handle_input_system(
             if menu_data.selected_level.1 >= 4 {
                 menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            e_play_sound.send(PlaySoundEvent::MoveCurosr);
+            e_play_sound.send(PlaySoundEvent::MoveCursor);
         }
         (false, true) => {
             menu_data.selected_level.1 =
@@ -315,7 +315,7 @@ fn handle_input_system(
             if menu_data.selected_level.1 >= 4 {
                 menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            e_play_sound.send(PlaySoundEvent::MoveCurosr);
+            e_play_sound.send(PlaySoundEvent::MoveCursor);
         }
         _ => {
             if menu_data.selected_level.1 < 4 {
@@ -323,12 +323,12 @@ fn handle_input_system(
                     (true, false) => {
                         menu_data.selected_level.0 =
                             (menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
-                        e_play_sound.send(PlaySoundEvent::MoveCurosr);
+                        e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                     (false, true) => {
                         menu_data.selected_level.0 =
                             (menu_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
-                        e_play_sound.send(PlaySoundEvent::MoveCurosr);
+                        e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                     _ => {}
                 }
@@ -340,7 +340,7 @@ fn handle_input_system(
         if let Some(level) =
             LEVELS[menu_data.selected_level.1 as usize][menu_data.selected_level.0 as usize]
         {
-            *player_data = PlayerData::new(level);
+            *player_data = PlayerData::new(level, true);
             e_play_sound.send(PlaySoundEvent::StartGame);
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);

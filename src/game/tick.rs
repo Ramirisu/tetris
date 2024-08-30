@@ -18,14 +18,21 @@ pub fn duration_to_ticks(duration: Duration) -> u64 {
 pub struct FallTick {
     threshold: Duration,
     initial_entry_delay: bool,
+    lv39_linecap: bool,
 }
 
 impl FallTick {
-    pub fn new(level: usize, initial_entry_delay: bool) -> Self {
+    pub fn new(level: usize, lv39_linecap: bool) -> Self {
         Self {
-            threshold: Self::get_trigger_tick(level),
-            initial_entry_delay,
+            threshold: Self::get_trigger_tick(level, lv39_linecap),
+            initial_entry_delay: true,
+            lv39_linecap,
         }
+    }
+
+    pub fn set_level(&mut self, level: usize) {
+        self.initial_entry_delay = false;
+        self.threshold = Self::get_trigger_tick(level, self.lv39_linecap);
     }
 
     pub fn threshold(&self) -> Duration {
@@ -36,7 +43,7 @@ impl FallTick {
         }
     }
 
-    fn get_trigger_tick(level: usize) -> Duration {
+    fn get_trigger_tick(level: usize, lv39_linecap: bool) -> Duration {
         match level {
             0 => ticks_to_duration(48),
             1 => ticks_to_duration(43),
@@ -52,8 +59,14 @@ impl FallTick {
             13..16 => ticks_to_duration(4),
             16..19 => ticks_to_duration(3),
             19..29 => ticks_to_duration(2),
-            29..39 => ticks_to_duration(1),  // kill screen
-            _ => sub_ticks_to_duration(500), // super kill screen
+            29..39 => ticks_to_duration(1),
+            _ => {
+                if lv39_linecap {
+                    sub_ticks_to_duration(500)
+                } else {
+                    ticks_to_duration(1)
+                }
+            }
         }
     }
 
