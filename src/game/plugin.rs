@@ -577,7 +577,7 @@ fn update_statistics_system(
     player_data: ResMut<PlayerData>,
 ) {
     if let Ok(mut text) = query.p0().get_single_mut() {
-        text.sections[1].value = format!("{:04}", player_data.board.lines());
+        text.sections[1].value = format!("{:03}", player_data.board.lines());
     }
     if let Ok(mut text) = query.p1().get_single_mut() {
         text.sections[1].value = format!("{:07}", player_data.board.score());
