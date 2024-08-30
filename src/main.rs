@@ -83,9 +83,9 @@ fn handle_input_system(
         let mut window = window.single_mut();
         match window.mode {
             WindowMode::Windowed => {
-                window.mode = WindowMode::Fullscreen;
+                window.mode = WindowMode::BorderlessFullscreen;
             }
-            WindowMode::Fullscreen => {
+            WindowMode::BorderlessFullscreen => {
                 window.mode = WindowMode::Windowed;
             }
             _ => (),

@@ -5,6 +5,9 @@
 
 A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
+![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png)
+![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
+
 ## Features
 
 - Game Play
@@ -18,6 +21,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
   - [x] Level 39 Super Kill Screen
   - [x] Statistics
   - [x] Sound Effects
+  - [ ] Musics
 
 - Platform
   - [x] High FPS Support
@@ -25,16 +29,16 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
 ## Keybindings
 
-| Action                                         | Keyboard | Controller (NES) |
-| :--------------------------------------------- | :------: | :--------------: |
-| Move Left                                      |    ←     |        ←         |
-| Move Right                                     |    →     |        →         |
-| Soft Drop                                      |    ↓     |        ↓         |
-| Rotate Clockwisely                             |    X     |        A         |
-| Rotate Counterclockwisely                      |    Z     |        B         |
-| Start/Pause/Resume                             |  Enter   |      Start       |
-| Soft Reset                                     |   Esc    |      Select      |
-| Toggle Windowed/FullScreen Mode (Desktop Only) |   F11    |                  |
+| Action                                                   | Keyboard | Controller (NES) |
+| :------------------------------------------------------- | :------: | :--------------: |
+| Move Left                                                |    ←     |        ←         |
+| Move Right                                               |    →     |        →         |
+| Soft Drop                                                |    ↓     |        ↓         |
+| Rotate Clockwisely                                       |    X     |        A         |
+| Rotate Counterclockwisely                                |    Z     |        B         |
+| Start/Pause/Resume                                       |  Enter   |      Start       |
+| Soft Reset                                               |   Esc    |      Select      |
+| Toggle Windowed/BorderlessFullscreen Mode (Desktop Only) |   F11    |                  |
 
 ## Build & Run
 
