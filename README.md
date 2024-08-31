@@ -15,8 +15,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
   - [x] Entry Delay (10 ~ 18 ticks)
   - [x] Line Clear Delay (18 ticks)
   - [x] 1H2R Random Generator for Next Piece
-  - [x] Normal Color Palettes
-  - [ ] Glitched Color Palettes
+  - [X] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
   - [x] Piece Distribution
   - [x] Statistics
