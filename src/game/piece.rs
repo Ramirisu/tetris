@@ -110,12 +110,12 @@ impl Piece {
     }
 
     pub fn rand() -> Self {
-        Self::new(rand::thread_rng().gen::<usize>().into())
+        Self::new(rand::thread_rng().gen_range(0..7).into())
     }
 
     pub fn rand_1h2r(&self) -> Piece {
         let shape = rand::thread_rng().gen_range(0..8);
-        if shape != self.shape as usize {
+        if shape != 7 && shape != self.shape as usize {
             Self::new(shape.into())
         } else {
             Self::rand()
