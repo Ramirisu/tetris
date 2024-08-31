@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{
     color::palettes::css::{BLACK, GREEN, RED, WHITE, YELLOW},
     prelude::*,
@@ -10,7 +12,7 @@ use crate::{
 
 use super::{
     board::Board,
-    palette::{get_default_square_image, get_square_image},
+    palette::{get_empty_square_image, get_square_image, SquareImageSize},
     piece::{Piece, PieceShape},
     render::RenderConfig,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
@@ -54,24 +56,28 @@ pub fn setup(app: &mut App) {
 
 #[derive(Resource)]
 struct SquareImageAssets {
-    images: Vec<Handle<Image>>,
-    default: Handle<Image>,
+    images: HashMap<SquareImageSize, Vec<Handle<Image>>>,
+    empty: HashMap<SquareImageSize, Handle<Image>>,
 }
 
 impl SquareImageAssets {
-    pub fn get_image(&self, shape: PieceShape) -> Handle<Image> {
-        self.images[shape as usize].clone()
+    pub fn get_image(&self, size: SquareImageSize, shape: PieceShape) -> Handle<Image> {
+        self.images[&size][shape as usize].clone()
     }
 
-    pub fn get_default(&self) -> Handle<Image> {
-        self.default.clone()
+    pub fn get_empty(&self, size: SquareImageSize) -> Handle<Image> {
+        self.empty[&size].clone()
     }
 
-    pub fn get_image_or_default(&self, shape: Option<PieceShape>) -> Handle<Image> {
+    pub fn get_image_or_empty(
+        &self,
+        size: SquareImageSize,
+        shape: Option<PieceShape>,
+    ) -> Handle<Image> {
         if let Some(shape) = shape {
-            self.get_image(shape)
+            self.get_image(size, shape)
         } else {
-            self.get_default()
+            self.get_empty(size)
         }
     }
 }
@@ -178,12 +184,32 @@ fn load_square_image_assets(
     mut image_assets: ResMut<Assets<Image>>,
     player_data: Res<PlayerData>,
 ) {
-    commands.insert_resource(SquareImageAssets {
-        images: PieceShape::iter()
-            .map(|shape| image_assets.add(get_square_image(*shape, player_data.board.level())))
-            .collect(),
-        default: image_assets.add(get_default_square_image()),
-    });
+    commands.insert_resource(load_square_image_assets_impl(
+        player_data.board.level(),
+        &mut image_assets,
+    ));
+}
+
+fn load_square_image_assets_impl(
+    level: usize,
+    image_assets: &mut Assets<Image>,
+) -> SquareImageAssets {
+    let mut images = HashMap::<SquareImageSize, Vec<Handle<Image>>>::new();
+    for size in SquareImageSize::iter() {
+        images.insert(
+            *size,
+            PieceShape::iter()
+                .map(|shape| image_assets.add(get_square_image(*size, *shape, level)))
+                .collect(),
+        );
+    }
+
+    let mut empty = HashMap::<SquareImageSize, Handle<Image>>::new();
+    for size in SquareImageSize::iter() {
+        empty.insert(*size, image_assets.add(get_empty_square_image(*size)));
+    }
+
+    SquareImageAssets { images, empty }
 }
 
 fn unload_square_image_assets(mut commands: Commands) {
@@ -231,7 +257,7 @@ fn setup_screen(
                         custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets.get_default(),
+                    texture: square_image_assets.get_empty(SquareImageSize::Normal),
                     ..default()
                 },
                 GameEntityMarker,
@@ -495,7 +521,7 @@ fn setup_screen(
                         custom_size: Some(player_data.rc.piece_count_square_size()),
                         ..default()
                     },
-                    texture: square_image_assets.get_image(*shape),
+                    texture: square_image_assets.get_image(SquareImageSize::Small, *shape),
                     ..default()
                 },
                 GameEntityMarker,
@@ -535,8 +561,10 @@ fn setup_screen(
                         custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets
-                        .get_image(player_data.board.get_curr_piece().shape()),
+                    texture: square_image_assets.get_image(
+                        SquareImageSize::Normal,
+                        player_data.board.get_curr_piece().shape(),
+                    ),
                     ..default()
                 },
                 GameEntityMarker,
@@ -585,8 +613,10 @@ fn setup_screen(
                         custom_size: Some(player_data.rc.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets
-                        .get_image(player_data.board.get_next_piece().shape()),
+                    texture: square_image_assets.get_image(
+                        SquareImageSize::Normal,
+                        player_data.board.get_next_piece().shape(),
+                    ),
                     ..default()
                 },
                 GameEntityMarker,
@@ -799,7 +829,10 @@ mod state_game_running {
                 player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = square_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                *image = square_image_assets.get_image(
+                    SquareImageSize::Normal,
+                    player_data.board.get_curr_piece().shape(),
+                );
                 transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
         }
@@ -909,8 +942,10 @@ mod state_game_running {
                     player_data.board.get_curr_piece_squares(),
                 )
                 .for_each(|((mut transform, mut image), blk)| {
-                    *image =
-                        square_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                    *image = square_image_assets.get_image(
+                        SquareImageSize::Normal,
+                        player_data.board.get_curr_piece().shape(),
+                    );
                     transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
@@ -933,7 +968,8 @@ mod state_game_running {
                 });
 
                 query.p0().iter_mut().for_each(|(mut image, coordinate)| {
-                    *image = square_image_assets.get_image_or_default(
+                    *image = square_image_assets.get_image_or_empty(
+                        SquareImageSize::Normal,
                         player_data
                             .board
                             .get_square(coordinate.0 as i32, coordinate.1 as i32),
@@ -1019,7 +1055,7 @@ mod state_game_line_clear {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
-                        *image = square_image_assets.get_default();
+                        *image = square_image_assets.get_empty(SquareImageSize::Normal);
                     }
                 }
             } else {
@@ -1043,12 +1079,8 @@ mod state_game_update_assets {
         mut square_image_assets: ResMut<SquareImageAssets>,
         player_data: Res<PlayerData>,
     ) {
-        *square_image_assets = SquareImageAssets {
-            images: PieceShape::iter()
-                .map(|shape| image_assets.add(get_square_image(*shape, player_data.board.level())))
-                .collect(),
-            default: image_assets.add(get_default_square_image()),
-        };
+        *square_image_assets =
+            load_square_image_assets_impl(player_data.board.level(), &mut image_assets);
         player_state.set(PlayerState::GameEntryDelay);
     }
 }
@@ -1074,7 +1106,8 @@ mod state_game_entry_delay {
             player_data.board.switch_to_next_piece();
 
             query.p0().iter_mut().for_each(|(mut image, coordinate)| {
-                *image = square_image_assets.get_image_or_default(
+                *image = square_image_assets.get_image_or_empty(
+                    SquareImageSize::Normal,
                     player_data
                         .board
                         .get_square(coordinate.0 as i32, coordinate.1 as i32),
@@ -1086,7 +1119,10 @@ mod state_game_entry_delay {
                 player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = square_image_assets.get_image(player_data.board.get_curr_piece().shape());
+                *image = square_image_assets.get_image(
+                    SquareImageSize::Normal,
+                    player_data.board.get_curr_piece().shape(),
+                );
                 transform.translation = player_data.rc.curr_piece_translation(blk.0, blk.1);
             });
             std::iter::zip(
@@ -1094,11 +1130,14 @@ mod state_game_entry_delay {
                 player_data.board.get_next_piece().to_squares(),
             )
             .for_each(|((mut transform, mut image), blk)| {
-                *image = square_image_assets.get_image(player_data.board.get_next_piece().shape());
+                *image = square_image_assets.get_image(
+                    SquareImageSize::Normal,
+                    player_data.board.get_next_piece().shape(),
+                );
                 transform.translation = player_data.rc.next_piece_translation(blk.0, blk.1);
             });
             query.p3().iter_mut().for_each(|(mut image, shape)| {
-                *image = square_image_assets.get_image(shape.0);
+                *image = square_image_assets.get_image(SquareImageSize::Small, shape.0);
             });
 
             player_state.set(PlayerState::GameRunning);

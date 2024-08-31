@@ -16,21 +16,22 @@ use image::{DynamicImage, Rgb32FImage};
 
 use super::piece::PieceShape;
 
-pub fn get_square_image(shape: PieceShape, level: usize) -> Image {
+pub fn get_square_image(size: SquareImageSize, shape: PieceShape, level: usize) -> Image {
     let palette = get_level_palette(level);
     match shape {
-        PieceShape::T => get_square_image_from_pattern(SquarePattern::X, palette),
-        PieceShape::J => get_square_image_from_pattern(SquarePattern::Z, palette),
-        PieceShape::Z => get_square_image_from_pattern(SquarePattern::Y, palette),
-        PieceShape::O => get_square_image_from_pattern(SquarePattern::X, palette),
-        PieceShape::S => get_square_image_from_pattern(SquarePattern::Z, palette),
-        PieceShape::L => get_square_image_from_pattern(SquarePattern::Y, palette),
-        PieceShape::I => get_square_image_from_pattern(SquarePattern::X, palette),
+        PieceShape::T => SquareImage::new(size, SquarePattern::X, palette),
+        PieceShape::J => SquareImage::new(size, SquarePattern::Z, palette),
+        PieceShape::Z => SquareImage::new(size, SquarePattern::Y, palette),
+        PieceShape::O => SquareImage::new(size, SquarePattern::X, palette),
+        PieceShape::S => SquareImage::new(size, SquarePattern::Z, palette),
+        PieceShape::L => SquareImage::new(size, SquarePattern::Y, palette),
+        PieceShape::I => SquareImage::new(size, SquarePattern::X, palette),
     }
+    .into()
 }
 
-pub fn get_default_square_image() -> Image {
-    get_square_image_from_pattern(SquarePattern::X, &[BLACK, BLACK, BLACK, BLACK])
+pub fn get_empty_square_image(size: SquareImageSize) -> Image {
+    SquareImage::new_empty(size).into()
 }
 
 fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
@@ -118,46 +119,75 @@ fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
     }
 }
 
-fn get_square_image_from_pattern(pattern: SquarePattern, colors: &[Srgba; 4]) -> Image {
-    let image: DynamicImage = SquareImage::new(pattern, colors).into();
-    Image::from_dynamic(
-        image,
-        true,
-        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-    )
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SquareImageSize {
+    Normal,
+    Small,
 }
 
-#[derive(Clone, Copy)]
+impl SquareImageSize {
+    pub fn iter() -> std::slice::Iter<'static, SquareImageSize> {
+        const SIZES: [SquareImageSize; 2] = [SquareImageSize::Normal, SquareImageSize::Small];
+        SIZES.iter()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum SquarePattern {
     X,
     Y,
     Z,
 }
 
-const SQUARE_IMAGE_ROWS: usize = 9;
-const SQUARE_IMAGE_COLS: usize = 9;
-
 struct SquareImage {
-    buffer: [[Srgba; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS],
+    width: usize,
+    height: usize,
+    buffer: Vec<Srgba>,
 }
 
 impl SquareImage {
-    pub fn new(pattern: SquarePattern, colors: &[Srgba; 4]) -> Self {
-        let pattern = match pattern {
-            SquarePattern::X => &Self::SQUARE_PATTERN_X,
-            SquarePattern::Y => &Self::SQUARE_PATTERN_Y,
-            SquarePattern::Z => &Self::SQUARE_PATTERN_Z,
-        };
-        let mut buffer = [[Srgba::BLACK; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS];
-        for y in 0..SQUARE_IMAGE_ROWS {
-            for x in 0..SQUARE_IMAGE_COLS {
-                buffer[y][x] = colors[pattern[y][x] as usize];
-            }
-        }
-        Self { buffer }
+    pub fn new_empty(size: SquareImageSize) -> Self {
+        Self::new(size, SquarePattern::X, &[BLACK, BLACK, BLACK, BLACK])
     }
 
-    const SQUARE_PATTERN_X: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+    pub fn new(size: SquareImageSize, pattern: SquarePattern, colors: &[Srgba; 4]) -> Self {
+        match size {
+            SquareImageSize::Normal => {
+                let pattern = match pattern {
+                    SquarePattern::X => Self::SQUARE_PATTERN_X,
+                    SquarePattern::Y => Self::SQUARE_PATTERN_Y,
+                    SquarePattern::Z => Self::SQUARE_PATTERN_Z,
+                };
+
+                Self {
+                    width: pattern[0].len(),
+                    height: pattern.len(),
+                    buffer: pattern
+                        .iter()
+                        .flat_map(|rows| rows.iter().map(|pattern| colors[*pattern as usize]))
+                        .collect(),
+                }
+            }
+            SquareImageSize::Small => {
+                let pattern = match pattern {
+                    SquarePattern::X => Self::SQUARE_PATTERN_SMALL_X,
+                    SquarePattern::Y => Self::SQUARE_PATTERN_SMALL_Y,
+                    SquarePattern::Z => Self::SQUARE_PATTERN_SMALL_Z,
+                };
+
+                Self {
+                    width: pattern[0].len(),
+                    height: pattern.len(),
+                    buffer: pattern
+                        .iter()
+                        .flat_map(|rows| rows.iter().map(|pattern| colors[*pattern as usize]))
+                        .collect(),
+                }
+            }
+        }
+    }
+
+    const SQUARE_PATTERN_X: &'static [[u8; 9]; 9] = &[
         [1, 3, 3, 3, 3, 3, 3, 3, 0],
         [3, 1, 1, 1, 1, 1, 1, 3, 0],
         [3, 1, 1, 1, 1, 1, 1, 3, 0],
@@ -169,7 +199,16 @@ impl SquareImage {
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    const SQUARE_PATTERN_Y: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+    const SQUARE_PATTERN_SMALL_X: &'static [[u8; 6]; 6] = &[
+        [1, 3, 3, 3, 3, 0],
+        [3, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 3, 0],
+        [3, 1, 1, 1, 3, 0],
+        [3, 3, 3, 3, 3, 0],
+        [0, 0, 0, 0, 0, 0],
+    ];
+
+    const SQUARE_PATTERN_Y: &'static [[u8; 9]; 9] = &[
         [1, 2, 2, 2, 2, 2, 2, 2, 0],
         [2, 1, 1, 2, 2, 2, 2, 2, 0],
         [2, 1, 2, 2, 2, 2, 2, 2, 0],
@@ -181,7 +220,16 @@ impl SquareImage {
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    const SQUARE_PATTERN_Z: &'static [[u8; SQUARE_IMAGE_COLS]; SQUARE_IMAGE_ROWS] = &[
+    const SQUARE_PATTERN_SMALL_Y: &'static [[u8; 6]; 6] = &[
+        [1, 2, 2, 2, 2, 0],
+        [2, 1, 1, 2, 2, 0],
+        [2, 1, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 0],
+        [2, 2, 2, 2, 2, 0],
+        [0, 0, 0, 0, 0, 0],
+    ];
+
+    const SQUARE_PATTERN_Z: &'static [[u8; 9]; 9] = &[
         [1, 3, 3, 3, 3, 3, 3, 3, 0],
         [3, 1, 1, 3, 3, 3, 3, 3, 0],
         [3, 1, 3, 3, 3, 3, 3, 3, 0],
@@ -192,20 +240,33 @@ impl SquareImage {
         [3, 3, 3, 3, 3, 3, 3, 3, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
+
+    const SQUARE_PATTERN_SMALL_Z: &'static [[u8; 6]; 6] = &[
+        [1, 3, 3, 3, 3, 0],
+        [3, 1, 1, 3, 3, 0],
+        [3, 1, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 0],
+        [3, 3, 3, 3, 3, 0],
+        [0, 0, 0, 0, 0, 0],
+    ];
 }
 
-impl Into<DynamicImage> for SquareImage {
-    fn into(self) -> DynamicImage {
-        DynamicImage::ImageRgb32F(
-            Rgb32FImage::from_vec(
-                SQUARE_IMAGE_COLS as u32,
-                SQUARE_IMAGE_ROWS as u32,
-                self.buffer
-                    .iter()
-                    .flat_map(|rows| rows.iter().flat_map(|color| color.to_f32_array_no_alpha()))
-                    .collect(),
-            )
-            .unwrap(),
+impl Into<Image> for SquareImage {
+    fn into(self) -> Image {
+        Image::from_dynamic(
+            DynamicImage::ImageRgb32F(
+                Rgb32FImage::from_vec(
+                    self.width as u32,
+                    self.height as u32,
+                    self.buffer
+                        .iter()
+                        .flat_map(|color| color.to_f32_array_no_alpha())
+                        .collect(),
+                )
+                .unwrap(),
+            ),
+            true,
+            RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
         )
     }
 }

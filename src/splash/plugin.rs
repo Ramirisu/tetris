@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     controller::Controller,
     game::{
-        palette::{get_default_square_image, get_square_image},
+        palette::{get_empty_square_image, get_square_image, SquareImageSize},
         piece::PieceShape,
     },
     utility::despawn_all,
@@ -33,13 +33,13 @@ pub const TETRIS_BITMAP: &[[u8; 21]; 5] = &[
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     let square_images = [
-        image_assets.add(get_default_square_image()),
-        image_assets.add(get_square_image(PieceShape::J, 8)),
-        image_assets.add(get_square_image(PieceShape::T, 2)),
-        image_assets.add(get_square_image(PieceShape::Z, 8)),
-        image_assets.add(get_square_image(PieceShape::Z, 9)),
-        image_assets.add(get_square_image(PieceShape::Z, 0)),
-        image_assets.add(get_square_image(PieceShape::Z, 1)),
+        image_assets.add(get_empty_square_image(SquareImageSize::Small)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::J, 8)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::T, 2)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 8)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 9)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 0)),
+        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 1)),
     ];
 
     commands
