@@ -81,11 +81,11 @@ impl RenderConfig {
     }
 
     pub fn lines_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 8.0, BOARD_LAYER)
+        Vec3::new(-self.board_width(), self.unit * 9.0, BOARD_LAYER)
     }
 
     pub fn score_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), self.unit * 8.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), self.unit * 9.0, BOARD_LAYER)
     }
 
     pub fn level_translation(&self) -> Vec3 {
@@ -121,11 +121,32 @@ impl RenderConfig {
     }
 
     pub fn statistics_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.unit * 2.0, BOARD_LAYER)
+        Vec3::new(-self.board_width(), self.unit * 3.0, BOARD_LAYER)
     }
 
     pub fn das_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), -self.unit * 3.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), -self.unit * 8.0, BOARD_LAYER)
+    }
+
+    pub fn piece_count_square_size(&self) -> Vec2 {
+        Vec2::splat(self.unit / 2.0)
+    }
+
+    pub fn piece_count_translation(&self, index: usize, x: i32, y: i32) -> Vec3 {
+        (Vec2::new(x as f32 + 0.5, y as f32) * self.piece_count_square_size()
+            + Vec2::new(
+                -self.board_width() - self.unit,
+                -self.unit * 2.0 - self.unit * 1.5 * index as f32,
+            ))
+        .extend(BOARD_LAYER)
+    }
+
+    pub fn piece_count_counter_translation(&self, index: usize) -> Vec3 {
+        Vec3::new(
+            -self.board_width() + self.unit * 2.0,
+            -self.unit * 2.0 - self.unit * 1.5 * index as f32,
+            BOARD_LAYER,
+        )
     }
 }
 

@@ -11,7 +11,7 @@ use crate::{
 use super::{
     board::Board,
     palette::{get_default_square_image, get_square_image},
-    piece::PieceShape,
+    piece::{Piece, PieceShape},
     render::RenderConfig,
     tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
@@ -105,6 +105,12 @@ struct DASEntityMarker;
 
 #[derive(Component)]
 struct StatisticsEntityMarker;
+
+#[derive(Component)]
+struct PieceCountEntityMarker(PieceShape);
+
+#[derive(Component)]
+struct PieceCountCounterEntityMarker(PieceShape);
 
 #[derive(Component)]
 struct CurrPieceEntityMarker;
@@ -266,7 +272,7 @@ fn setup_screen(
 
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections(vec![
+            text: Text::from_sections([
                 TextSection {
                     value: "LINES\n".into(),
                     style: TextStyle {
@@ -291,7 +297,7 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections(vec![
+            text: Text::from_sections([
                 TextSection {
                     value: "SCORE\n".into(),
                     style: TextStyle {
@@ -316,7 +322,7 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections(vec![
+            text: Text::from_sections([
                 TextSection {
                     value: "LEVEL ".into(),
                     style: TextStyle {
@@ -345,7 +351,7 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections(vec![
+            text: Text::from_sections([
                 TextSection {
                     value: "BRN ".into(),
                     style: TextStyle {
@@ -453,7 +459,7 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections(vec![
+            text: Text::from_sections([
                 TextSection {
                     value: "DAS ".into(),
                     style: TextStyle {
@@ -475,6 +481,45 @@ fn setup_screen(
         GameEntityMarker,
         DASEntityMarker,
     ));
+
+    for shape in PieceShape::iter() {
+        for square in Piece::new(*shape).to_squares() {
+            commands.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(player_data.rc.piece_count_translation(
+                        *shape as usize,
+                        square.0,
+                        square.1,
+                    )),
+                    sprite: Sprite {
+                        custom_size: Some(player_data.rc.piece_count_square_size()),
+                        ..default()
+                    },
+                    texture: square_image_assets.get_image(*shape),
+                    ..default()
+                },
+                GameEntityMarker,
+                PieceCountEntityMarker(*shape),
+            ));
+            commands.spawn((
+                Text2dBundle {
+                    text: Text::from_sections([TextSection::from_style(TextStyle {
+                        font_size: player_data.rc.unit(),
+                        color: WHITE.into(),
+                        ..default()
+                    })]),
+                    transform: Transform::from_translation(
+                        player_data
+                            .rc
+                            .piece_count_counter_translation(*shape as usize),
+                    ),
+                    ..default()
+                },
+                GameEntityMarker,
+                PieceCountCounterEntityMarker(*shape),
+            ));
+        }
+    }
 
     player_data
         .board
@@ -573,6 +618,7 @@ fn update_statistics_system(
         Query<&mut Text, With<LevelEntityMarker>>,
         Query<&mut Text, With<StatisticsEntityMarker>>,
         Query<&mut Text, With<DASEntityMarker>>,
+        Query<(&mut Text, &PieceCountCounterEntityMarker)>,
     )>,
     player_data: ResMut<PlayerData>,
 ) {
@@ -620,6 +666,9 @@ fn update_statistics_system(
         } else {
             text.sections[1].style.color = RED.into();
         }
+    }
+    for (mut text, shape) in query.p5().iter_mut() {
+        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(shape.0));
     }
 }
 
@@ -1013,6 +1062,7 @@ mod state_game_entry_delay {
             Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<(&mut Transform, &mut Handle<Image>), With<NextPieceEntityMarker>>,
+            Query<(&mut Handle<Image>, &PieceCountEntityMarker)>,
         )>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
@@ -1046,6 +1096,9 @@ mod state_game_entry_delay {
             .for_each(|((mut transform, mut image), blk)| {
                 *image = square_image_assets.get_image(player_data.board.get_next_piece().shape());
                 transform.translation = player_data.rc.next_piece_translation(blk.0, blk.1);
+            });
+            query.p3().iter_mut().for_each(|(mut image, shape)| {
+                *image = square_image_assets.get_image(shape.0);
             });
 
             player_state.set(PlayerState::GameRunning);

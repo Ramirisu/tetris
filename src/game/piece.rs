@@ -54,6 +54,10 @@ pub enum PieceShape {
 }
 
 impl PieceShape {
+    pub const fn variant_count() -> usize {
+        7
+    }
+
     pub fn len(&self) -> usize {
         match self {
             PieceShape::T => PIECE_SHAPE_T.len(),

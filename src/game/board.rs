@@ -17,6 +17,7 @@ pub struct Board {
     triple: usize,
     tetris: usize,
     drought: usize,
+    piece_count: [usize; PieceShape::variant_count()],
 }
 
 impl Board {
@@ -40,6 +41,7 @@ impl Board {
             triple: 0,
             tetris: 0,
             drought: 0,
+            piece_count: [0; PieceShape::variant_count()],
         };
 
         // auto apply `drought` and `rand_1h2r`
@@ -110,6 +112,10 @@ impl Board {
         indexes
     }
 
+    pub fn get_piece_count(&self, shape: PieceShape) -> usize {
+        self.piece_count[shape as usize]
+    }
+
     pub fn lock_curr_piece(&mut self) {
         for blk in self.get_curr_piece_squares() {
             self.squares[blk.1 as usize][blk.0 as usize] = Some(self.curr_piece.shape());
@@ -127,18 +133,10 @@ impl Board {
         self.score += get_score(indexes.len(), self.level());
         self.lines += indexes.len();
         match indexes.len() {
-            1 => {
-                self.single += 1;
-            }
-            2 => {
-                self.double += 1;
-            }
-            3 => {
-                self.triple += 1;
-            }
-            4 => {
-                self.tetris += 1;
-            }
+            1 => self.single += 1,
+            2 => self.double += 1,
+            3 => self.triple += 1,
+            4 => self.tetris += 1,
             _ => (),
         }
         self.squares
@@ -155,6 +153,7 @@ impl Board {
         } else {
             self.drought += 1;
         }
+        self.piece_count[self.curr_piece.shape() as usize] += 1;
     }
 
     pub fn get_curr_piece(&self) -> Piece {
