@@ -5,8 +5,7 @@
 
 A Classic Tetris (NES Tetris) clone written in bevy/rust.
 
-![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png)
-![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
+![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png) ![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
 
 ## Features
 
@@ -19,6 +18,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
   - [x] Normal Color Palettes
   - [ ] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
+  - [x] Piece Distribution
   - [x] Statistics
   - [x] Sound Effects
   - [ ] Musics
