@@ -3,9 +3,10 @@
 [![Build](https://github.com/Ramirisu/tetris/actions/workflows/build.yml/badge.svg)](https://github.com/Ramirisu/tetris/actions/workflows/build.yml)
 [![dependency status](https://deps.rs/repo/github/Ramirisu/tetris/status.svg)](https://deps.rs/repo/github/Ramirisu/tetris)
 
-A Classic Tetris (NES Tetris) clone written in bevy/rust.
+A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
-![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png) ![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
+![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png)
+![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
 
 ## Features
 
@@ -14,7 +15,7 @@ A Classic Tetris (NES Tetris) clone written in bevy/rust.
   - [x] Initial Entry Delay (96 ticks)
   - [x] Entry Delay (10 ~ 18 ticks)
   - [x] Line Clear Delay (18 ticks)
-  - [x] 1H2R Random Generator for Next Piece
+  - [x] 1H2R RNG for Next Piece
   - [X] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
   - [x] Piece Distribution
