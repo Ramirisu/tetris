@@ -7,7 +7,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::player::{PlayerData, PlayerState},
+    game::player::{PlayerConfig, PlayerData, PlayerState},
     utility::despawn_all,
 };
 
@@ -294,7 +294,10 @@ fn handle_input_system(
         if let Some(level) =
             LEVELS[menu_data.selected_level.1 as usize][menu_data.selected_level.0 as usize]
         {
-            *player_data = PlayerData::new(level, true);
+            *player_data = PlayerData::new(PlayerConfig {
+                start_level: level,
+                lv39_line_cap: true,
+            });
             e_play_sound.send(PlaySoundEvent::StartGame);
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);

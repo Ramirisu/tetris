@@ -18,6 +18,12 @@ pub enum PlayerState {
     GameOver,
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct PlayerConfig {
+    pub start_level: usize,
+    pub lv39_line_cap: bool,
+}
+
 #[derive(Resource)]
 pub struct PlayerData {
     pub rc: RenderConfig,
@@ -35,16 +41,16 @@ pub struct PlayerData {
 }
 
 impl PlayerData {
-    pub fn new(start_level: usize, lv39_linecap: bool) -> Self {
+    pub fn new(config: PlayerConfig) -> Self {
         Self {
             rc: RenderConfig::default(),
-            board: Board::new(start_level),
+            board: Board::new(config.start_level),
             game_timer: GameTimer::default(),
             lock_curr_piece_immediately: false,
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(start_level, lv39_linecap),
+            fall_tick: FallTick::new(config.start_level, config.lv39_line_cap),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),
@@ -55,7 +61,10 @@ impl PlayerData {
 
 impl Default for PlayerData {
     fn default() -> Self {
-        Self::new(0, false)
+        Self::new(PlayerConfig {
+            start_level: 0,
+            lv39_line_cap: false,
+        })
     }
 }
 
