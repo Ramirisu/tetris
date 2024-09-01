@@ -11,12 +11,12 @@ use crate::{
 };
 
 use super::{
+    asset::SquareImageAssets,
     board::Board,
     palette::{get_empty_square_image, get_square_image, SquareImageSize},
     piece::{Piece, PieceShape},
-    render::RenderConfig,
-    tick::{duration_to_ticks, EntryDelayTick, FallTick, LineClearTick},
-    timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
+    player::{LineClearPhase, PlayerData, PlayerState},
+    tick::{duration_to_ticks, EntryDelayTick, LineClearTick},
 };
 
 pub fn setup(app: &mut App) {
@@ -52,34 +52,6 @@ pub fn setup(app: &mut App) {
             )
                 .run_if(in_state(AppState::Game)),
         );
-}
-
-#[derive(Resource)]
-struct SquareImageAssets {
-    images: HashMap<SquareImageSize, Vec<Handle<Image>>>,
-    empty: HashMap<SquareImageSize, Handle<Image>>,
-}
-
-impl SquareImageAssets {
-    pub fn get_image(&self, size: SquareImageSize, shape: PieceShape) -> Handle<Image> {
-        self.images[&size][shape as usize].clone()
-    }
-
-    pub fn get_empty(&self, size: SquareImageSize) -> Handle<Image> {
-        self.empty[&size].clone()
-    }
-
-    pub fn get_image_or_empty(
-        &self,
-        size: SquareImageSize,
-        shape: Option<PieceShape>,
-    ) -> Handle<Image> {
-        if let Some(shape) = shape {
-            self.get_image(size, shape)
-        } else {
-            self.get_empty(size)
-        }
-    }
 }
 
 #[derive(Component)]
@@ -127,58 +99,6 @@ struct NextPieceEntityMarker;
 #[derive(Component)]
 struct NextPieceSlotCoverEntityMarker;
 
-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
-pub enum PlayerState {
-    #[default]
-    GameRunning,
-    GameLineClear,
-    GameUpdateSquareImageAssets,
-    GameEntryDelay,
-    GamePause,
-    GameOver,
-}
-
-#[derive(Resource)]
-pub struct PlayerData {
-    rc: RenderConfig,
-    board: Board,
-    game_timer: GameTimer,
-    lock_curr_piece_immediately: bool,
-    can_press_down: bool,
-    press_down_timer: PressDownTimer,
-    das_timer: DelayAutoShiftTimer,
-    fall_tick: FallTick,
-    line_clear_tick: LineClearTick,
-    line_clear_rows: Vec<usize>,
-    line_clear_phase: state_game_line_clear::LineClearPhase,
-    entry_delay_tick: EntryDelayTick,
-}
-
-impl PlayerData {
-    pub fn new(start_level: usize, lv39_linecap: bool) -> Self {
-        Self {
-            rc: RenderConfig::default(),
-            board: Board::new(start_level),
-            game_timer: GameTimer::default(),
-            lock_curr_piece_immediately: false,
-            can_press_down: false,
-            press_down_timer: PressDownTimer::default(),
-            das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(start_level, lv39_linecap),
-            line_clear_tick: LineClearTick::default(),
-            line_clear_rows: default(),
-            line_clear_phase: state_game_line_clear::LineClearPhase::default(),
-            entry_delay_tick: EntryDelayTick::default(),
-        }
-    }
-}
-
-impl Default for PlayerData {
-    fn default() -> Self {
-        Self::new(0, false)
-    }
-}
-
 fn load_square_image_assets(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
@@ -209,7 +129,7 @@ fn load_square_image_assets_impl(
         empty.insert(*size, image_assets.add(get_empty_square_image(*size)));
     }
 
-    SquareImageAssets { images, empty }
+    SquareImageAssets::new(images, empty)
 }
 
 fn unload_square_image_assets(mut commands: Commands) {
@@ -703,8 +623,6 @@ fn update_statistics_system(
 }
 
 mod state_game_running {
-    use state_game_line_clear::LineClearPhase;
-
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
@@ -1004,40 +922,6 @@ mod state_game_running {
 
 mod state_game_line_clear {
     use super::*;
-
-    pub(super) struct LineClearPhase {
-        cols: Option<(usize, usize)>, // (left, right)
-    }
-
-    impl LineClearPhase {
-        pub fn new() -> Self {
-            const COLS: usize = Board::BOARD_COLS;
-            Self {
-                cols: if COLS % 2 == 0 {
-                    Some((COLS / 2 - 1, COLS / 2))
-                } else {
-                    Some((COLS / 2, COLS / 2))
-                },
-            }
-        }
-
-        pub fn next_cols(&mut self) -> Option<(usize, usize)> {
-            self.cols.map(|cols| {
-                if cols.0 > 0 {
-                    self.cols = Some((cols.0 - 1, cols.1 + 1));
-                } else {
-                    self.cols = None
-                }
-                cols
-            })
-        }
-    }
-
-    impl Default for LineClearPhase {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
 
     pub(super) fn tick_system(
         time: Res<Time>,

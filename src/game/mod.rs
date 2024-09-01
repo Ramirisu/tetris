@@ -1,7 +1,9 @@
+mod asset;
 mod board;
 mod level;
 pub mod palette;
 pub mod piece;
+pub mod player;
 pub mod plugin;
 mod render;
 mod score;

@@ -7,7 +7,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::plugin::{PlayerData, PlayerState},
+    game::player::{PlayerData, PlayerState},
     utility::despawn_all,
 };
 
