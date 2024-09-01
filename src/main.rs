@@ -11,7 +11,7 @@ mod app_state;
 mod audio;
 mod controller;
 mod game;
-mod menu;
+mod level_menu;
 mod splash;
 mod utility;
 
@@ -50,7 +50,7 @@ fn main() {
             controller::setup,
             audio::plugin::setup,
             splash::plugin::setup,
-            menu::plugin::setup,
+            level_menu::plugin::setup,
             game::plugin::setup,
         ))
         .run();

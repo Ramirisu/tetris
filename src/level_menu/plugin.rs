@@ -12,19 +12,22 @@ use crate::{
 };
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(MenuData::default())
-        .add_systems(OnEnter(AppState::Menu), setup_screen)
+    app.insert_resource(LevelMenuData::default())
+        .add_systems(OnEnter(AppState::LevelMenu), setup_screen)
         .add_systems(
             Update,
             (update_ui_system, handle_input_system)
                 .chain()
-                .run_if(in_state(AppState::Menu)),
+                .run_if(in_state(AppState::LevelMenu)),
         )
-        .add_systems(OnExit(AppState::Menu), despawn_all::<MenuEntityMarker>);
+        .add_systems(
+            OnExit(AppState::LevelMenu),
+            despawn_all::<LevelMenuEntityMarker>,
+        );
 }
 
 #[derive(Component)]
-struct MenuEntityMarker;
+struct LevelMenuEntityMarker;
 
 #[derive(Component)]
 struct LevelButtonEntityMarker {
@@ -32,11 +35,11 @@ struct LevelButtonEntityMarker {
 }
 
 #[derive(Resource)]
-struct MenuData {
+struct LevelMenuData {
     selected_level: (i32, i32),
 }
 
-impl MenuData {
+impl LevelMenuData {
     pub fn new() -> Self {
         Self {
             selected_level: (0, 0),
@@ -44,7 +47,7 @@ impl MenuData {
     }
 }
 
-impl Default for MenuData {
+impl Default for LevelMenuData {
     fn default() -> Self {
         Self::new()
     }
@@ -63,7 +66,7 @@ fn setup_screen(mut commands: Commands) {
                 },
                 ..default()
             },
-            MenuEntityMarker,
+            LevelMenuEntityMarker,
         ))
         .with_children(|parent| {
             parent
@@ -176,7 +179,7 @@ const LEVELS_COLS: usize = LEVELS[0].len();
 fn update_ui_system(
     time: Res<Time>,
     mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
-    menu_data: Res<MenuData>,
+    menu_data: Res<LevelMenuData>,
 ) {
     fn sin(elapsed: f32) -> f32 {
         const SPEED: f32 = 30.0;
@@ -215,7 +218,7 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
     controller: Res<Controller>,
-    mut menu_data: ResMut<MenuData>,
+    mut menu_data: ResMut<LevelMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
     mut player_state: ResMut<NextState<PlayerState>>,

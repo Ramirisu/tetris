@@ -134,6 +134,6 @@ fn handle_input_system(
             })
         })
     {
-        app_state.set(AppState::Menu);
+        app_state.set(AppState::LevelMenu);
     }
 }

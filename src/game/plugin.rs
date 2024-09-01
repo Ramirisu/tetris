@@ -1074,7 +1074,7 @@ mod state_game_over {
         });
 
         if clicked || keys.just_pressed(KeyCode::Enter) {
-            app_state.set(AppState::Menu);
+            app_state.set(AppState::LevelMenu);
         }
     }
 }
