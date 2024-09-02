@@ -35,14 +35,19 @@ struct LevelButtonEntityMarker {
 }
 
 #[derive(Resource)]
-struct LevelMenuData {
+pub struct LevelMenuData {
     selected_level: (i32, i32),
+    pub config: PlayerConfig,
 }
 
 impl LevelMenuData {
     pub fn new() -> Self {
         Self {
             selected_level: (0, 0),
+            config: PlayerConfig {
+                start_level: 0,
+                lv39_linecap: false,
+            },
         }
     }
 }
@@ -179,7 +184,7 @@ const LEVELS_COLS: usize = LEVELS[0].len();
 fn update_ui_system(
     time: Res<Time>,
     mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
-    menu_data: Res<LevelMenuData>,
+    level_menu_data: Res<LevelMenuData>,
 ) {
     fn sin(elapsed: f32) -> f32 {
         const SPEED: f32 = 30.0;
@@ -187,7 +192,7 @@ fn update_ui_system(
     }
 
     query.iter_mut().for_each(|(mut bg_color, level_button)| {
-        if level_button.cordinate == menu_data.selected_level {
+        if level_button.cordinate == level_menu_data.selected_level {
             let color = GOLD * sin(time.elapsed_seconds());
             *bg_color = color.into();
         } else {
@@ -196,7 +201,7 @@ fn update_ui_system(
     });
 }
 
-pub struct MenuInputs {
+pub struct LevelMenuInputs {
     left: bool,
     right: bool,
     up: bool,
@@ -204,7 +209,7 @@ pub struct MenuInputs {
     start: bool,
 }
 
-impl std::ops::BitOrAssign for MenuInputs {
+impl std::ops::BitOrAssign for LevelMenuInputs {
     fn bitor_assign(&mut self, rhs: Self) {
         self.left |= rhs.left;
         self.right |= rhs.right;
@@ -218,13 +223,13 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
     controller: Res<Controller>,
-    mut menu_data: ResMut<LevelMenuData>,
+    mut level_menu_data: ResMut<LevelMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    let mut inputs = MenuInputs {
+    let mut inputs = LevelMenuInputs {
         left: keys.just_pressed(KeyCode::ArrowLeft),
         right: keys.just_pressed(KeyCode::ArrowRight),
         up: keys.just_pressed(KeyCode::ArrowUp),
@@ -233,7 +238,7 @@ fn handle_input_system(
     };
 
     for gamepad in &controller.gamepads {
-        inputs |= MenuInputs {
+        inputs |= LevelMenuInputs {
             left: buttons.just_pressed(GamepadButton {
                 gamepad: *gamepad,
                 button_type: GamepadButtonType::DPadLeft,
@@ -259,32 +264,32 @@ fn handle_input_system(
 
     match (inputs.up, inputs.down) {
         (true, false) => {
-            menu_data.selected_level.1 =
-                (menu_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
-            if menu_data.selected_level.1 >= 4 {
-                menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
+            level_menu_data.selected_level.1 =
+                (level_menu_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
+            if level_menu_data.selected_level.1 >= 4 {
+                level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
             e_play_sound.send(PlaySoundEvent::MoveCursor);
         }
         (false, true) => {
-            menu_data.selected_level.1 =
-                (menu_data.selected_level.1 + 1).rem_euclid(LEVELS_ROWS as i32);
-            if menu_data.selected_level.1 >= 4 {
-                menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
+            level_menu_data.selected_level.1 =
+                (level_menu_data.selected_level.1 + 1).rem_euclid(LEVELS_ROWS as i32);
+            if level_menu_data.selected_level.1 >= 4 {
+                level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
             e_play_sound.send(PlaySoundEvent::MoveCursor);
         }
         _ => {
-            if menu_data.selected_level.1 < 4 {
+            if level_menu_data.selected_level.1 < 4 {
                 match (inputs.left, inputs.right) {
                     (true, false) => {
-                        menu_data.selected_level.0 =
-                            (menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
+                        level_menu_data.selected_level.0 =
+                            (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
                         e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                     (false, true) => {
-                        menu_data.selected_level.0 =
-                            (menu_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
+                        level_menu_data.selected_level.0 =
+                            (level_menu_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
                         e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                     _ => {}
@@ -294,13 +299,12 @@ fn handle_input_system(
     }
 
     if inputs.start {
-        if let Some(level) =
-            LEVELS[menu_data.selected_level.1 as usize][menu_data.selected_level.0 as usize]
+        if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
+            [level_menu_data.selected_level.0 as usize]
         {
-            *player_data = PlayerData::new(PlayerConfig {
-                start_level: level,
-                lv39_line_cap: true,
-            });
+            level_menu_data.config.start_level = level;
+
+            *player_data = PlayerData::new(level_menu_data.config);
             e_play_sound.send(PlaySoundEvent::StartGame);
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);

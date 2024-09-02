@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub enum AppState {
     #[default]
     Splash,
+    GameModeMenu,
     LevelMenu,
     Game,
 }

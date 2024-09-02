@@ -21,7 +21,7 @@ pub enum PlayerState {
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct PlayerConfig {
     pub start_level: usize,
-    pub lv39_line_cap: bool,
+    pub lv39_linecap: bool,
 }
 
 #[derive(Resource)]
@@ -50,7 +50,7 @@ impl PlayerData {
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(config.start_level, config.lv39_line_cap),
+            fall_tick: FallTick::new(config.start_level, config.lv39_linecap),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),
@@ -63,7 +63,7 @@ impl Default for PlayerData {
     fn default() -> Self {
         Self::new(PlayerConfig {
             start_level: 0,
-            lv39_line_cap: false,
+            lv39_linecap: false,
         })
     }
 }
