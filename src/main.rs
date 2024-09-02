@@ -12,6 +12,7 @@ mod audio;
 mod controller;
 mod game;
 mod game_mode_menu;
+mod inputs;
 mod level_menu;
 mod splash;
 mod utility;
@@ -19,6 +20,7 @@ mod utility;
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use controller::Controller;
+use inputs::PlayerInputs;
 
 fn main() {
     App::new()
@@ -69,14 +71,10 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
 ) {
-    if keys.just_pressed(KeyCode::Escape)
-        || controller.gamepads.iter().any(|gamepad| {
-            buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Select,
-            })
-        })
-    {
+    let inputs =
+        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
+
+    if keys.just_pressed(KeyCode::Escape) || inputs.select {
         app_state.set(AppState::Splash);
     }
 

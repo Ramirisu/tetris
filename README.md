@@ -29,16 +29,16 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
 ## Keybindings
 
-| Action                                                   | Keyboard | Controller (NES) |
-| :------------------------------------------------------- | :------: | :--------------: |
-| Move Left                                                |    ←     |        ←         |
-| Move Right                                               |    →     |        →         |
-| Soft Drop                                                |    ↓     |        ↓         |
-| Rotate Clockwisely                                       |    X     |        A         |
-| Rotate Counterclockwisely                                |    Z     |        B         |
-| Start/Pause/Resume                                       |  Enter   |      Start       |
-| Soft Reset                                               |   Esc    |      Select      |
-| Toggle Windowed/BorderlessFullscreen Mode (Desktop Only) |   F11    |                  |
+| Action                                                   |     Keyboard     | Controller (NES) |
+| :------------------------------------------------------- | :--------------: | :--------------: |
+| Move Left                                                |        ←         |        ←         |
+| Move Right                                               |        →         |        →         |
+| Soft Drop                                                |        ↓         |        ↓         |
+| Rotate Clockwisely                                       |        X         |        A         |
+| Rotate Counterclockwisely                                |        Z         |        B         |
+| Start/Pause/Resume                                       |      Enter       |      Start       |
+| Soft Reset                                               | Left Shift / Esc |      Select      |
+| Toggle Windowed/BorderlessFullscreen Mode (Desktop Only) |       F11        |                  |
 
 ## Build & Run
 

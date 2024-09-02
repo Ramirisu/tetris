@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::{
     app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    utility::despawn_all,
+    inputs::PlayerInputs, utility::despawn_all,
 };
 
 use super::{
@@ -630,29 +630,6 @@ mod state_game_running {
         player_data.press_down_timer.tick(time.delta());
     }
 
-    pub struct GameRunningInputs {
-        left: (bool, bool),  // (just_pressed, pressed)
-        right: (bool, bool), // (just_pressed, pressed)
-        down: (bool, bool),  // (just_pressed, pressed)
-        rotate_clockwise: bool,
-        rotate_counter_clockwise: bool,
-        start: bool,
-    }
-
-    impl std::ops::BitOrAssign for GameRunningInputs {
-        fn bitor_assign(&mut self, rhs: Self) {
-            self.left.0 |= rhs.left.0;
-            self.left.1 |= rhs.left.1;
-            self.right.0 |= rhs.right.0;
-            self.right.1 |= rhs.right.1;
-            self.down.0 |= rhs.down.0;
-            self.down.1 |= rhs.down.1;
-            self.rotate_clockwise |= rhs.rotate_clockwise;
-            self.rotate_counter_clockwise |= rhs.rotate_counter_clockwise;
-            self.start |= rhs.start;
-        }
-    }
-
     pub(super) fn handle_input_system(
         time: Res<Time>,
         keys: Res<ButtonInput<KeyCode>>,
@@ -668,70 +645,8 @@ mod state_game_running {
         mut player_state: ResMut<NextState<PlayerState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
-        let mut inputs = GameRunningInputs {
-            left: (
-                keys.just_pressed(KeyCode::ArrowLeft),
-                keys.pressed(KeyCode::ArrowLeft),
-            ),
-            right: (
-                keys.just_pressed(KeyCode::ArrowRight),
-                keys.pressed(KeyCode::ArrowRight),
-            ),
-            down: (
-                keys.just_pressed(KeyCode::ArrowDown),
-                keys.pressed(KeyCode::ArrowDown),
-            ),
-            rotate_clockwise: keys.just_pressed(KeyCode::KeyX),
-            rotate_counter_clockwise: keys.just_pressed(KeyCode::KeyZ),
-            start: keys.just_pressed(KeyCode::Enter),
-        };
-
-        for gamepad in &controller.gamepads {
-            inputs |= GameRunningInputs {
-                left: (
-                    buttons.just_pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadLeft,
-                    }),
-                    buttons.pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadLeft,
-                    }),
-                ),
-                right: (
-                    buttons.just_pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadRight,
-                    }),
-                    buttons.pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadRight,
-                    }),
-                ),
-                down: (
-                    buttons.just_pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadDown,
-                    }),
-                    buttons.pressed(GamepadButton {
-                        gamepad: *gamepad,
-                        button_type: GamepadButtonType::DPadDown,
-                    }),
-                ),
-                rotate_clockwise: buttons.just_pressed(GamepadButton {
-                    gamepad: *gamepad,
-                    button_type: GamepadButtonType::East,
-                }),
-                rotate_counter_clockwise: buttons.just_pressed(GamepadButton {
-                    gamepad: *gamepad,
-                    button_type: GamepadButtonType::South,
-                }),
-                start: buttons.just_pressed(GamepadButton {
-                    gamepad: *gamepad,
-                    button_type: GamepadButtonType::Start,
-                }),
-            };
-        }
+        let inputs =
+            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
 
         if inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
@@ -763,7 +678,7 @@ mod state_game_running {
     }
 
     fn handle_input(
-        inputs: GameRunningInputs,
+        inputs: PlayerInputs,
         time: &Time,
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
@@ -821,10 +736,10 @@ mod state_game_running {
             }
         }
 
-        if inputs.rotate_clockwise {
+        if inputs.a.0 {
             rotated |= player_data.board.rotate_piece_clockwise();
         }
-        if inputs.rotate_counter_clockwise {
+        if inputs.b.0 {
             rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
@@ -1042,14 +957,10 @@ mod state_game_pause {
         )>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        let clicked = controller.gamepads.iter().any(|gamepad| {
-            buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Start,
-            })
-        });
+        let inputs =
+            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
 
-        if clicked || keys.just_pressed(KeyCode::Enter) {
+        if inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
             *query.p1().single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
@@ -1066,14 +977,10 @@ mod state_game_over {
         controller: Res<Controller>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
-        let clicked = controller.gamepads.iter().any(|gamepad| {
-            buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Start,
-            })
-        });
+        let inputs =
+            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
 
-        if clicked || keys.just_pressed(KeyCode::Enter) {
+        if inputs.start {
             app_state.set(AppState::LevelMenu);
         }
     }

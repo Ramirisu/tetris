@@ -8,6 +8,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::player::{PlayerConfig, PlayerData, PlayerState},
+    inputs::PlayerInputs,
     utility::despawn_all,
 };
 
@@ -201,24 +202,6 @@ fn update_ui_system(
     });
 }
 
-pub struct LevelMenuInputs {
-    left: bool,
-    right: bool,
-    up: bool,
-    down: bool,
-    start: bool,
-}
-
-impl std::ops::BitOrAssign for LevelMenuInputs {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.left |= rhs.left;
-        self.right |= rhs.right;
-        self.up |= rhs.up;
-        self.down |= rhs.down;
-        self.start |= rhs.start;
-    }
-}
-
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
@@ -229,40 +212,10 @@ fn handle_input_system(
     mut player_state: ResMut<NextState<PlayerState>>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    let mut inputs = LevelMenuInputs {
-        left: keys.just_pressed(KeyCode::ArrowLeft),
-        right: keys.just_pressed(KeyCode::ArrowRight),
-        up: keys.just_pressed(KeyCode::ArrowUp),
-        down: keys.just_pressed(KeyCode::ArrowDown),
-        start: keys.just_pressed(KeyCode::Enter),
-    };
+    let inputs =
+        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
 
-    for gamepad in &controller.gamepads {
-        inputs |= LevelMenuInputs {
-            left: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadLeft,
-            }),
-            right: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadRight,
-            }),
-            up: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadUp,
-            }),
-            down: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadDown,
-            }),
-            start: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Start,
-            }),
-        };
-    }
-
-    match (inputs.up, inputs.down) {
+    match (inputs.up.0, inputs.down.0) {
         (true, false) => {
             level_menu_data.selected_level.1 =
                 (level_menu_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
@@ -281,7 +234,7 @@ fn handle_input_system(
         }
         _ => {
             if level_menu_data.selected_level.1 < 4 {
-                match (inputs.left, inputs.right) {
+                match (inputs.left.0, inputs.right.0) {
                     (true, false) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);

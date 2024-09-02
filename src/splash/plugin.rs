@@ -7,6 +7,7 @@ use crate::{
         palette::{get_empty_square_image, get_square_image, SquareImageSize},
         piece::PieceShape,
     },
+    inputs::PlayerInputs,
     utility::despawn_all,
 };
 
@@ -126,14 +127,10 @@ fn handle_input_system(
     controller: Res<Controller>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    if keys.just_pressed(KeyCode::Enter)
-        || controller.gamepads.iter().any(|gamepad| {
-            buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Start,
-            })
-        })
-    {
+    let inputs =
+        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
+
+    if inputs.start {
         app_state.set(AppState::GameModeMenu);
     }
 }

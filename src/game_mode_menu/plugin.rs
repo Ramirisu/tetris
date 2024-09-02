@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{
     app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    level_menu::plugin::LevelMenuData, utility::despawn_all,
+    inputs::PlayerInputs, level_menu::plugin::LevelMenuData, utility::despawn_all,
 };
 
 pub fn setup(app: &mut App) {
@@ -247,20 +247,6 @@ fn update_ui_system(
     }
 }
 
-pub struct GameModeMenuInputs {
-    up: bool,
-    down: bool,
-    start: bool,
-}
-
-impl std::ops::BitOrAssign for GameModeMenuInputs {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.up |= rhs.up;
-        self.down |= rhs.down;
-        self.start |= rhs.start;
-    }
-}
-
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
@@ -270,30 +256,10 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     mut level_menu_data: ResMut<LevelMenuData>,
 ) {
-    let mut inputs = GameModeMenuInputs {
-        up: keys.just_pressed(KeyCode::ArrowUp),
-        down: keys.just_pressed(KeyCode::ArrowDown),
-        start: keys.just_pressed(KeyCode::Enter),
-    };
+    let inputs =
+        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
 
-    for gamepad in &controller.gamepads {
-        inputs |= GameModeMenuInputs {
-            up: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadUp,
-            }),
-            down: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::DPadDown,
-            }),
-            start: buttons.just_pressed(GamepadButton {
-                gamepad: *gamepad,
-                button_type: GamepadButtonType::Start,
-            }),
-        };
-    }
-
-    match (inputs.up, inputs.down) {
+    match (inputs.up.0, inputs.down.0) {
         (true, false) => {
             game_mode_menu_data.selected_index =
                 (game_mode_menu_data.selected_index - 1).rem_euclid(GAME_MODES.len() as i32);
