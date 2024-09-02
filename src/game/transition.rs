@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(transition.get_level(0, 30), 3);
         assert_eq!(transition.get_level(0, 180), 18);
 
-        assert_eq!(transition.get_level(18, 0), 0);
+        assert_eq!(transition.get_level(18, 0), 18);
         assert_eq!(transition.get_level(18, 10), 19);
         assert_eq!(transition.get_level(18, 20), 20);
         assert_eq!(transition.get_level(18, 30), 21);
