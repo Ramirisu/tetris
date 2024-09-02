@@ -306,6 +306,9 @@ fn handle_input_system(
                     GAME_MODES[game_mode_menu_data.selected_index as usize].transition;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
+            } else if inputs.b.0 {
+                e_play_sound.send(PlaySoundEvent::StartGame);
+                app_state.set(AppState::Splash);
             }
         }
     }

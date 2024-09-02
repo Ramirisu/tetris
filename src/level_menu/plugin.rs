@@ -259,5 +259,8 @@ fn handle_input_system(
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);
         }
+    } else if inputs.b.0 {
+        e_play_sound.send(PlaySoundEvent::StartGame);
+        app_state.set(AppState::GameModeMenu);
     }
 }
