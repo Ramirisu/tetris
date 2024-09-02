@@ -5,7 +5,8 @@ use bevy::{
 
 use crate::{
     app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    inputs::PlayerInputs, level_menu::plugin::LevelMenuData, utility::despawn_all,
+    game::transition::Transition, inputs::PlayerInputs, level_menu::plugin::LevelMenuData,
+    utility::despawn_all,
 };
 
 pub fn setup(app: &mut App) {
@@ -101,8 +102,10 @@ fn setup_screen(mut commands: Commands) {
                                     style: Style {
                                         display: Display::Grid,
                                         grid_template_columns: vec![GridTrack::auto(); 2],
+                                        border: UiRect::all(Val::Px(5.0)),
                                         ..default()
                                     },
+                                    border_color: GREEN.into(),
                                     ..default()
                                 })
                                 .with_children(|parent| {
@@ -162,44 +165,46 @@ fn setup_screen(mut commands: Commands) {
                                         display: Display::Grid,
                                         grid_template_columns: vec![GridTrack::auto(); 2],
                                         border: UiRect::all(Val::Px(5.0)),
+                                        padding: UiRect::all(Val::Px(20.0)),
                                         ..default()
                                     },
                                     border_color: WHITE.into(),
                                     ..default()
                                 })
                                 .with_children(|parent| {
-                                    parent
-                                        .spawn((NodeBundle {
-                                            style: Style {
-                                                width: Val::Px(360.0),
-                                                height: Val::Px(60.0),
-                                                align_items: AlignItems::Center,
-                                                justify_content: JustifyContent::Center,
+                                    parent.spawn((
+                                        TextBundle::from_sections([
+                                            TextSection {
+                                                value: "  TRANSITION: ".into(),
+                                                style: TextStyle {
+                                                    font_size: 30.0,
+                                                    color: WHITE.into(),
+                                                    ..default()
+                                                },
                                                 ..default()
                                             },
-                                            ..default()
-                                        },))
-                                        .with_children(|parent| {
-                                            parent.spawn((
-                                                TextBundle::from_sections([
-                                                    TextSection {
-                                                        value: "LV39 LINECAP ".into(),
-                                                        style: TextStyle {
-                                                            font_size: 30.0,
-                                                            color: WHITE.into(),
-                                                            ..default()
-                                                        },
-                                                        ..default()
-                                                    },
-                                                    TextSection::from_style(TextStyle {
-                                                        font_size: 30.0,
-                                                        color: WHITE.into(),
-                                                        ..default()
-                                                    }),
-                                                ]),
-                                                GameFeatureEntityMarker,
-                                            ));
-                                        });
+                                            TextSection::from_style(TextStyle {
+                                                font_size: 30.0,
+                                                color: WHITE.into(),
+                                                ..default()
+                                            }),
+                                            TextSection {
+                                                value: "LV39 LINECAP: ".into(),
+                                                style: TextStyle {
+                                                    font_size: 30.0,
+                                                    color: WHITE.into(),
+                                                    ..default()
+                                                },
+                                                ..default()
+                                            },
+                                            TextSection::from_style(TextStyle {
+                                                font_size: 30.0,
+                                                color: WHITE.into(),
+                                                ..default()
+                                            }),
+                                        ]),
+                                        GameFeatureEntityMarker,
+                                    ));
                                 });
                         });
                 });
@@ -208,17 +213,25 @@ fn setup_screen(mut commands: Commands) {
 
 struct GameMode {
     name: &'static str,
+    transition: Transition,
     lv39_linecap: bool,
 }
 
-const GAME_MODES: [GameMode; 2] = [
+const GAME_MODES: [GameMode; 3] = [
     GameMode {
-        name: "Classic",
+        name: "CLASSIC",
+        transition: Transition::Classic,
         lv39_linecap: false,
     },
     GameMode {
-        name: "Competitive",
+        name: "COMPETITIVE",
+        transition: Transition::Classic,
         lv39_linecap: true,
+    },
+    GameMode {
+        name: "TRANSITION",
+        transition: Transition::Fast,
+        lv39_linecap: false,
     },
 ];
 
@@ -236,13 +249,28 @@ fn update_ui_system(
             *visibility = Visibility::Hidden;
         }
     });
+
+    fn format(msg: impl std::fmt::Display) -> String {
+        format!("{:<8}\n", msg)
+    }
+
     if let Ok(mut text) = query.p1().get_single_mut() {
+        match GAME_MODES[game_mode_menu_data.selected_index as usize].transition {
+            Transition::Classic => {
+                text.sections[1].value = format(Transition::Classic.to_string().to_uppercase());
+                text.sections[1].style.color = GREEN.into();
+            }
+            Transition::Fast => {
+                text.sections[1].value = format(Transition::Fast.to_string().to_uppercase());
+                text.sections[1].style.color = RED.into();
+            }
+        }
         if GAME_MODES[game_mode_menu_data.selected_index as usize].lv39_linecap {
-            text.sections[1].value = format!("{:<8}", "ON");
-            text.sections[1].style.color = GREEN.into();
+            text.sections[3].value = format("ON");
+            text.sections[3].style.color = GREEN.into();
         } else {
-            text.sections[1].value = format!("{:<8}", "OFF");
-            text.sections[1].style.color = RED.into();
+            text.sections[3].value = format("OFF");
+            text.sections[3].style.color = RED.into();
         }
     }
 }
@@ -274,6 +302,8 @@ fn handle_input_system(
             if inputs.start {
                 level_menu_data.config.lv39_linecap =
                     GAME_MODES[game_mode_menu_data.selected_index as usize].lv39_linecap;
+                level_menu_data.config.transition =
+                    GAME_MODES[game_mode_menu_data.selected_index as usize].transition;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }

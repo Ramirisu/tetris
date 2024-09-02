@@ -1,15 +1,16 @@
 use super::{
-    level::get_level,
     piece::{Piece, PieceShape, Square},
     score::get_score,
+    transition::Transition,
 };
 
 pub struct Board {
+    start_level: usize,
+    transition: Transition,
     squares: Vec<Vec<Option<PieceShape>>>,
     curr_piece: Piece,
     curr_translation: (i32, i32),
     next_piece: Piece,
-    start_level: usize,
     lines: usize,
     score: usize,
     single: usize,
@@ -27,13 +28,14 @@ impl Board {
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
-    pub fn new(start_level: usize) -> Self {
+    pub fn new(start_level: usize, transition: Transition) -> Self {
         let mut board = Self {
+            start_level,
+            transition,
             squares: vec![vec![None; Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece: Piece::rand(),
             curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_piece: Piece::rand(),
-            start_level,
             lines: 0,
             score: 0,
             single: 0,
@@ -54,7 +56,7 @@ impl Board {
     }
 
     pub fn level(&self) -> usize {
-        get_level(self.start_level, self.lines)
+        self.transition.get_level(self.start_level, self.lines)
     }
 
     pub fn lines(&self) -> usize {
@@ -269,6 +271,6 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self::new(0)
+        Self::new(0, Transition::Classic)
     }
 }

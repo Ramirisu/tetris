@@ -1,6 +1,5 @@
 mod asset;
 mod board;
-mod level;
 pub mod palette;
 pub mod piece;
 pub mod player;
@@ -9,3 +8,4 @@ mod render;
 mod score;
 mod tick;
 mod timer;
+pub mod transition;

@@ -5,6 +5,7 @@ use super::{
     render::RenderConfig,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
+    transition::Transition,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -21,7 +22,18 @@ pub enum PlayerState {
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct PlayerConfig {
     pub start_level: usize,
+    pub transition: Transition,
     pub lv39_linecap: bool,
+}
+
+impl Default for PlayerConfig {
+    fn default() -> Self {
+        Self {
+            start_level: 0,
+            lv39_linecap: false,
+            transition: Transition::Classic,
+        }
+    }
 }
 
 #[derive(Resource)]
@@ -44,7 +56,7 @@ impl PlayerData {
     pub fn new(config: PlayerConfig) -> Self {
         Self {
             rc: RenderConfig::default(),
-            board: Board::new(config.start_level),
+            board: Board::new(config.start_level, config.transition),
             game_timer: GameTimer::default(),
             lock_curr_piece_immediately: false,
             can_press_down: false,
@@ -61,10 +73,7 @@ impl PlayerData {
 
 impl Default for PlayerData {
     fn default() -> Self {
-        Self::new(PlayerConfig {
-            start_level: 0,
-            lv39_linecap: false,
-        })
+        Self::new(PlayerConfig::default())
     }
 }
 

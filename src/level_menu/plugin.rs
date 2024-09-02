@@ -45,10 +45,7 @@ impl LevelMenuData {
     pub fn new() -> Self {
         Self {
             selected_level: (0, 0),
-            config: PlayerConfig {
-                start_level: 0,
-                lv39_linecap: false,
-            },
+            config: PlayerConfig::default(),
         }
     }
 }
