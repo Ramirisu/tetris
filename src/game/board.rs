@@ -18,6 +18,7 @@ pub struct Board {
     triple: usize,
     tetris: usize,
     drought: usize,
+    max_drought: usize,
     piece_count: [usize; PieceShape::variant_count()],
 }
 
@@ -43,6 +44,7 @@ impl Board {
             triple: 0,
             tetris: 0,
             drought: 0,
+            max_drought: 0,
             piece_count: [0; PieceShape::variant_count()],
         };
 
@@ -97,6 +99,10 @@ impl Board {
 
     pub fn drought(&self) -> usize {
         self.drought
+    }
+
+    pub fn max_drought(&self) -> usize {
+        self.max_drought
     }
 
     pub fn get_square(&self, x: i32, y: i32) -> Option<PieceShape> {
@@ -154,6 +160,7 @@ impl Board {
             self.drought = 0;
         } else {
             self.drought += 1;
+            self.max_drought = self.max_drought.max(self.drought);
         }
         self.piece_count[self.curr_piece.shape() as usize] += 1;
     }

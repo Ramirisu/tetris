@@ -297,105 +297,13 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "BRN ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
+            text: Text::from_sections(vec![
                 TextSection::from_style(TextStyle {
                     font_size: player_data.rc.unit(),
                     color: WHITE.into(),
                     ..default()
-                }),
-                TextSection {
-                    value: " 1X ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-                TextSection {
-                    value: " 2X ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-                TextSection {
-                    value: " 3X ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-                TextSection {
-                    value: "TRT ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-                TextSection {
-                    value: "TRT ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-                TextSection {
-                    value: "DRT ".into(),
-                    style: TextStyle {
-                        font_size: player_data.rc.unit(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: player_data.rc.unit(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
+                });
+                10
             ]),
             transform: Transform::from_translation(player_data.rc.statistics_translation()),
             ..default()
@@ -583,30 +491,28 @@ fn update_statistics_system(
         text.sections[2].value = format!(" {:02}", player_data.board.start_level());
     }
     if let Ok(mut text) = query.p3().get_single_mut() {
-        text.sections[1].value = format!("{:4}\n", player_data.board.burned_lines());
-        text.sections[3].value = format!("{:4}\n", player_data.board.single());
-        text.sections[5].value = format!("{:4}\n", player_data.board.double());
-        text.sections[7].value = format!("{:4}\n", player_data.board.triple());
-        text.sections[9].value = format!("{:4}\n", player_data.board.tetris());
-
+        text.sections[0].value = format!("BRN {:4}\n", player_data.board.burned_lines());
+        text.sections[1].value = format!(" 1X {:4}\n", player_data.board.single());
+        text.sections[2].value = format!(" 2X {:4}\n", player_data.board.double());
+        text.sections[3].value = format!(" 3X {:4}\n", player_data.board.triple());
+        text.sections[4].value = format!("TRT {:4}\n", player_data.board.tetris());
+        text.sections[5].value = format!("TRT ");
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
-        text.sections[11].value = format!("{:3}%\n", rate);
-        if rate >= 80 {
-            text.sections[11].style.color = GREEN.into();
-        } else if rate >= 50 {
-            text.sections[11].style.color = YELLOW.into();
-        } else {
-            text.sections[11].style.color = RED.into();
+        text.sections[6].value = format!("{:3}%\n", rate);
+        match rate {
+            0..50 => text.sections[6].style.color = RED.into(),
+            50..80 => text.sections[6].style.color = YELLOW.into(),
+            _ => text.sections[6].style.color = GREEN.into(),
         }
+        text.sections[7].value = format!("DRT ");
         let drought = player_data.board.drought();
-        text.sections[13].value = format!("{:4}\n", drought);
-        if drought >= 14 {
-            text.sections[13].style.color = RED.into();
-        } else if drought >= 7 {
-            text.sections[13].style.color = YELLOW.into();
-        } else {
-            text.sections[13].style.color = GREEN.into();
+        text.sections[8].value = format!("{:02}", drought);
+        match drought {
+            0..7 => text.sections[8].style.color = WHITE.into(),
+            7..14 => text.sections[8].style.color = YELLOW.into(),
+            _ => text.sections[8].style.color = RED.into(),
         }
+        text.sections[9].value = format!(" ({:02})\n", player_data.board.max_drought());
     }
     if let Ok(mut text) = query.p4().get_single_mut() {
         let ticks = duration_to_ticks(player_data.das_timer.duration());
