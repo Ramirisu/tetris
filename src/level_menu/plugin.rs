@@ -6,7 +6,6 @@ use bevy::{
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    controller::Controller,
     game::player::{PlayerConfig, PlayerData, PlayerState},
     inputs::PlayerInputs,
     utility::despawn_all,
@@ -200,19 +199,14 @@ fn update_ui_system(
 }
 
 fn handle_input_system(
-    keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    player_inputs: Res<PlayerInputs>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     mut player_data: ResMut<PlayerData>,
 ) {
-    let inputs =
-        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-    match (inputs.up.0, inputs.down.0) {
+    match (player_inputs.up.0, player_inputs.down.0) {
         (true, false) => {
             level_menu_data.selected_level.1 =
                 (level_menu_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
@@ -231,7 +225,7 @@ fn handle_input_system(
         }
         _ => {
             if level_menu_data.selected_level.1 < 4 {
-                match (inputs.left.0, inputs.right.0) {
+                match (player_inputs.left.0, player_inputs.right.0) {
                     (true, false) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
@@ -248,7 +242,7 @@ fn handle_input_system(
         }
     }
 
-    if inputs.start {
+    if player_inputs.start {
         if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
             [level_menu_data.selected_level.0 as usize]
         {
@@ -259,7 +253,7 @@ fn handle_input_system(
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);
         }
-    } else if inputs.b.0 {
+    } else if player_inputs.b.0 {
         e_play_sound.send(PlaySoundEvent::StartGame);
         app_state.set(AppState::GameModeMenu);
     }

@@ -2,7 +2,6 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 
 use crate::{
     app_state::AppState,
-    controller::Controller,
     game::{
         palette::{get_empty_square_image, get_square_image, SquareImageSize},
         piece::PieceShape,
@@ -122,15 +121,10 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
 }
 
 fn handle_input_system(
-    keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    player_inputs: Res<PlayerInputs>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    let inputs =
-        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-    if inputs.start {
+    if player_inputs.start {
         app_state.set(AppState::GameModeMenu);
     }
 }

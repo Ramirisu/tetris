@@ -19,7 +19,6 @@ mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use controller::Controller;
 use inputs::PlayerInputs;
 
 fn main() {
@@ -51,6 +50,7 @@ fn main() {
         .add_systems(Update, handle_input_system)
         .add_plugins((
             controller::setup,
+            inputs::setup,
             audio::plugin::setup,
             splash::plugin::setup,
             game_mode_menu::plugin::setup,
@@ -65,21 +65,16 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn handle_input_system(
-    keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    player_inputs: Res<PlayerInputs>,
     mut app_state: ResMut<NextState<AppState>>,
     #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
 ) {
-    let inputs =
-        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-    if keys.just_pressed(KeyCode::Escape) || inputs.select {
+    if player_inputs.soft_reset {
         app_state.set(AppState::Splash);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    if keys.just_pressed(KeyCode::F11) {
+    if player_inputs.toggle_fullscreen {
         let mut window = window.single_mut();
         match window.mode {
             WindowMode::Windowed => {

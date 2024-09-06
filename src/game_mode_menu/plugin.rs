@@ -4,9 +4,8 @@ use bevy::{
 };
 
 use crate::{
-    app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    game::transition::Transition, inputs::PlayerInputs, level_menu::plugin::LevelMenuData,
-    utility::despawn_all,
+    app_state::AppState, audio::plugin::PlaySoundEvent, game::transition::Transition,
+    inputs::PlayerInputs, level_menu::plugin::LevelMenuData, utility::despawn_all,
 };
 
 pub fn setup(app: &mut App) {
@@ -276,18 +275,13 @@ fn update_ui_system(
 }
 
 fn handle_input_system(
-    keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    player_inputs: Res<PlayerInputs>,
     mut game_mode_menu_data: ResMut<GameModeMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
     mut level_menu_data: ResMut<LevelMenuData>,
 ) {
-    let inputs =
-        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-    match (inputs.up.0, inputs.down.0) {
+    match (player_inputs.up.0, player_inputs.down.0) {
         (true, false) => {
             game_mode_menu_data.selected_index =
                 (game_mode_menu_data.selected_index - 1).rem_euclid(GAME_MODES.len() as i32);
@@ -299,14 +293,14 @@ fn handle_input_system(
             e_play_sound.send(PlaySoundEvent::MoveCursor);
         }
         _ => {
-            if inputs.start {
+            if player_inputs.start {
                 level_menu_data.config.lv39_linecap =
                     GAME_MODES[game_mode_menu_data.selected_index as usize].lv39_linecap;
                 level_menu_data.config.transition =
                     GAME_MODES[game_mode_menu_data.selected_index as usize].transition;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
-            } else if inputs.b.0 {
+            } else if player_inputs.b.0 {
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::Splash);
             }

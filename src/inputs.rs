@@ -2,7 +2,22 @@ use bevy::prelude::*;
 
 use crate::controller::Controller;
 
-#[derive(Clone, Copy)]
+pub fn setup(app: &mut App) {
+    app.insert_resource(PlayerInputs::default())
+        .add_systems(Update, update_player_inputs);
+}
+
+fn update_player_inputs(
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
+    mut player_inputs: ResMut<PlayerInputs>,
+) {
+    *player_inputs =
+        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
+}
+
+#[derive(Clone, Copy, Resource)]
 pub struct PlayerInputs {
     pub up: (bool, bool),
     pub down: (bool, bool),
@@ -14,6 +29,9 @@ pub struct PlayerInputs {
     pub y: (bool, bool), // DPad::West
     pub start: bool,
     pub select: bool,
+
+    pub toggle_fullscreen: bool,
+    pub soft_reset: bool,
 }
 
 impl PlayerInputs {
@@ -29,6 +47,8 @@ impl PlayerInputs {
             y: (false, false),
             start: false,
             select: false,
+            toggle_fullscreen: false,
+            soft_reset: false,
         }
     }
 
@@ -68,6 +88,9 @@ impl PlayerInputs {
             ),
             start: inputs.just_pressed(KeyCode::Enter),
             select: inputs.just_pressed(KeyCode::ShiftLeft),
+            toggle_fullscreen: inputs.just_pressed(KeyCode::F11),
+            soft_reset: inputs.just_pressed(KeyCode::ShiftLeft)
+                || inputs.just_pressed(KeyCode::Escape),
         }
     }
 
@@ -115,6 +138,9 @@ impl PlayerInputs {
             ),
             start: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start)),
             select: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
+            toggle_fullscreen: false,
+            soft_reset: buttons
+                .just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
         }
     }
 
@@ -153,6 +179,8 @@ impl std::ops::BitOr for PlayerInputs {
             y: (self.y.0 | rhs.y.0, self.y.1 | rhs.y.1),
             start: self.start | rhs.start,
             select: self.select | rhs.select,
+            toggle_fullscreen: self.toggle_fullscreen | rhs.toggle_fullscreen,
+            soft_reset: self.soft_reset | rhs.soft_reset,
         }
     }
 }

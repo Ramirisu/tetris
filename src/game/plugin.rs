@@ -6,8 +6,7 @@ use bevy::{
 };
 
 use crate::{
-    app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    inputs::PlayerInputs, utility::despawn_all,
+    app_state::AppState, audio::plugin::PlaySoundEvent, inputs::PlayerInputs, utility::despawn_all,
 };
 
 use super::{
@@ -538,9 +537,7 @@ mod state_game_running {
 
     pub(super) fn handle_input_system(
         time: Res<Time>,
-        keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        player_inputs: Res<PlayerInputs>,
         mut query: ParamSet<(
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
@@ -551,17 +548,14 @@ mod state_game_running {
         mut player_state: ResMut<NextState<PlayerState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
-        let inputs =
-            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-        if inputs.start {
+        if player_inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
             *query.p2().single_mut() = Visibility::Inherited;
             player_state.set(PlayerState::GamePause);
             return;
         }
 
-        let (moved, lr_moved, rotated) = handle_input(inputs, &time, &mut player_data);
+        let (moved, lr_moved, rotated) = handle_input(&player_inputs, &time, &mut player_data);
         if moved {
             std::iter::zip(
                 query.p0().iter_mut(),
@@ -584,7 +578,7 @@ mod state_game_running {
     }
 
     fn handle_input(
-        inputs: PlayerInputs,
+        inputs: &PlayerInputs,
         time: &Time,
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
@@ -854,19 +848,14 @@ mod state_game_pause {
     use super::*;
 
     pub(super) fn handle_input_system(
-        keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        player_inputs: Res<PlayerInputs>,
         mut query: ParamSet<(
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
             Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
         )>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
-        let inputs =
-            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-        if inputs.start {
+        if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
             *query.p1().single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
@@ -878,15 +867,10 @@ mod state_game_over {
     use super::*;
 
     pub(super) fn handle_input_system(
-        keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        player_inputs: Res<PlayerInputs>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
-        let inputs =
-            PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
-
-        if inputs.start {
+        if player_inputs.start {
             app_state.set(AppState::LevelMenu);
         }
     }
