@@ -29,6 +29,7 @@ fn main() {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(1280.0, 960.0),
                         present_mode: PresentMode::AutoNoVsync,
+                        title: "TETRIS".into(),
                         ..default()
                     }),
                     ..default()
