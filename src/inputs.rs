@@ -30,7 +30,6 @@ pub struct PlayerInputs {
     pub start: bool,
     pub select: bool,
 
-    pub toggle_fullscreen: bool,
     pub soft_reset: bool,
 }
 
@@ -47,7 +46,6 @@ impl PlayerInputs {
             y: (false, false),
             start: false,
             select: false,
-            toggle_fullscreen: false,
             soft_reset: false,
         }
     }
@@ -88,7 +86,6 @@ impl PlayerInputs {
             ),
             start: inputs.just_pressed(KeyCode::Enter),
             select: inputs.just_pressed(KeyCode::ShiftLeft),
-            toggle_fullscreen: inputs.just_pressed(KeyCode::F11),
             soft_reset: inputs.just_pressed(KeyCode::ShiftLeft)
                 || inputs.just_pressed(KeyCode::Escape),
         }
@@ -138,7 +135,6 @@ impl PlayerInputs {
             ),
             start: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start)),
             select: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
-            toggle_fullscreen: false,
             soft_reset: buttons
                 .just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
         }
@@ -179,7 +175,6 @@ impl std::ops::BitOr for PlayerInputs {
             y: (self.y.0 | rhs.y.0, self.y.1 | rhs.y.1),
             start: self.start | rhs.start,
             select: self.select | rhs.select,
-            toggle_fullscreen: self.toggle_fullscreen | rhs.toggle_fullscreen,
             soft_reset: self.soft_reset | rhs.soft_reset,
         }
     }

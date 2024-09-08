@@ -29,17 +29,16 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
 ## Keybindings
 
-| Menu                                   | In Game                   |     Keyboard     | Controller (NES) |
-| :------------------------------------- | :------------------------ | :--------------: | :--------------: |
-| Move Up                                |                           |        ↑         |        ↑         |
-| Move Down                              | Soft Drop                 |        ↓         |        ↓         |
-| Move Left                              | Move Left                 |        ←         |        ←         |
-| Move Right                             | Move Right                |        →         |        →         |
-|                                        | Rotate Clockwisely        |        X         |        A         |
-| Back                                   | Rotate Counterclockwisely |        Z         |        B         |
-| Start                                  | Pause/Resume              |      Enter       |      Start       |
-| Soft Reset                             | Soft Reset                | Left Shift / Esc |      Select      |
-| Toggle Window Mode (Desktop Only)</td> |                           |       F11        |                  |
+| Menu       | In Game                   |     Keyboard     | Controller (NES) |
+| :--------- | :------------------------ | :--------------: | :--------------: |
+| Move Up    |                           |        ↑         |        ↑         |
+| Move Down  | Soft Drop                 |        ↓         |        ↓         |
+| Move Left  | Move Left                 |        ←         |        ←         |
+| Move Right | Move Right                |        →         |        →         |
+|            | Rotate Clockwisely        |        X         |        A         |
+| Back       | Rotate Counterclockwisely |        Z         |        B         |
+| Start      | Pause/Resume              |      Enter       |      Start       |
+| Soft Reset | Soft Reset                | Left Shift / Esc |      Select      |
 
 ## Build & Run
 

@@ -8,6 +8,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     game::player::{PlayerConfig, PlayerData, PlayerState},
     inputs::PlayerInputs,
+    logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
 };
 
@@ -55,11 +56,15 @@ impl Default for LevelMenuData {
     }
 }
 
-fn setup_screen(mut commands: Commands) {
+fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
+    let logo_images = load_logo_images(&mut image_assets);
+
     commands
         .spawn((
             NodeBundle {
                 style: Style {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
@@ -71,6 +76,37 @@ fn setup_screen(mut commands: Commands) {
             LevelMenuEntityMarker,
         ))
         .with_children(|parent| {
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        display: Display::Grid,
+                        grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
+                        margin: UiRect::all(Val::Px(40.0)),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    TETRIS_BITMAP.iter().for_each(|rows| {
+                        rows.iter().for_each(|square| {
+                            parent.spawn((
+                                NodeBundle {
+                                    style: Style {
+                                        width: Val::Px(24.0),
+                                        height: Val::Px(24.0),
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                UiImage {
+                                    texture: logo_images[(*square) as usize].clone(),
+                                    ..default()
+                                },
+                            ));
+                        })
+                    });
+                });
+
             parent
                 .spawn(NodeBundle {
                     style: Style {

@@ -1,19 +1,18 @@
+use audio::plugin::PlaySoundEvent;
 use bevy::{
     color::palettes::css::GREEN,
     prelude::*,
     window::{PresentMode, WindowResolution},
 };
 
-#[cfg(not(target_arch = "wasm32"))]
-use bevy::window::WindowMode;
-
 mod app_state;
 mod audio;
 mod controller;
 mod game;
-mod game_mode_menu;
+mod game_option_menu;
 mod inputs;
 mod level_menu;
+mod logo;
 mod splash;
 mod utility;
 
@@ -54,7 +53,7 @@ fn main() {
             inputs::setup,
             audio::plugin::setup,
             splash::plugin::setup,
-            game_mode_menu::plugin::setup,
+            game_option_menu::plugin::setup,
             level_menu::plugin::setup,
             game::plugin::setup,
         ))
@@ -67,24 +66,11 @@ fn setup_camera(mut commands: Commands) {
 
 fn handle_input_system(
     player_inputs: Res<PlayerInputs>,
+    mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
-    #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
 ) {
     if player_inputs.soft_reset {
+        e_play_sound.send(PlaySoundEvent::StartGame);
         app_state.set(AppState::Splash);
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    if player_inputs.toggle_fullscreen {
-        let mut window = window.single_mut();
-        match window.mode {
-            WindowMode::Windowed => {
-                window.mode = WindowMode::BorderlessFullscreen;
-            }
-            WindowMode::BorderlessFullscreen => {
-                window.mode = WindowMode::Windowed;
-            }
-            _ => (),
-        }
     }
 }
