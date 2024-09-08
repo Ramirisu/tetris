@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     board::Board,
+    drop_speed::DropSpeed,
     render::RenderConfig,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
@@ -24,6 +25,7 @@ pub struct PlayerConfig {
     pub start_level: usize,
     pub transition: Transition,
     pub lv39_linecap: bool,
+    pub drop_speed: DropSpeed,
 }
 
 impl Default for PlayerConfig {
@@ -32,6 +34,7 @@ impl Default for PlayerConfig {
             start_level: 0,
             lv39_linecap: false,
             transition: Transition::Classic,
+            drop_speed: DropSpeed::Classic,
         }
     }
 }
@@ -62,7 +65,7 @@ impl PlayerData {
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(config.start_level, config.lv39_linecap),
+            fall_tick: FallTick::new(config.start_level, config.lv39_linecap, config.drop_speed),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),

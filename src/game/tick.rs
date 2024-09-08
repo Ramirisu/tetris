@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use super::drop_speed::DropSpeed;
+
 const TICKS_PER_MICROSECOND: u64 = 60_000_000;
 
 pub const fn ticks_to_duration(count: u64) -> Duration {
@@ -19,20 +21,25 @@ pub struct FallTick {
     threshold: Duration,
     initial_entry_delay: bool,
     lv39_linecap: bool,
+    drop_speed: DropSpeed,
 }
 
 impl FallTick {
-    pub fn new(level: usize, lv39_linecap: bool) -> Self {
+    pub fn new(level: usize, lv39_linecap: bool, drop_speed: DropSpeed) -> Self {
         Self {
             threshold: Self::get_trigger_tick(level, lv39_linecap),
             initial_entry_delay: true,
             lv39_linecap,
+            drop_speed,
         }
     }
 
     pub fn set_level(&mut self, level: usize) {
         self.initial_entry_delay = false;
-        self.threshold = Self::get_trigger_tick(level, self.lv39_linecap);
+        match self.drop_speed {
+            DropSpeed::Classic => self.threshold = Self::get_trigger_tick(level, self.lv39_linecap),
+            DropSpeed::Locked => (),
+        }
     }
 
     pub fn threshold(&self) -> Duration {

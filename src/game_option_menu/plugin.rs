@@ -3,7 +3,7 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    game::transition::Transition,
+    game::{drop_speed::DropSpeed, transition::Transition},
     inputs::PlayerInputs,
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -40,6 +40,7 @@ enum GameOptionMenuState {
     Tetris,
     Transition,
     Linecap,
+    DropSpeed,
     #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
 }
@@ -47,13 +48,14 @@ enum GameOptionMenuState {
 impl GameOptionMenuState {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuState> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuState; 4];
+        type ArrayType = [GameOptionMenuState; 5];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuState; 3];
+        type ArrayType = [GameOptionMenuState; 4];
         const STATES: ArrayType = [
             GameOptionMenuState::Tetris,
             GameOptionMenuState::Transition,
             GameOptionMenuState::Linecap,
+            GameOptionMenuState::DropSpeed,
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuState::WindowMode,
         ];
@@ -66,6 +68,7 @@ struct GameOptionMenuData {
     state: GameOptionMenuState,
     transition: Transition,
     lv39_linecap: bool,
+    drop_speed: DropSpeed,
     #[cfg(not(target_arch = "wasm32"))]
     window_mode: WindowMode,
 }
@@ -76,6 +79,7 @@ impl GameOptionMenuData {
             state: GameOptionMenuState::default(),
             transition: Transition::Classic,
             lv39_linecap: false,
+            drop_speed: DropSpeed::Classic,
             #[cfg(not(target_arch = "wasm32"))]
             window_mode: WindowMode::Windowed,
         }
@@ -208,6 +212,13 @@ fn update_ui_system(
                     text.sections[1].value = fopt("OFF", false, true);
                 }
             }
+            GameOptionMenuState::DropSpeed => {
+                text.sections[0].value = fname("DROPSPEED");
+                match game_option_menu_data.drop_speed {
+                    DropSpeed::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
+                    DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
+                };
+            }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuState::WindowMode => {
                 text.sections[0].value = fname("WINDOW MODE");
@@ -259,6 +270,7 @@ fn handle_input_system(
             } else if player_inputs.start {
                 level_menu_data.config.transition = game_option_menu_data.transition;
                 level_menu_data.config.lv39_linecap = game_option_menu_data.lv39_linecap;
+                level_menu_data.config.drop_speed = game_option_menu_data.drop_speed;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
@@ -291,6 +303,22 @@ fn handle_input_system(
                 game_option_menu_data.state = GameOptionMenuState::Transition;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.down.0 {
+                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            }
+            if player_inputs.right.0 {
+                game_option_menu_data.lv39_linecap = true;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            } else if player_inputs.left.0 {
+                game_option_menu_data.lv39_linecap = false;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            }
+        }
+        GameOptionMenuState::DropSpeed => {
+            if player_inputs.up.0 {
+                game_option_menu_data.state = GameOptionMenuState::Linecap;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            } else if player_inputs.down.0 {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     game_option_menu_data.state = GameOptionMenuState::WindowMode;
@@ -302,17 +330,17 @@ fn handle_input_system(
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
             if player_inputs.right.0 {
-                game_option_menu_data.lv39_linecap = true;
+                game_option_menu_data.drop_speed = DropSpeed::Locked;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.left.0 {
-                game_option_menu_data.lv39_linecap = false;
+                game_option_menu_data.drop_speed = DropSpeed::Classic;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuState::WindowMode => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::Linecap;
+                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.down.0 {
                 game_option_menu_data.state = GameOptionMenuState::Tetris;
