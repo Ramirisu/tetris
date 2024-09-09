@@ -278,6 +278,6 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self::new(0, Transition::Classic)
+        Self::new(0, Transition::Default)
     }
 }

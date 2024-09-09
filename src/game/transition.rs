@@ -3,15 +3,17 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Transition {
-    Classic,
-    Fast,
+    Default,
+    Every10Lines,
+    Every4Lines,
 }
 
 impl Transition {
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
-            Transition::Classic => Self::get_level_classic(start_level, lines),
-            Transition::Fast => Self::get_level_fast(start_level, lines),
+            Transition::Default => Self::get_level_classic(start_level, lines),
+            Transition::Every10Lines => Self::get_level_every_n_lines(start_level, lines, 10),
+            Transition::Every4Lines => Self::get_level_every_n_lines(start_level, lines, 4),
         }
     }
 
@@ -35,8 +37,8 @@ impl Transition {
         start_level
     }
 
-    fn get_level_fast(start_level: usize, lines: usize) -> usize {
-        start_level + lines / 10
+    fn get_level_every_n_lines(start_level: usize, lines: usize, every: usize) -> usize {
+        start_level + lines / every
     }
 }
 
@@ -51,8 +53,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn classic() {
-        let transition = Transition::Classic;
+    fn test_default() {
+        let transition = Transition::Default;
 
         assert_eq!(transition.get_level(0, 0), 0);
         assert_eq!(transition.get_level(0, 10), 1);
@@ -123,8 +125,8 @@ mod tests {
     }
 
     #[test]
-    fn fast() {
-        let transition = Transition::Fast;
+    fn test_every_n_lines() {
+        let transition = Transition::Every10Lines;
 
         assert_eq!(transition.get_level(0, 0), 0);
         assert_eq!(transition.get_level(0, 10), 1);

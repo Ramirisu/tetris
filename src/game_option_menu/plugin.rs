@@ -77,9 +77,9 @@ impl GameOptionMenuData {
     pub fn new() -> Self {
         Self {
             state: GameOptionMenuState::default(),
-            transition: Transition::Classic,
+            transition: Transition::Default,
             lv39_linecap: false,
-            drop_speed: DropSpeed::Classic,
+            drop_speed: DropSpeed::Level,
             #[cfg(not(target_arch = "wasm32"))]
             window_mode: WindowMode::Windowed,
         }
@@ -200,8 +200,13 @@ fn update_ui_system(
             GameOptionMenuState::Transition => {
                 text.sections[0].value = fname("TRANSITION");
                 match game_option_menu_data.transition {
-                    Transition::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
-                    Transition::Fast => text.sections[1].value = fopt("FAST", true, false),
+                    Transition::Default => text.sections[1].value = fopt("DEFAULT", false, true),
+                    Transition::Every10Lines => {
+                        text.sections[1].value = fopt("10 LINES", true, false)
+                    }
+                    Transition::Every4Lines => {
+                        text.sections[1].value = fopt(" 4 LINES", true, false)
+                    }
                 };
             }
             GameOptionMenuState::Linecap => {
@@ -215,7 +220,7 @@ fn update_ui_system(
             GameOptionMenuState::DropSpeed => {
                 text.sections[0].value = fname("DROPSPEED");
                 match game_option_menu_data.drop_speed {
-                    DropSpeed::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
+                    DropSpeed::Level => text.sections[1].value = fopt("LEVEL", false, true),
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
@@ -284,15 +289,24 @@ fn handle_input_system(
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
             match game_option_menu_data.transition {
-                Transition::Classic => {
+                Transition::Default => {
                     if player_inputs.right.0 {
-                        game_option_menu_data.transition = Transition::Fast;
+                        game_option_menu_data.transition = Transition::Every10Lines;
                         e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                 }
-                Transition::Fast => {
+                Transition::Every10Lines => {
+                    if player_inputs.right.0 {
+                        game_option_menu_data.transition = Transition::Every4Lines;
+                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                    } else if player_inputs.left.0 {
+                        game_option_menu_data.transition = Transition::Default;
+                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                    }
+                }
+                Transition::Every4Lines => {
                     if player_inputs.left.0 {
-                        game_option_menu_data.transition = Transition::Classic;
+                        game_option_menu_data.transition = Transition::Every10Lines;
                         e_play_sound.send(PlaySoundEvent::MoveCursor);
                     }
                 }
@@ -333,7 +347,7 @@ fn handle_input_system(
                 game_option_menu_data.drop_speed = DropSpeed::Locked;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.left.0 {
-                game_option_menu_data.drop_speed = DropSpeed::Classic;
+                game_option_menu_data.drop_speed = DropSpeed::Level;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
         }

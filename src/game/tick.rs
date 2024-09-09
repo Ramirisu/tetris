@@ -37,7 +37,7 @@ impl FallTick {
     pub fn set_level(&mut self, level: usize) {
         self.initial_entry_delay = false;
         match self.drop_speed {
-            DropSpeed::Classic => self.threshold = Self::get_trigger_tick(level, self.lv39_linecap),
+            DropSpeed::Level => self.threshold = Self::get_trigger_tick(level, self.lv39_linecap),
             DropSpeed::Locked => (),
         }
     }
