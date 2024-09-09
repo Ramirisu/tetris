@@ -39,20 +39,6 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             SplashEntityMarker,
         ))
         .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "Classic",
-                    TextStyle {
-                        font_size: 40.0,
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                }),
-            );
             parent
                 .spawn(NodeBundle {
                     style: Style {
