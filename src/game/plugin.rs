@@ -95,9 +95,6 @@ struct CurrPieceEntityMarker;
 #[derive(Component)]
 struct NextPieceEntityMarker;
 
-#[derive(Component)]
-struct NextPieceSlotCoverEntityMarker;
-
 fn load_square_image_assets(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
@@ -190,8 +187,8 @@ fn setup_screen(
             SpriteBundle {
                 transform: Transform::from_translation(player_data.rc.board_cover_translation()),
                 sprite: Sprite {
-                    color: BLACK.into(),
-                    custom_size: Some(player_data.rc.board_size()),
+                    color: RED.into(),
+                    custom_size: Some(player_data.rc.board_cover_size()),
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -450,22 +447,6 @@ fn setup_screen(
                 NextPieceEntityMarker,
             ));
         });
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(
-                player_data.rc.next_piece_slot_cover_translation(),
-            ),
-            sprite: Sprite {
-                color: BLACK.into(),
-                custom_size: Some(player_data.rc.next_piece_slot_size()),
-                ..default()
-            },
-            visibility: Visibility::Hidden,
-            ..default()
-        },
-        GameEntityMarker,
-        NextPieceSlotCoverEntityMarker,
-    ));
 }
 
 fn update_statistics_system(
@@ -541,7 +522,6 @@ mod state_game_running {
         mut query: ParamSet<(
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
-            Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
@@ -550,7 +530,6 @@ mod state_game_running {
     ) {
         if player_inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
-            *query.p2().single_mut() = Visibility::Inherited;
             player_state.set(PlayerState::GamePause);
             return;
         }
@@ -849,15 +828,11 @@ mod state_game_pause {
 
     pub(super) fn handle_input_system(
         player_inputs: Res<PlayerInputs>,
-        mut query: ParamSet<(
-            Query<&mut Visibility, With<BoardCoverEntityMarker>>,
-            Query<&mut Visibility, With<NextPieceSlotCoverEntityMarker>>,
-        )>,
+        mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
         if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
-            *query.p1().single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
         }
     }

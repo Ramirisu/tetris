@@ -60,6 +60,10 @@ impl RenderConfig {
         Vec3::new(0.0, -self.unit / 20.0, BOARD_BACKGROUND_LAYER)
     }
 
+    pub fn board_cover_size(&self) -> Vec2 {
+        Vec2::new(self.unit * 8.0, self.unit * 3.0)
+    }
+
     pub fn board_cover_translation(&self) -> Vec3 {
         Vec3::new(0.0, 0.0, COVER_LAYER)
     }
@@ -114,10 +118,6 @@ impl RenderConfig {
 
     pub fn next_piece_slot_background_size(&self) -> Vec2 {
         Vec2::new(self.unit * 6.1, self.unit * 6.1)
-    }
-
-    pub fn next_piece_slot_cover_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), 0.0, COVER_LAYER)
     }
 
     pub fn statistics_translation(&self) -> Vec3 {
