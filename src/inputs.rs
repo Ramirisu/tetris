@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use crate::controller::Controller;
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(PlayerInputs::default())
+    app.insert_resource(ControllerType::default())
+        .insert_resource(PlayerInputs::default())
         .add_systems(Update, update_player_inputs);
 }
 
@@ -11,10 +12,18 @@ fn update_player_inputs(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
     controller: Res<Controller>,
+    controller_type: Res<ControllerType>,
     mut player_inputs: ResMut<PlayerInputs>,
 ) {
-    *player_inputs =
-        PlayerInputs::with_keyboard(&keys) | PlayerInputs::with_gamepads(&buttons, &controller);
+    *player_inputs = PlayerInputs::with_keyboard(&keys)
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+}
+
+#[derive(Default, Clone, Copy, Resource)]
+pub enum ControllerType {
+    #[default]
+    TypeA,
+    TypeB,
 }
 
 #[derive(Clone, Copy, Resource)]
@@ -23,10 +32,8 @@ pub struct PlayerInputs {
     pub down: (bool, bool),
     pub left: (bool, bool),
     pub right: (bool, bool),
-    pub a: (bool, bool), // DPad::East
-    pub b: (bool, bool), // DPad::South
-    pub x: (bool, bool), // DPad::North
-    pub y: (bool, bool), // DPad::West
+    pub a: (bool, bool),
+    pub b: (bool, bool),
     pub start: bool,
     pub select: bool,
 
@@ -42,8 +49,6 @@ impl PlayerInputs {
             right: (false, false),
             a: (false, false),
             b: (false, false),
-            x: (false, false),
-            y: (false, false),
             start: false,
             select: false,
             soft_reset: false,
@@ -76,14 +81,6 @@ impl PlayerInputs {
                 inputs.just_pressed(KeyCode::KeyZ),
                 inputs.pressed(KeyCode::KeyZ),
             ),
-            x: (
-                inputs.just_pressed(KeyCode::KeyS),
-                inputs.pressed(KeyCode::KeyS),
-            ),
-            y: (
-                inputs.just_pressed(KeyCode::KeyA),
-                inputs.pressed(KeyCode::KeyA),
-            ),
             start: inputs.just_pressed(KeyCode::Enter),
             select: inputs.just_pressed(KeyCode::ShiftLeft),
             soft_reset: inputs.just_pressed(KeyCode::ShiftLeft)
@@ -91,15 +88,30 @@ impl PlayerInputs {
         }
     }
 
-    pub fn with_gamepads(buttons: &ButtonInput<GamepadButton>, controller: &Controller) -> Self {
+    pub fn with_gamepads(
+        buttons: &ButtonInput<GamepadButton>,
+        controller: &Controller,
+        controller_type: ControllerType,
+    ) -> Self {
         let mut inputs = Self::new();
         for gamepad in &controller.gamepads {
-            inputs |= Self::with_gamepad(buttons, *gamepad);
+            inputs |= Self::with_gamepad(buttons, *gamepad, controller_type);
         }
         inputs
     }
 
-    fn with_gamepad(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+    fn with_gamepad(
+        buttons: &ButtonInput<GamepadButton>,
+        gamepad: Gamepad,
+        controller_type: ControllerType,
+    ) -> Self {
+        match controller_type {
+            ControllerType::TypeA => Self::with_gamepad_type_a(buttons, gamepad),
+            ControllerType::TypeB => Self::with_gamepad_type_b(buttons, gamepad),
+        }
+    }
+
+    fn with_gamepad_type_a(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
         Self {
             up: (
                 buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadUp)),
@@ -125,11 +137,36 @@ impl PlayerInputs {
                 buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
                 buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
             ),
-            x: (
-                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::North)),
-                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::North)),
+            start: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start)),
+            select: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
+            soft_reset: buttons
+                .just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
+        }
+    }
+
+    fn with_gamepad_type_b(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+        Self {
+            up: (
+                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadUp)),
+                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadUp)),
             ),
-            y: (
+            down: (
+                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadDown)),
+                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadDown)),
+            ),
+            left: (
+                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadLeft)),
+                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadLeft)),
+            ),
+            right: (
+                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadRight)),
+                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadRight)),
+            ),
+            a: (
+                buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
+                buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
+            ),
+            b: (
                 buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::West)),
                 buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::West)),
             ),
@@ -171,8 +208,6 @@ impl std::ops::BitOr for PlayerInputs {
             right: (self.right.0 | rhs.right.0, self.right.1 | rhs.right.1),
             a: (self.a.0 | rhs.a.0, self.a.1 | rhs.a.1),
             b: (self.b.0 | rhs.b.0, self.b.1 | rhs.b.1),
-            x: (self.x.0 | rhs.x.0, self.x.1 | rhs.x.1),
-            y: (self.y.0 | rhs.y.0, self.y.1 | rhs.y.1),
             start: self.start | rhs.start,
             select: self.select | rhs.select,
             soft_reset: self.soft_reset | rhs.soft_reset,

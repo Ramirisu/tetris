@@ -29,16 +29,16 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
 ## Keybindings
 
-| Menu       | In Game                   |     Keyboard     | Controller (NES) |
-| :--------- | :------------------------ | :--------------: | :--------------: |
-| Move Up    |                           |        ↑         |        ↑         |
-| Move Down  | Soft Drop                 |        ↓         |        ↓         |
-| Move Left  | Move Left                 |        ←         |        ←         |
-| Move Right | Move Right                |        →         |        →         |
-|            | Rotate Clockwisely        |        X         |        A         |
-| Back       | Rotate Counterclockwisely |        Z         |        B         |
-| Start      | Pause/Resume              |      Enter       |      Start       |
-| Soft Reset | Soft Reset                | Left Shift / Esc |      Select      |
+| Menu       | In Game                   |     Keyboard     | Controller Type A (NES) | Controller Type B (NES) |
+| :--------- | :------------------------ | :--------------: | :---------------------: | :---------------------: |
+| Move Up    |                           |        ↑         |            ↑            |            ↑            |
+| Move Down  | Soft Drop                 |        ↓         |            ↓            |            ↓            |
+| Move Left  | Move Left                 |        ←         |            ←            |            ←            |
+| Move Right | Move Right                |        →         |            →            |            →            |
+|            | Rotate Clockwisely        |        X         |            A            |            B            |
+| Back       | Rotate Counterclockwisely |        Z         |            B            |            Y            |
+| Start      | Pause/Resume              |      Enter       |          Start          |          Start          |
+| Soft Reset | Soft Reset                | Left Shift / Esc |         Select          |         Select          |
 
 ## Build & Run
 

@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     game::{drop_speed::DropSpeed, transition::Transition},
-    inputs::PlayerInputs,
+    inputs::{ControllerType, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
@@ -41,6 +41,7 @@ enum GameOptionMenuState {
     Transition,
     Linecap,
     DropSpeed,
+    ControllerType,
     #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
 }
@@ -48,14 +49,15 @@ enum GameOptionMenuState {
 impl GameOptionMenuState {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuState> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuState; 5];
+        type ArrayType = [GameOptionMenuState; 6];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuState; 4];
+        type ArrayType = [GameOptionMenuState; 5];
         const STATES: ArrayType = [
             GameOptionMenuState::Tetris,
             GameOptionMenuState::Transition,
             GameOptionMenuState::Linecap,
             GameOptionMenuState::DropSpeed,
+            GameOptionMenuState::ControllerType,
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuState::WindowMode,
         ];
@@ -180,6 +182,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
 fn update_ui_system(
     mut query: Query<(&mut Text, &GameOptionEntityMarker)>,
     game_option_menu_data: Res<GameOptionMenuData>,
+    controller_type: Res<ControllerType>,
 ) {
     query.iter_mut().for_each(|(mut text, marker)| {
         let selected = marker.0 == game_option_menu_data.state;
@@ -224,6 +227,13 @@ fn update_ui_system(
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
+            GameOptionMenuState::ControllerType => {
+                text.sections[0].value = fname("CONTROLLER TYPE");
+                match *controller_type {
+                    ControllerType::TypeA => text.sections[1].value = fopt("TYPE A", false, true),
+                    ControllerType::TypeB => text.sections[1].value = fopt("TYPE B", true, false),
+                };
+            }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuState::WindowMode => {
                 text.sections[0].value = fname("WINDOW MODE");
@@ -248,6 +258,7 @@ fn handle_input_system(
     player_inputs: Res<PlayerInputs>,
     mut game_option_menu_data: ResMut<GameOptionMenuData>,
     mut level_menu_data: ResMut<LevelMenuData>,
+    mut controller_type: ResMut<ControllerType>,
     mut app_state: ResMut<NextState<AppState>>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
@@ -266,7 +277,7 @@ fn handle_input_system(
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    game_option_menu_data.state = GameOptionMenuState::Linecap;
+                    game_option_menu_data.state = GameOptionMenuState::ControllerType;
                 }
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.down.0 {
@@ -333,6 +344,22 @@ fn handle_input_system(
                 game_option_menu_data.state = GameOptionMenuState::Linecap;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.down.0 {
+                game_option_menu_data.state = GameOptionMenuState::ControllerType;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            }
+            if player_inputs.right.0 {
+                game_option_menu_data.drop_speed = DropSpeed::Locked;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            } else if player_inputs.left.0 {
+                game_option_menu_data.drop_speed = DropSpeed::Level;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            }
+        }
+        GameOptionMenuState::ControllerType => {
+            if player_inputs.up.0 {
+                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
+                e_play_sound.send(PlaySoundEvent::MoveCursor);
+            } else if player_inputs.down.0 {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     game_option_menu_data.state = GameOptionMenuState::WindowMode;
@@ -344,17 +371,17 @@ fn handle_input_system(
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
             if player_inputs.right.0 {
-                game_option_menu_data.drop_speed = DropSpeed::Locked;
+                *controller_type = ControllerType::TypeB;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.left.0 {
-                game_option_menu_data.drop_speed = DropSpeed::Level;
+                *controller_type = ControllerType::TypeA;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuState::WindowMode => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
+                game_option_menu_data.state = GameOptionMenuState::ControllerType;
                 e_play_sound.send(PlaySoundEvent::MoveCursor);
             } else if player_inputs.down.0 {
                 game_option_menu_data.state = GameOptionMenuState::Tetris;
