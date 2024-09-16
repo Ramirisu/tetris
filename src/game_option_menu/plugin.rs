@@ -269,6 +269,12 @@ fn handle_input_system(
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
 
+    if player_inputs.soft_reset {
+        e_play_sound.send(PlaySoundEvent::StartGame);
+        app_state.set(AppState::Splash);
+        return;
+    }
+
     if player_inputs.b.0 {
         app_state.set(AppState::Splash);
         e_play_sound.send(PlaySoundEvent::StartGame);

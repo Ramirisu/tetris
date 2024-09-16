@@ -70,8 +70,7 @@ impl PlayerInputs {
             ),
             start: inputs.just_pressed(KeyCode::Enter),
             select: inputs.just_pressed(KeyCode::ShiftLeft),
-            soft_reset: inputs.just_pressed(KeyCode::ShiftLeft)
-                || inputs.just_pressed(KeyCode::Escape),
+            soft_reset: inputs.just_pressed(KeyCode::Escape),
         }
     }
 
@@ -126,8 +125,10 @@ impl PlayerInputs {
             ),
             start: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start)),
             select: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
-            soft_reset: buttons
-                .just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
+            soft_reset: buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::East))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
         }
     }
 
@@ -159,8 +160,10 @@ impl PlayerInputs {
             ),
             start: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start)),
             select: buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
-            soft_reset: buttons
-                .just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select)),
+            soft_reset: buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South))
+                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::West)),
         }
     }
 

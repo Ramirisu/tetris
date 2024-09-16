@@ -530,10 +530,17 @@ mod state_game_running {
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        mut app_state: ResMut<NextState<AppState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
+        if player_inputs.soft_reset {
+            e_play_sound.send(PlaySoundEvent::StartGame);
+            app_state.set(AppState::Splash);
+            return;
+        }
 
         if player_inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
@@ -839,10 +846,18 @@ mod state_game_pause {
         controller: Res<Controller>,
         controller_type: Res<ControllerType>,
         mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
+        mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_state: ResMut<NextState<PlayerState>>,
+        mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
+        if player_inputs.soft_reset {
+            e_play_sound.send(PlaySoundEvent::StartGame);
+            app_state.set(AppState::Splash);
+            return;
+        }
 
         if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
@@ -859,10 +874,17 @@ mod state_game_over {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         controller_type: Res<ControllerType>,
+        mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
+        if player_inputs.soft_reset {
+            e_play_sound.send(PlaySoundEvent::StartGame);
+            app_state.set(AppState::Splash);
+            return;
+        }
 
         if player_inputs.start {
             app_state.set(AppState::LevelMenu);
