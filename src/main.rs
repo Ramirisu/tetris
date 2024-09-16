@@ -18,7 +18,8 @@ mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use inputs::PlayerInputs;
+use controller::Controller;
+use inputs::{ControllerType, PlayerInputs};
 
 fn main() {
     App::new()
@@ -65,10 +66,16 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn handle_input_system(
-    player_inputs: Res<PlayerInputs>,
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
+    controller_type: Res<ControllerType>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
+    let player_inputs = PlayerInputs::with_keyboard(&keys)
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
     if player_inputs.soft_reset {
         e_play_sound.send(PlaySoundEvent::StartGame);
         app_state.set(AppState::Splash);

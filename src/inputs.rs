@@ -3,20 +3,7 @@ use bevy::prelude::*;
 use crate::controller::Controller;
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(ControllerType::default())
-        .insert_resource(PlayerInputs::default())
-        .add_systems(Update, update_player_inputs);
-}
-
-fn update_player_inputs(
-    keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
-    controller_type: Res<ControllerType>,
-    mut player_inputs: ResMut<PlayerInputs>,
-) {
-    *player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+    app.insert_resource(ControllerType::default());
 }
 
 #[derive(Default, Clone, Copy, Resource)]
@@ -26,7 +13,7 @@ pub enum ControllerType {
     TypeB,
 }
 
-#[derive(Clone, Copy, Resource)]
+#[derive(Clone, Copy)]
 pub struct PlayerInputs {
     pub up: (bool, bool),
     pub down: (bool, bool),

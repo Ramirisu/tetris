@@ -6,8 +6,9 @@ use bevy::{
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
+    controller::Controller,
     game::player::{PlayerConfig, PlayerData, PlayerState},
-    inputs::PlayerInputs,
+    inputs::{ControllerType, PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
 };
@@ -235,13 +236,19 @@ fn update_ui_system(
 }
 
 fn handle_input_system(
-    player_inputs: Res<PlayerInputs>,
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
+    controller_type: Res<ControllerType>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     mut player_data: ResMut<PlayerData>,
 ) {
+    let player_inputs = PlayerInputs::with_keyboard(&keys)
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
     match (player_inputs.up.0, player_inputs.down.0) {
         (true, false) => {
             level_menu_data.selected_level.1 =

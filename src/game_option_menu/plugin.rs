@@ -3,6 +3,7 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
+    controller::Controller,
     game::{drop_speed::DropSpeed, transition::Transition},
     inputs::{ControllerType, PlayerInputs},
     level_menu::plugin::LevelMenuData,
@@ -255,14 +256,19 @@ fn update_ui_system(
 }
 
 fn handle_input_system(
-    player_inputs: Res<PlayerInputs>,
+    keys: Res<ButtonInput<KeyCode>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
+    controller: Res<Controller>,
+    mut controller_type: ResMut<ControllerType>,
     mut game_option_menu_data: ResMut<GameOptionMenuData>,
     mut level_menu_data: ResMut<LevelMenuData>,
-    mut controller_type: ResMut<ControllerType>,
     mut app_state: ResMut<NextState<AppState>>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
 ) {
+    let player_inputs = PlayerInputs::with_keyboard(&keys)
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
     if player_inputs.b.0 {
         app_state.set(AppState::Splash);
         e_play_sound.send(PlaySoundEvent::StartGame);

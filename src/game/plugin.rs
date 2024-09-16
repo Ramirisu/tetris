@@ -6,7 +6,8 @@ use bevy::{
 };
 
 use crate::{
-    app_state::AppState, audio::plugin::PlaySoundEvent, inputs::PlayerInputs, utility::despawn_all,
+    app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
+    inputs::ControllerType, inputs::PlayerInputs, utility::despawn_all,
 };
 
 use super::{
@@ -518,7 +519,10 @@ mod state_game_running {
 
     pub(super) fn handle_input_system(
         time: Res<Time>,
-        player_inputs: Res<PlayerInputs>,
+        keys: Res<ButtonInput<KeyCode>>,
+        buttons: Res<ButtonInput<GamepadButton>>,
+        controller: Res<Controller>,
+        controller_type: Res<ControllerType>,
         mut query: ParamSet<(
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
@@ -528,6 +532,9 @@ mod state_game_running {
         mut player_state: ResMut<NextState<PlayerState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
+        let player_inputs = PlayerInputs::with_keyboard(&keys)
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
         if player_inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
             player_state.set(PlayerState::GamePause);
@@ -827,10 +834,16 @@ mod state_game_pause {
     use super::*;
 
     pub(super) fn handle_input_system(
-        player_inputs: Res<PlayerInputs>,
+        keys: Res<ButtonInput<KeyCode>>,
+        buttons: Res<ButtonInput<GamepadButton>>,
+        controller: Res<Controller>,
+        controller_type: Res<ControllerType>,
         mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
         mut player_state: ResMut<NextState<PlayerState>>,
     ) {
+        let player_inputs = PlayerInputs::with_keyboard(&keys)
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
         if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
             player_state.set(PlayerState::GameRunning);
@@ -842,9 +855,15 @@ mod state_game_over {
     use super::*;
 
     pub(super) fn handle_input_system(
-        player_inputs: Res<PlayerInputs>,
+        keys: Res<ButtonInput<KeyCode>>,
+        buttons: Res<ButtonInput<GamepadButton>>,
+        controller: Res<Controller>,
+        controller_type: Res<ControllerType>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
+        let player_inputs = PlayerInputs::with_keyboard(&keys)
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+
         if player_inputs.start {
             app_state.set(AppState::LevelMenu);
         }
