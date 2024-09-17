@@ -54,6 +54,7 @@ fn main() {
                 },
             },
         })
+        .add_plugins(bevy_framepace::FramepacePlugin)
         .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
         .add_systems(Startup, setup_camera)

@@ -17,6 +17,9 @@ use bevy::window::WindowMode;
 
 use super::transform::GameOptionMenuTransform;
 
+#[cfg(not(target_arch = "wasm32"))]
+use super::fps_limiter::FPSLimiter;
+
 pub fn setup(app: &mut App) {
     app.insert_resource(GameOptionMenuTransform::default())
         .insert_resource(GameOptionMenuData::default())
@@ -55,13 +58,15 @@ enum GameOptionMenuSelection {
     BlankLine3,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
+    FPSLimiter,
+    #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
 }
 
 impl GameOptionMenuSelection {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 13];
+        type ArrayType = [GameOptionMenuSelection; 14];
         #[cfg(target_arch = "wasm32")]
         type ArrayType = [GameOptionMenuSelection; 12];
         const STATES: ArrayType = [
@@ -78,6 +83,8 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::BlankLine3,
             GameOptionMenuSelection::ScaleFactor,
             #[cfg(not(target_arch = "wasm32"))]
+            GameOptionMenuSelection::FPSLimiter,
+            #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode,
         ];
         STATES.iter()
@@ -91,6 +98,8 @@ struct GameOptionMenuData {
     linecap: Linecap,
     drop_speed: DropSpeed,
     #[cfg(not(target_arch = "wasm32"))]
+    fps_limiter: FPSLimiter,
+    #[cfg(not(target_arch = "wasm32"))]
     window_mode: WindowMode,
 }
 
@@ -101,6 +110,8 @@ impl GameOptionMenuData {
             transition: Transition::default(),
             linecap: Linecap::default(),
             drop_speed: DropSpeed::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            fps_limiter: FPSLimiter::default(),
             #[cfg(not(target_arch = "wasm32"))]
             window_mode: WindowMode::Windowed,
         }
@@ -313,6 +324,19 @@ fn update_ui_system(
                 }
             }
             #[cfg(not(target_arch = "wasm32"))]
+            GameOptionMenuSelection::FPSLimiter => {
+                text.sections[0].value = fname("FPS LIMITER", NameKind::Option);
+                match game_option_menu_data.fps_limiter {
+                    FPSLimiter::Auto => text.sections[1].value = fopt("AUTO", false, true),
+                    FPSLimiter::Unlimited => text.sections[1].value = fopt("UNLIMITED", true, true),
+                    FPSLimiter::F60 => text.sections[1].value = fopt("60 FPS", true, true),
+                    FPSLimiter::F144 => text.sections[1].value = fopt("144 FPS", true, true),
+                    FPSLimiter::F240 => text.sections[1].value = fopt("240 FPS", true, true),
+                    FPSLimiter::F360 => text.sections[1].value = fopt("360 FPS", true, true),
+                    FPSLimiter::F480 => text.sections[1].value = fopt("480 FPS", true, false),
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
                 text.sections[0].value = fname("WINDOW MODE", NameKind::Option);
                 match game_option_menu_data.window_mode {
@@ -339,6 +363,9 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
+    #[cfg(not(target_arch = "wasm32"))] mut framepace_settins: ResMut<
+        bevy_framepace::FramepaceSettings,
+    >,
     #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -359,6 +386,8 @@ fn handle_input_system(
     let mut selection_changed = false;
     let mut option_changed = false;
     let mut scale_changed = false;
+    #[cfg(not(target_arch = "wasm32"))]
+    let mut fps_changed = false;
     #[cfg(not(target_arch = "wasm32"))]
     let mut window_mode_changed = false;
 
@@ -474,7 +503,7 @@ fn handle_input_system(
             } else if player_inputs.down.0 {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
+                    game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
@@ -494,9 +523,29 @@ fn handle_input_system(
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        GameOptionMenuSelection::WindowMode => {
+        GameOptionMenuSelection::FPSLimiter => {
             if player_inputs.up.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
+                selection_changed = true;
+            } else if player_inputs.down.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
+                selection_changed = true;
+            }
+
+            if player_inputs.right.0 {
+                if let Some(_) = game_option_menu_data.fps_limiter.enum_next() {
+                    fps_changed = true;
+                }
+            } else if player_inputs.left.0 {
+                if let Some(_) = game_option_menu_data.fps_limiter.enum_prev() {
+                    fps_changed = true;
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        GameOptionMenuSelection::WindowMode => {
+            if player_inputs.up.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
                 selection_changed = true;
             } else if player_inputs.down.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
@@ -525,6 +574,15 @@ fn handle_input_system(
         app_state.set(AppState::ChangeScale);
     }
     option_changed |= scale_changed;
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if fps_changed {
+            *framepace_settins = bevy_framepace::FramepaceSettings {
+                limiter: game_option_menu_data.fps_limiter.get_limiter(),
+            };
+        }
+        option_changed |= fps_changed;
+    }
     #[cfg(not(target_arch = "wasm32"))]
     {
         if window_mode_changed {

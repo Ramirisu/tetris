@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.14.2", features = ["wav"] }
 bevy_dev_tools = "0.14.2"
+bevy_framepace = "0.17.1"
 rand = "0.8.5"
 num-traits = "0.2"
 num-derive = "0.4"
