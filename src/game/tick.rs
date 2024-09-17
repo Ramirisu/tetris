@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use super::drop_speed::DropSpeed;
+use super::{drop_speed::DropSpeed, linecap::Linecap};
 
 const TICKS_PER_MICROSECOND: u64 = 60_000_000;
 
@@ -20,16 +20,16 @@ pub fn duration_to_ticks(duration: Duration) -> u64 {
 pub struct FallTick {
     threshold: Duration,
     initial_entry_delay: bool,
-    lv39_linecap: bool,
+    linecap: Linecap,
     drop_speed: DropSpeed,
 }
 
 impl FallTick {
-    pub fn new(level: usize, lv39_linecap: bool, drop_speed: DropSpeed) -> Self {
+    pub fn new(level: usize, linecap: Linecap, drop_speed: DropSpeed) -> Self {
         Self {
-            threshold: Self::get_trigger_tick(level, lv39_linecap),
+            threshold: Self::get_trigger_tick(level, linecap),
             initial_entry_delay: true,
-            lv39_linecap,
+            linecap,
             drop_speed,
         }
     }
@@ -37,7 +37,7 @@ impl FallTick {
     pub fn set_level(&mut self, level: usize) {
         self.initial_entry_delay = false;
         match self.drop_speed {
-            DropSpeed::Level => self.threshold = Self::get_trigger_tick(level, self.lv39_linecap),
+            DropSpeed::Level => self.threshold = Self::get_trigger_tick(level, self.linecap),
             DropSpeed::Locked => (),
         }
     }
@@ -50,7 +50,7 @@ impl FallTick {
         }
     }
 
-    fn get_trigger_tick(level: usize, lv39_linecap: bool) -> Duration {
+    fn get_trigger_tick(level: usize, linecap: Linecap) -> Duration {
         match level {
             0 => ticks_to_duration(48),
             1 => ticks_to_duration(43),
@@ -67,13 +67,10 @@ impl FallTick {
             16..19 => ticks_to_duration(3),
             19..29 => ticks_to_duration(2),
             29..39 => ticks_to_duration(1),
-            _ => {
-                if lv39_linecap {
-                    sub_ticks_to_duration(500)
-                } else {
-                    ticks_to_duration(1)
-                }
-            }
+            _ => match linecap {
+                Linecap::None => ticks_to_duration(1),
+                Linecap::KillScreenX2 => sub_ticks_to_duration(500),
+            },
         }
     }
 

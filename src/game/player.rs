@@ -3,6 +3,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use super::{
     board::Board,
     drop_speed::DropSpeed,
+    linecap::Linecap,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
     transition::Transition,
@@ -23,7 +24,7 @@ pub enum PlayerState {
 pub struct PlayerConfig {
     pub start_level: usize,
     pub transition: Transition,
-    pub lv39_linecap: bool,
+    pub linecap: Linecap,
     pub drop_speed: DropSpeed,
 }
 
@@ -31,9 +32,9 @@ impl Default for PlayerConfig {
     fn default() -> Self {
         Self {
             start_level: 0,
-            lv39_linecap: false,
+            linecap: Linecap::default(),
             transition: Transition::default(),
-            drop_speed: DropSpeed::Level,
+            drop_speed: DropSpeed::default(),
         }
     }
 }
@@ -64,7 +65,7 @@ impl PlayerData {
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(config.start_level, config.lv39_linecap, config.drop_speed),
+            fall_tick: FallTick::new(config.start_level, config.linecap, config.drop_speed),
             line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),

@@ -5,7 +5,7 @@ use num_traits::FromPrimitive;
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Transition {
     #[default]
-    Default = 0,
+    Classic = 0,
     Every10Lines,
     Every4Lines,
 }
@@ -21,7 +21,7 @@ impl Transition {
 
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
-            Transition::Default => Self::get_level_classic(start_level, lines),
+            Transition::Classic => Self::get_level_classic(start_level, lines),
             Transition::Every10Lines => Self::get_level_every_n_lines(start_level, lines, 10),
             Transition::Every4Lines => Self::get_level_every_n_lines(start_level, lines, 4),
         }
@@ -63,8 +63,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_default() {
-        let transition = Transition::Default;
+    fn test_classic() {
+        let transition = Transition::Classic;
 
         assert_eq!(transition.get_level(0, 0), 0);
         assert_eq!(transition.get_level(0, 10), 1);

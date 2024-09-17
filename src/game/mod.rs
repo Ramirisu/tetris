@@ -1,6 +1,7 @@
 mod asset;
 mod board;
 pub mod drop_speed;
+pub mod linecap;
 pub mod palette;
 pub mod piece;
 pub mod player;

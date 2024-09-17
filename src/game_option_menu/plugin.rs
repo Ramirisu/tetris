@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::{drop_speed::DropSpeed, transition::Transition},
+    game::{drop_speed::DropSpeed, linecap::Linecap, transition::Transition},
     inputs::{ControllerMapping, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -88,7 +88,7 @@ impl GameOptionMenuSelection {
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
     transition: Transition,
-    lv39_linecap: bool,
+    linecap: Linecap,
     drop_speed: DropSpeed,
     #[cfg(not(target_arch = "wasm32"))]
     window_mode: WindowMode,
@@ -98,9 +98,9 @@ impl GameOptionMenuData {
     pub fn new() -> Self {
         Self {
             selection: GameOptionMenuSelection::default(),
-            transition: Transition::Default,
-            lv39_linecap: false,
-            drop_speed: DropSpeed::Level,
+            transition: Transition::default(),
+            linecap: Linecap::default(),
+            drop_speed: DropSpeed::default(),
             #[cfg(not(target_arch = "wasm32"))]
             window_mode: WindowMode::Windowed,
         }
@@ -252,7 +252,7 @@ fn update_ui_system(
             GameOptionMenuSelection::Transition => {
                 text.sections[0].value = fname("TRANSITION", NameKind::Option);
                 match game_option_menu_data.transition {
-                    Transition::Default => text.sections[1].value = fopt("DEFAULT", false, true),
+                    Transition::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
                     Transition::Every10Lines => {
                         text.sections[1].value = fopt("10 LINES", true, true)
                     }
@@ -262,11 +262,10 @@ fn update_ui_system(
                 };
             }
             GameOptionMenuSelection::Linecap => {
-                text.sections[0].value = fname("LV39 LINECAP", NameKind::Option);
-                if game_option_menu_data.lv39_linecap {
-                    text.sections[1].value = fopt("ON", true, false);
-                } else {
-                    text.sections[1].value = fopt("OFF", false, true);
+                text.sections[0].value = fname("LINECAP", NameKind::Option);
+                match game_option_menu_data.linecap {
+                    Linecap::None => text.sections[1].value = fopt("OFF", false, true),
+                    Linecap::KillScreenX2 => text.sections[1].value = fopt("ON", true, false),
                 }
             }
             GameOptionMenuSelection::DropSpeed => {
@@ -381,7 +380,7 @@ fn handle_input_system(
             }
             if player_inputs.start {
                 level_menu_data.config.transition = game_option_menu_data.transition;
-                level_menu_data.config.lv39_linecap = game_option_menu_data.lv39_linecap;
+                level_menu_data.config.linecap = game_option_menu_data.linecap;
                 level_menu_data.config.drop_speed = game_option_menu_data.drop_speed;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
@@ -417,12 +416,15 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
             }
+
             if player_inputs.right.0 {
-                game_option_menu_data.lv39_linecap = true;
-                option_changed = true;
+                if let Some(_) = game_option_menu_data.linecap.enum_next() {
+                    scale_changed = true;
+                }
             } else if player_inputs.left.0 {
-                game_option_menu_data.lv39_linecap = false;
-                option_changed = true;
+                if let Some(_) = game_option_menu_data.linecap.enum_prev() {
+                    scale_changed = true;
+                }
             }
         }
         GameOptionMenuSelection::DropSpeed => {
