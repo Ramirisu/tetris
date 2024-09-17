@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, time::Stopwatch};
 
 use super::{
     board::Board,
@@ -43,6 +43,7 @@ impl Default for PlayerConfig {
 pub struct PlayerData {
     pub rc: RenderConfig,
     pub board: Board,
+    pub game_stopwatch: Stopwatch,
     pub game_timer: GameTimer,
     pub lock_curr_piece_immediately: bool,
     pub can_press_down: bool,
@@ -60,6 +61,7 @@ impl PlayerData {
         Self {
             rc: RenderConfig::default(),
             board: Board::new(config.start_level, config.transition),
+            game_stopwatch: Stopwatch::new(),
             game_timer: GameTimer::default(),
             lock_curr_piece_immediately: false,
             can_press_down: false,

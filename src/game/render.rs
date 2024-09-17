@@ -128,6 +128,10 @@ impl RenderConfig {
         Vec3::new(self.board_width(), -self.unit * 8.0, BOARD_LAYER)
     }
 
+    pub fn game_stopwatch_translation(&self) -> Vec3 {
+        Vec3::new(self.board_width(), -self.unit * 10.0, BOARD_LAYER)
+    }
+
     pub fn piece_count_square_size(&self) -> Vec2 {
         Vec2::splat(self.unit / 2.0)
     }

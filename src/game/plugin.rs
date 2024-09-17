@@ -6,8 +6,11 @@ use bevy::{
 };
 
 use crate::{
-    app_state::AppState, audio::plugin::PlaySoundEvent, controller::Controller,
-    inputs::ControllerType, inputs::PlayerInputs, utility::despawn_all,
+    app_state::AppState,
+    audio::plugin::PlaySoundEvent,
+    controller::Controller,
+    inputs::{ControllerType, PlayerInputs},
+    utility::{despawn_all, format_hhmmss},
 };
 
 use super::{
@@ -80,6 +83,9 @@ struct LevelEntityMarker;
 
 #[derive(Component)]
 struct DASEntityMarker;
+
+#[derive(Component)]
+struct GameStopwatchEntityMarker;
 
 #[derive(Component)]
 struct StatisticsEntityMarker;
@@ -332,6 +338,22 @@ fn setup_screen(
         GameEntityMarker,
         DASEntityMarker,
     ));
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font_size: player_data.rc.unit(),
+                    color: WHITE.into(),
+                    ..default()
+                },
+            ),
+            transform: Transform::from_translation(player_data.rc.game_stopwatch_translation()),
+            ..default()
+        },
+        GameEntityMarker,
+        GameStopwatchEntityMarker,
+    ));
 
     for shape in PieceShape::iter() {
         for square in Piece::new(*shape).to_squares() {
@@ -457,9 +479,10 @@ fn update_statistics_system(
         Query<&mut Text, With<LevelEntityMarker>>,
         Query<&mut Text, With<StatisticsEntityMarker>>,
         Query<&mut Text, With<DASEntityMarker>>,
+        Query<&mut Text, With<GameStopwatchEntityMarker>>,
         Query<(&mut Text, &PieceCountCounterEntityMarker)>,
     )>,
-    player_data: ResMut<PlayerData>,
+    player_data: Res<PlayerData>,
 ) {
     if let Ok(mut text) = query.p0().get_single_mut() {
         text.sections[1].value = format!("{:03}", player_data.board.lines());
@@ -504,7 +527,10 @@ fn update_statistics_system(
             text.sections[1].style.color = RED.into();
         }
     }
-    for (mut text, shape) in query.p5().iter_mut() {
+    if let Ok(mut text) = query.p5().get_single_mut() {
+        text.sections[0].value = format_hhmmss(player_data.game_stopwatch.elapsed());
+    }
+    for (mut text, shape) in query.p6().iter_mut() {
         text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(shape.0));
     }
 }
@@ -513,6 +539,7 @@ mod state_game_running {
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+        player_data.game_stopwatch.tick(time.delta());
         player_data.game_timer.tick(time.delta());
         player_data.press_down_timer.tick(time.delta());
     }
