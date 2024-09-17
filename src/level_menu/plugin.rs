@@ -13,8 +13,11 @@ use crate::{
     utility::despawn_all,
 };
 
+use super::transform::LevelMenuTransform;
+
 pub fn setup(app: &mut App) {
-    app.insert_resource(LevelMenuData::default())
+    app.insert_resource(LevelMenuTransform::default())
+        .insert_resource(LevelMenuData::default())
         .add_systems(OnEnter(AppState::LevelMenu), setup_screen)
         .add_systems(
             Update,
@@ -57,8 +60,13 @@ impl Default for LevelMenuData {
     }
 }
 
-fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
+fn setup_screen(
+    mut commands: Commands,
+    mut image_assets: ResMut<Assets<Image>>,
+    level_menu_transform: Res<LevelMenuTransform>,
+) {
     let logo_images = load_logo_images(&mut image_assets);
+    let scale = level_menu_transform.scale();
 
     commands
         .spawn((
@@ -82,7 +90,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     style: Style {
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(40.0)),
+                        margin: UiRect::all(Val::Px(scale * 40.0)),
                         ..default()
                     },
                     ..default()
@@ -93,8 +101,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             parent.spawn((
                                 NodeBundle {
                                     style: Style {
-                                        width: Val::Px(24.0),
-                                        height: Val::Px(24.0),
+                                        width: Val::Px(scale * 24.0),
+                                        height: Val::Px(scale * 24.0),
                                         ..default()
                                     },
                                     ..default()
@@ -113,13 +121,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(10.0)),
-                        padding: UiRect::all(Val::Px(10.0)),
-                        border: UiRect::all(Val::Px(5.0)),
+                        margin: UiRect::all(Val::Px(scale * 10.0)),
+                        padding: UiRect::all(Val::Px(scale * 10.0)),
+                        border: UiRect::all(Val::Px(scale * 5.0)),
                         ..default()
                     },
                     border_color: BLUE.into(),
-                    border_radius: BorderRadius::all(Val::Px(5.0)),
+                    border_radius: BorderRadius::all(Val::Px(scale * 5.0)),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -127,13 +135,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         TextBundle::from_section(
                             "LEVEL",
                             TextStyle {
-                                font_size: 40.0,
+                                font_size: scale * 36.0,
                                 color: WHITE.into(),
                                 ..default()
                             },
                         )
                         .with_style(Style {
-                            margin: UiRect::all(Val::Px(20.0)),
+                            margin: UiRect::all(Val::Px(scale * 20.0)),
                             ..default()
                         }),
                     );
@@ -143,9 +151,9 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             style: Style {
                                 display: Display::Grid,
                                 grid_template_columns: vec![GridTrack::auto(); 5],
-                                row_gap: Val::Px(5.0),
-                                column_gap: Val::Px(5.0),
-                                border: UiRect::all(Val::Px(5.0)),
+                                row_gap: Val::Px(scale * 5.0),
+                                column_gap: Val::Px(scale * 5.0),
+                                border: UiRect::all(Val::Px(scale * 5.0)),
                                 ..default()
                             },
                             background_color: GREEN.into(),
@@ -160,8 +168,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                             .spawn((
                                                 NodeBundle {
                                                     style: Style {
-                                                        width: Val::Px(60.0),
-                                                        height: Val::Px(60.0),
+                                                        width: Val::Px(scale * 60.0),
+                                                        height: Val::Px(scale * 60.0),
                                                         align_items: AlignItems::Center,
                                                         justify_content: JustifyContent::Center,
                                                         ..default()
@@ -177,7 +185,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                                 parent.spawn(TextBundle::from_section(
                                                     format!("{}", level),
                                                     TextStyle {
-                                                        font_size: 40.0,
+                                                        font_size: scale * 40.0,
                                                         color: CRIMSON.into(),
                                                         ..default()
                                                     },
@@ -186,8 +194,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                     } else {
                                         parent.spawn(NodeBundle {
                                             style: Style {
-                                                width: Val::Px(60.0),
-                                                height: Val::Px(60.0),
+                                                width: Val::Px(scale * 60.0),
+                                                height: Val::Px(scale * 60.0),
                                                 align_items: AlignItems::Center,
                                                 justify_content: JustifyContent::Center,
                                                 ..default()

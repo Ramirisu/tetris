@@ -3,7 +3,6 @@ use bevy::{prelude::*, time::Stopwatch};
 use super::{
     board::Board,
     drop_speed::DropSpeed,
-    render::RenderConfig,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
     transition::Transition,
@@ -41,7 +40,6 @@ impl Default for PlayerConfig {
 
 #[derive(Resource)]
 pub struct PlayerData {
-    pub rc: RenderConfig,
     pub board: Board,
     pub game_stopwatch: Stopwatch,
     pub game_timer: GameTimer,
@@ -59,7 +57,6 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(config: PlayerConfig) -> Self {
         Self {
-            rc: RenderConfig::default(),
             board: Board::new(config.start_level, config.transition),
             game_stopwatch: Stopwatch::new(),
             game_timer: GameTimer::default(),

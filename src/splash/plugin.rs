@@ -8,8 +8,11 @@ use crate::{
     utility::despawn_all,
 };
 
+use super::transform::SplashTransform;
+
 pub fn setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::Splash), setup_screen)
+    app.insert_resource(SplashTransform::default())
+        .add_systems(OnEnter(AppState::Splash), setup_screen)
         .add_systems(
             Update,
             handle_input_system.run_if(in_state(AppState::Splash)),
@@ -20,8 +23,13 @@ pub fn setup(app: &mut App) {
 #[derive(Component)]
 struct SplashEntityMarker;
 
-fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
+fn setup_screen(
+    mut commands: Commands,
+    mut image_assets: ResMut<Assets<Image>>,
+    splash_transform: Res<SplashTransform>,
+) {
     let logo_images = load_logo_images(&mut image_assets);
+    let scale = splash_transform.scale();
 
     commands
         .spawn((
@@ -45,7 +53,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     style: Style {
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(40.0)),
+                        margin: UiRect::all(Val::Px(scale * 40.0)),
                         ..default()
                     },
                     ..default()
@@ -56,8 +64,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             parent.spawn((
                                 NodeBundle {
                                     style: Style {
-                                        width: Val::Px(36.0),
-                                        height: Val::Px(36.0),
+                                        width: Val::Px(scale * 36.0),
+                                        height: Val::Px(scale * 36.0),
                                         ..default()
                                     },
                                     ..default()
@@ -74,13 +82,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 TextBundle::from_section(
                     "PRESS START",
                     TextStyle {
-                        font_size: 30.0,
+                        font_size: scale * 36.0,
                         color: WHITE.into(),
                         ..default()
                     },
                 )
                 .with_style(Style {
-                    margin: UiRect::all(Val::Px(60.0)),
+                    margin: UiRect::all(Val::Px(scale * 60.0)),
                     ..default()
                 }),
             );
