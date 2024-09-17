@@ -43,10 +43,16 @@ struct GameOptionMenuEntityMarker;
 enum GameOptionMenuSelection {
     #[default]
     Tetris,
+    BlankLine0,
+    OptionsCategory,
+    BlankLine1,
     Transition,
     Linecap,
     DropSpeed,
     ControllerType,
+    BlankLine2,
+    VideoCategory,
+    BlankLine3,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
@@ -55,15 +61,21 @@ enum GameOptionMenuSelection {
 impl GameOptionMenuSelection {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 7];
+        type ArrayType = [GameOptionMenuSelection; 13];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuSelection; 6];
+        type ArrayType = [GameOptionMenuSelection; 12];
         const STATES: ArrayType = [
             GameOptionMenuSelection::Tetris,
+            GameOptionMenuSelection::BlankLine0,
+            GameOptionMenuSelection::OptionsCategory,
+            GameOptionMenuSelection::BlankLine1,
             GameOptionMenuSelection::Transition,
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::DropSpeed,
             GameOptionMenuSelection::ControllerType,
+            GameOptionMenuSelection::BlankLine2,
+            GameOptionMenuSelection::VideoCategory,
+            GameOptionMenuSelection::BlankLine3,
             GameOptionMenuSelection::ScaleFactor,
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode,
@@ -198,23 +210,47 @@ fn update_ui_system(
     scale_factor: Res<ScaleFactor>,
 ) {
     query.iter_mut().for_each(|(mut text, marker)| {
-        let selected = marker.0 == game_option_menu_data.selection;
-        let fname = |name| -> String {
-            let s = if selected { ">" } else { " " };
-            format!("{} {:18}", s, name)
+        enum NameKind {
+            Category,
+            Option,
+        }
+        let fname = |name, kind: NameKind| -> String {
+            match kind {
+                NameKind::Category => format!("{:23}", name),
+                NameKind::Option => {
+                    let s = if marker.0 == game_option_menu_data.selection {
+                        ">>"
+                    } else {
+                        ""
+                    };
+                    format!("{:>4} {:18}", s, name)
+                }
+            }
         };
         let fopt = |name, l, r| -> String {
-            let l = if l { "<" } else { " " };
-            let r = if r { ">" } else { " " };
-            format!("{} {:12} {}", l, name, r)
+            let l = if l { "<" } else { "" };
+            let r = if r { ">" } else { "" };
+            format!("{:1} {:12} {:1}", l, name, r)
         };
         match marker.0 {
             GameOptionMenuSelection::Tetris => {
-                text.sections[0].value = fname("TETRIS");
+                text.sections[0].value = fname("TETRIS", NameKind::Option);
+                text.sections[1].value = fopt("", false, false);
+            }
+            GameOptionMenuSelection::BlankLine0 => {
+                text.sections[0].value = fname("", NameKind::Category);
+                text.sections[1].value = fopt("", false, false);
+            }
+            GameOptionMenuSelection::OptionsCategory => {
+                text.sections[0].value = fname("# OPTIONS", NameKind::Category);
+                text.sections[1].value = fopt("", false, false);
+            }
+            GameOptionMenuSelection::BlankLine1 => {
+                text.sections[0].value = fname("", NameKind::Category);
                 text.sections[1].value = fopt("", false, false);
             }
             GameOptionMenuSelection::Transition => {
-                text.sections[0].value = fname("TRANSITION");
+                text.sections[0].value = fname("TRANSITION", NameKind::Option);
                 match game_option_menu_data.transition {
                     Transition::Default => text.sections[1].value = fopt("DEFAULT", false, true),
                     Transition::Every10Lines => {
@@ -226,7 +262,7 @@ fn update_ui_system(
                 };
             }
             GameOptionMenuSelection::Linecap => {
-                text.sections[0].value = fname("LV39 LINECAP");
+                text.sections[0].value = fname("LV39 LINECAP", NameKind::Option);
                 if game_option_menu_data.lv39_linecap {
                     text.sections[1].value = fopt("ON", true, false);
                 } else {
@@ -234,21 +270,33 @@ fn update_ui_system(
                 }
             }
             GameOptionMenuSelection::DropSpeed => {
-                text.sections[0].value = fname("DROPSPEED");
+                text.sections[0].value = fname("DROPSPEED", NameKind::Option);
                 match game_option_menu_data.drop_speed {
                     DropSpeed::Level => text.sections[1].value = fopt("LEVEL", false, true),
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
             GameOptionMenuSelection::ControllerType => {
-                text.sections[0].value = fname("CONTROLLER TYPE");
+                text.sections[0].value = fname("CONTROLLER TYPE", NameKind::Option);
                 match *controller_type {
                     ControllerType::TypeA => text.sections[1].value = fopt("TYPE A", false, true),
                     ControllerType::TypeB => text.sections[1].value = fopt("TYPE B", true, false),
                 };
             }
+            GameOptionMenuSelection::BlankLine2 => {
+                text.sections[0].value = fname("", NameKind::Category);
+                text.sections[1].value = fopt("", false, false);
+            }
+            GameOptionMenuSelection::VideoCategory => {
+                text.sections[0].value = fname("# VIDEO OPTIONS", NameKind::Category);
+                text.sections[1].value = fopt("", false, false);
+            }
+            GameOptionMenuSelection::BlankLine3 => {
+                text.sections[0].value = fname("", NameKind::Category);
+                text.sections[1].value = fopt("", false, false);
+            }
             GameOptionMenuSelection::ScaleFactor => {
-                text.sections[0].value = fname("SCALE FACTOR");
+                text.sections[0].value = fname("SCALE FACTOR", NameKind::Option);
                 match *scale_factor {
                     ScaleFactor::S720 => text.sections[1].value = fopt("0.66 (720P)", false, true),
                     ScaleFactor::S1080 => text.sections[1].value = fopt("1.00 (1080P)", true, true),
@@ -263,7 +311,7 @@ fn update_ui_system(
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
-                text.sections[0].value = fname("WINDOW MODE");
+                text.sections[0].value = fname("WINDOW MODE", NameKind::Option);
                 match game_option_menu_data.window_mode {
                     WindowMode::Windowed => {
                         text.sections[1].value = fopt("WINDOWED", false, true);
@@ -335,6 +383,9 @@ fn handle_input_system(
                 app_state.set(AppState::LevelMenu);
             }
         }
+        GameOptionMenuSelection::BlankLine0 => (),
+        GameOptionMenuSelection::OptionsCategory => (),
+        GameOptionMenuSelection::BlankLine1 => (),
         GameOptionMenuSelection::Transition => {
             if player_inputs.up.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
@@ -415,6 +466,9 @@ fn handle_input_system(
                 option_changed = true;
             }
         }
+        GameOptionMenuSelection::BlankLine2 => (),
+        GameOptionMenuSelection::VideoCategory => (),
+        GameOptionMenuSelection::BlankLine3 => (),
         GameOptionMenuSelection::ScaleFactor => {
             if player_inputs.up.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
