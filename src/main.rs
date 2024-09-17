@@ -1,7 +1,7 @@
 use bevy::{
     color::palettes::css::GREEN,
     prelude::*,
-    window::{PresentMode, WindowResolution},
+    window::{Cursor, PresentMode, WindowResolution},
 };
 
 #[macro_use]
@@ -34,6 +34,10 @@ fn main() {
                         present_mode: PresentMode::AutoNoVsync,
                         position: WindowPosition::Centered(MonitorSelection::Primary),
                         fit_canvas_to_parent: true,
+                        cursor: Cursor {
+                            visible: false,
+                            ..default()
+                        },
                         title: "TETRIS".into(),
                         ..default()
                     }),
