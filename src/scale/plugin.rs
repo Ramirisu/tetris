@@ -25,6 +25,14 @@ pub enum ScaleFactor {
 }
 
 impl ScaleFactor {
+    pub fn enum_prev(&mut self) -> Option<Self> {
+        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
+    }
+
+    pub fn enum_next(&mut self) -> Option<Self> {
+        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
+    }
+
     pub fn mul(&self) -> f32 {
         let base = 1080.0;
 
@@ -37,14 +45,6 @@ impl ScaleFactor {
             ScaleFactor::S3240 => 3240.0 / base,
             ScaleFactor::S4320 => 4320.0 / base,
         }
-    }
-
-    pub fn prev(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
-    }
-
-    pub fn next(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
     }
 }
 

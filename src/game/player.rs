@@ -32,7 +32,7 @@ impl Default for PlayerConfig {
         Self {
             start_level: 0,
             lv39_linecap: false,
-            transition: Transition::Default,
+            transition: Transition::default(),
             drop_speed: DropSpeed::Level,
         }
     }

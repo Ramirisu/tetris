@@ -398,27 +398,14 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
             }
-            match game_option_menu_data.transition {
-                Transition::Default => {
-                    if player_inputs.right.0 {
-                        game_option_menu_data.transition = Transition::Every10Lines;
-                        option_changed = true;
-                    }
+
+            if player_inputs.right.0 {
+                if let Some(_) = game_option_menu_data.transition.enum_next() {
+                    scale_changed = true;
                 }
-                Transition::Every10Lines => {
-                    if player_inputs.right.0 {
-                        game_option_menu_data.transition = Transition::Every4Lines;
-                        option_changed = true;
-                    } else if player_inputs.left.0 {
-                        game_option_menu_data.transition = Transition::Default;
-                        option_changed = true;
-                    }
-                }
-                Transition::Every4Lines => {
-                    if player_inputs.left.0 {
-                        game_option_menu_data.transition = Transition::Every10Lines;
-                        option_changed = true;
-                    }
+            } else if player_inputs.left.0 {
+                if let Some(_) = game_option_menu_data.transition.enum_prev() {
+                    scale_changed = true;
                 }
             }
         }
@@ -446,12 +433,15 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
                 selection_changed = true;
             }
+
             if player_inputs.right.0 {
-                game_option_menu_data.drop_speed = DropSpeed::Locked;
-                option_changed = true;
+                if let Some(_) = game_option_menu_data.drop_speed.enum_next() {
+                    scale_changed = true;
+                }
             } else if player_inputs.left.0 {
-                game_option_menu_data.drop_speed = DropSpeed::Level;
-                option_changed = true;
+                if let Some(_) = game_option_menu_data.drop_speed.enum_prev() {
+                    scale_changed = true;
+                }
             }
         }
         GameOptionMenuSelection::ControllerMapping => {
@@ -463,11 +453,13 @@ fn handle_input_system(
                 selection_changed = true;
             }
             if player_inputs.right.0 {
-                *controller_mapping = ControllerMapping::MappingB;
-                option_changed = true;
+                if let Some(_) = controller_mapping.enum_next() {
+                    scale_changed = true;
+                }
             } else if player_inputs.left.0 {
-                *controller_mapping = ControllerMapping::MappingA;
-                option_changed = true;
+                if let Some(_) = controller_mapping.enum_prev() {
+                    scale_changed = true;
+                }
             }
         }
         GameOptionMenuSelection::BlankLine2 => (),
@@ -490,11 +482,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.0 {
-                if let Some(_) = scale_factor.next() {
+                if let Some(_) = scale_factor.enum_next() {
                     scale_changed = true;
                 }
             } else if player_inputs.left.0 {
-                if let Some(_) = scale_factor.prev() {
+                if let Some(_) = scale_factor.enum_prev() {
                     scale_changed = true;
                 }
             }

@@ -1,14 +1,24 @@
-use core::fmt;
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use num_traits::FromPrimitive;
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Transition {
-    Default,
+    #[default]
+    Default = 0,
     Every10Lines,
     Every4Lines,
 }
 
 impl Transition {
+    pub fn enum_prev(&mut self) -> Option<Self> {
+        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
+    }
+
+    pub fn enum_next(&mut self) -> Option<Self> {
+        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
+    }
+
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
             Transition::Default => Self::get_level_classic(start_level, lines),
@@ -44,7 +54,7 @@ impl Transition {
 
 impl Display for Transition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fmt::Debug::fmt(&self, f)
+        std::fmt::Debug::fmt(&self, f)
     }
 }
 
