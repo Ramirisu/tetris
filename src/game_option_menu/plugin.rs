@@ -8,6 +8,7 @@ use crate::{
     inputs::{ControllerType, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
+    scale::plugin::ScaleFactor,
     utility::despawn_all,
 };
 
@@ -33,37 +34,39 @@ pub fn setup(app: &mut App) {
 }
 
 #[derive(Component)]
-struct GameOptionEntityMarker(pub GameOptionMenuState);
+struct GameOptionEntityMarker(pub GameOptionMenuSelection);
 
 #[derive(Component)]
 struct GameOptionMenuEntityMarker;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
-enum GameOptionMenuState {
+enum GameOptionMenuSelection {
     #[default]
     Tetris,
     Transition,
     Linecap,
     DropSpeed,
     ControllerType,
+    ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
 }
 
-impl GameOptionMenuState {
-    pub fn iter() -> std::slice::Iter<'static, GameOptionMenuState> {
+impl GameOptionMenuSelection {
+    pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuState; 6];
+        type ArrayType = [GameOptionMenuSelection; 7];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuState; 5];
+        type ArrayType = [GameOptionMenuSelection; 6];
         const STATES: ArrayType = [
-            GameOptionMenuState::Tetris,
-            GameOptionMenuState::Transition,
-            GameOptionMenuState::Linecap,
-            GameOptionMenuState::DropSpeed,
-            GameOptionMenuState::ControllerType,
+            GameOptionMenuSelection::Tetris,
+            GameOptionMenuSelection::Transition,
+            GameOptionMenuSelection::Linecap,
+            GameOptionMenuSelection::DropSpeed,
+            GameOptionMenuSelection::ControllerType,
+            GameOptionMenuSelection::ScaleFactor,
             #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuState::WindowMode,
+            GameOptionMenuSelection::WindowMode,
         ];
         STATES.iter()
     }
@@ -71,7 +74,7 @@ impl GameOptionMenuState {
 
 #[derive(Resource)]
 struct GameOptionMenuData {
-    state: GameOptionMenuState,
+    selection: GameOptionMenuSelection,
     transition: Transition,
     lv39_linecap: bool,
     drop_speed: DropSpeed,
@@ -82,7 +85,7 @@ struct GameOptionMenuData {
 impl GameOptionMenuData {
     pub fn new() -> Self {
         Self {
-            state: GameOptionMenuState::default(),
+            selection: GameOptionMenuSelection::default(),
             transition: Transition::Default,
             lv39_linecap: false,
             drop_speed: DropSpeed::Level,
@@ -167,7 +170,7 @@ fn setup_screen(
                     ..default()
                 })
                 .with_children(|parent| {
-                    for state in GameOptionMenuState::iter() {
+                    for selection in GameOptionMenuSelection::iter() {
                         parent.spawn((
                             TextBundle::from_sections(vec![
                                 TextSection::from_style(TextStyle {
@@ -181,7 +184,7 @@ fn setup_screen(
                                     ..default()
                                 }),
                             ]),
-                            GameOptionEntityMarker(*state),
+                            GameOptionEntityMarker(*selection),
                         ));
                     }
                 });
@@ -192,12 +195,13 @@ fn update_ui_system(
     mut query: Query<(&mut Text, &GameOptionEntityMarker)>,
     game_option_menu_data: Res<GameOptionMenuData>,
     controller_type: Res<ControllerType>,
+    scale_factor: Res<ScaleFactor>,
 ) {
     query.iter_mut().for_each(|(mut text, marker)| {
-        let selected = marker.0 == game_option_menu_data.state;
+        let selected = marker.0 == game_option_menu_data.selection;
         let fname = |name| -> String {
             let s = if selected { ">" } else { " " };
-            format!("{} {:16}", s, name)
+            format!("{} {:18}", s, name)
         };
         let fopt = |name, l, r| -> String {
             let l = if l { "<" } else { " " };
@@ -205,23 +209,23 @@ fn update_ui_system(
             format!("{} {:12} {}", l, name, r)
         };
         match marker.0 {
-            GameOptionMenuState::Tetris => {
+            GameOptionMenuSelection::Tetris => {
                 text.sections[0].value = fname("TETRIS");
                 text.sections[1].value = fopt("", false, false);
             }
-            GameOptionMenuState::Transition => {
+            GameOptionMenuSelection::Transition => {
                 text.sections[0].value = fname("TRANSITION");
                 match game_option_menu_data.transition {
                     Transition::Default => text.sections[1].value = fopt("DEFAULT", false, true),
                     Transition::Every10Lines => {
-                        text.sections[1].value = fopt("10 LINES", true, false)
+                        text.sections[1].value = fopt("10 LINES", true, true)
                     }
                     Transition::Every4Lines => {
                         text.sections[1].value = fopt(" 4 LINES", true, false)
                     }
                 };
             }
-            GameOptionMenuState::Linecap => {
+            GameOptionMenuSelection::Linecap => {
                 text.sections[0].value = fname("LV39 LINECAP");
                 if game_option_menu_data.lv39_linecap {
                     text.sections[1].value = fopt("ON", true, false);
@@ -229,32 +233,43 @@ fn update_ui_system(
                     text.sections[1].value = fopt("OFF", false, true);
                 }
             }
-            GameOptionMenuState::DropSpeed => {
+            GameOptionMenuSelection::DropSpeed => {
                 text.sections[0].value = fname("DROPSPEED");
                 match game_option_menu_data.drop_speed {
                     DropSpeed::Level => text.sections[1].value = fopt("LEVEL", false, true),
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
-            GameOptionMenuState::ControllerType => {
+            GameOptionMenuSelection::ControllerType => {
                 text.sections[0].value = fname("CONTROLLER TYPE");
                 match *controller_type {
                     ControllerType::TypeA => text.sections[1].value = fopt("TYPE A", false, true),
                     ControllerType::TypeB => text.sections[1].value = fopt("TYPE B", true, false),
                 };
             }
+            GameOptionMenuSelection::ScaleFactor => {
+                text.sections[0].value = fname("SCALE FACTOR");
+                match *scale_factor {
+                    ScaleFactor::S720 => text.sections[1].value = fopt("0.66 (720P)", false, true),
+                    ScaleFactor::S1080 => text.sections[1].value = fopt("1.00 (1080P)", true, true),
+                    ScaleFactor::S1440 => text.sections[1].value = fopt("1.33 (1440P)", true, true),
+                    ScaleFactor::S1800 => text.sections[1].value = fopt("1.66 (1800P)", true, true),
+                    ScaleFactor::S2160 => text.sections[1].value = fopt("2.00 (2160P)", true, true),
+                    ScaleFactor::S3240 => text.sections[1].value = fopt("3.00 (3240P)", true, true),
+                    ScaleFactor::S4320 => {
+                        text.sections[1].value = fopt("4.00 (4320P)", true, false)
+                    }
+                }
+            }
             #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuState::WindowMode => {
+            GameOptionMenuSelection::WindowMode => {
                 text.sections[0].value = fname("WINDOW MODE");
                 match game_option_menu_data.window_mode {
                     WindowMode::Windowed => {
                         text.sections[1].value = fopt("WINDOWED", false, true);
                     }
                     WindowMode::BorderlessFullscreen => {
-                        text.sections[1].value = fopt("BORDERLESS", true, true);
-                    }
-                    WindowMode::Fullscreen => {
-                        text.sections[1].value = fopt("FULLSCREEN", true, false);
+                        text.sections[1].value = fopt("BORDERLESS", true, false);
                     }
                     _ => (),
                 };
@@ -272,7 +287,8 @@ fn handle_input_system(
     mut level_menu_data: ResMut<LevelMenuData>,
     mut app_state: ResMut<NextState<AppState>>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
-    #[cfg(not(target_arch = "wasm32"))] mut window: Query<&mut Window>,
+    mut scale_factor: ResMut<ScaleFactor>,
+    #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
@@ -286,24 +302,32 @@ fn handle_input_system(
     if player_inputs.b.0 {
         app_state.set(AppState::Splash);
         e_play_sound.send(PlaySoundEvent::StartGame);
+        return;
     }
 
-    match game_option_menu_data.state {
-        GameOptionMenuState::Tetris => {
+    let mut selection_changed = false;
+    let mut option_changed = false;
+    let mut scale_changed = false;
+    #[cfg(not(target_arch = "wasm32"))]
+    let mut window_mode_changed = false;
+
+    match game_option_menu_data.selection {
+        GameOptionMenuSelection::Tetris => {
             if player_inputs.up.0 {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    game_option_menu_data.state = GameOptionMenuState::WindowMode;
+                    game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    game_option_menu_data.state = GameOptionMenuState::ControllerType;
+                    game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
                 }
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.state = GameOptionMenuState::Transition;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
-            } else if player_inputs.start {
+                game_option_menu_data.selection = GameOptionMenuSelection::Transition;
+                selection_changed = true;
+            }
+            if player_inputs.start {
                 level_menu_data.config.transition = game_option_menu_data.transition;
                 level_menu_data.config.lv39_linecap = game_option_menu_data.lv39_linecap;
                 level_menu_data.config.drop_speed = game_option_menu_data.drop_speed;
@@ -311,129 +335,153 @@ fn handle_input_system(
                 app_state.set(AppState::LevelMenu);
             }
         }
-        GameOptionMenuState::Transition => {
+        GameOptionMenuSelection::Transition => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::Tetris;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.state = GameOptionMenuState::Linecap;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
+                selection_changed = true;
             }
             match game_option_menu_data.transition {
                 Transition::Default => {
                     if player_inputs.right.0 {
                         game_option_menu_data.transition = Transition::Every10Lines;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        option_changed = true;
                     }
                 }
                 Transition::Every10Lines => {
                     if player_inputs.right.0 {
                         game_option_menu_data.transition = Transition::Every4Lines;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        option_changed = true;
                     } else if player_inputs.left.0 {
                         game_option_menu_data.transition = Transition::Default;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        option_changed = true;
                     }
                 }
                 Transition::Every4Lines => {
                     if player_inputs.left.0 {
                         game_option_menu_data.transition = Transition::Every10Lines;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        option_changed = true;
                     }
                 }
             }
         }
-        GameOptionMenuState::Linecap => {
+        GameOptionMenuSelection::Linecap => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::Transition;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::Transition;
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                selection_changed = true;
             }
             if player_inputs.right.0 {
                 game_option_menu_data.lv39_linecap = true;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
             } else if player_inputs.left.0 {
                 game_option_menu_data.lv39_linecap = false;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
             }
         }
-        GameOptionMenuState::DropSpeed => {
+        GameOptionMenuSelection::DropSpeed => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::Linecap;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.state = GameOptionMenuState::ControllerType;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
+                selection_changed = true;
             }
             if player_inputs.right.0 {
                 game_option_menu_data.drop_speed = DropSpeed::Locked;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
             } else if player_inputs.left.0 {
                 game_option_menu_data.drop_speed = DropSpeed::Level;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
             }
         }
-        GameOptionMenuState::ControllerType => {
+        GameOptionMenuSelection::ControllerType => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::DropSpeed;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    game_option_menu_data.state = GameOptionMenuState::WindowMode;
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    game_option_menu_data.state = GameOptionMenuState::Tetris;
-                }
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
+                selection_changed = true;
             }
             if player_inputs.right.0 {
                 *controller_type = ControllerType::TypeB;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
             } else if player_inputs.left.0 {
                 *controller_type = ControllerType::TypeA;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                option_changed = true;
+            }
+        }
+        GameOptionMenuSelection::ScaleFactor => {
+            if player_inputs.up.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
+                selection_changed = true;
+            } else if player_inputs.down.0 {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
+                }
+                selection_changed = true;
+            }
+
+            if player_inputs.right.0 {
+                if let Some(_) = scale_factor.next() {
+                    scale_changed = true;
+                }
+            } else if player_inputs.left.0 {
+                if let Some(_) = scale_factor.prev() {
+                    scale_changed = true;
+                }
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        GameOptionMenuState::WindowMode => {
+        GameOptionMenuSelection::WindowMode => {
             if player_inputs.up.0 {
-                game_option_menu_data.state = GameOptionMenuState::ControllerType;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
+                selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.state = GameOptionMenuState::Tetris;
-                e_play_sound.send(PlaySoundEvent::MoveCursor);
+                game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
+                selection_changed = true;
             }
+
             match game_option_menu_data.window_mode {
                 WindowMode::Windowed => {
                     if player_inputs.right.0 {
                         game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        window_mode_changed = true;
                     }
                 }
                 WindowMode::BorderlessFullscreen => {
-                    if player_inputs.right.0 {
-                        game_option_menu_data.window_mode = WindowMode::Fullscreen;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
-                    } else if player_inputs.left.0 {
-                        game_option_menu_data.window_mode = WindowMode::Windowed;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
-                    }
-                }
-                WindowMode::Fullscreen => {
                     if player_inputs.left.0 {
-                        game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
-                        e_play_sound.send(PlaySoundEvent::MoveCursor);
+                        game_option_menu_data.window_mode = WindowMode::Windowed;
+                        window_mode_changed = true;
                     }
                 }
                 _ => (),
             }
+        }
+    }
 
-            let mut window = window.single_mut();
+    if scale_changed {
+        app_state.set(AppState::ChangeScale);
+    }
+    option_changed |= scale_changed;
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if window_mode_changed {
+            let mut window = query.single_mut();
             window.mode = game_option_menu_data.window_mode;
         }
+        option_changed |= window_mode_changed;
+    }
+    if selection_changed || option_changed {
+        e_play_sound.send(PlaySoundEvent::MoveCursor);
     }
 }

@@ -7,6 +7,8 @@ edition = "2021"
 bevy = { version = "0.14.2", features = ["wav"] }
 bevy_dev_tools = "0.14.2"
 rand = "0.8.5"
+num-traits = "0.2"
+num-derive = "0.4"
 image = "0.25.2"
 log = { version = "*", features = [
     "max_level_debug",

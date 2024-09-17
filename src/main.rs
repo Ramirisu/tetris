@@ -4,6 +4,10 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 
+#[macro_use]
+extern crate num_derive;
+extern crate num_traits;
+
 mod app_state;
 mod audio;
 mod controller;
@@ -12,6 +16,7 @@ mod game_option_menu;
 mod inputs;
 mod level_menu;
 mod logo;
+mod scale;
 mod splash;
 mod utility;
 
@@ -24,8 +29,11 @@ fn main() {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resolution: WindowResolution::new(1280.0, 960.0),
+                        resolution: WindowResolution::new(1920.0, 1080.0)
+                            .with_scale_factor_override(1.0),
                         present_mode: PresentMode::AutoNoVsync,
+                        position: WindowPosition::Centered(MonitorSelection::Primary),
+                        fit_canvas_to_parent: true,
                         title: "TETRIS".into(),
                         ..default()
                     }),
@@ -53,6 +61,7 @@ fn main() {
             game_option_menu::plugin::setup,
             level_menu::plugin::setup,
             game::plugin::setup,
+            scale::plugin::setup,
         ))
         .run();
 }

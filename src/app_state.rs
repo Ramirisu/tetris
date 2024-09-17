@@ -7,4 +7,5 @@ pub enum AppState {
     GameModeMenu,
     LevelMenu,
     Game,
+    ChangeScale,
 }
