@@ -3,7 +3,7 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 use crate::{
     app_state::AppState,
     controller::Controller,
-    inputs::{ControllerType, PlayerInputs},
+    inputs::{ControllerMapping, PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
 };
@@ -99,11 +99,11 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
     controller: Res<Controller>,
-    controller_type: Res<ControllerType>,
+    controller_mapping: Res<ControllerMapping>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
     if player_inputs.start {
         app_state.set(AppState::GameModeMenu);

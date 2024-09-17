@@ -29,7 +29,7 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
 ## Keybindings
 
-| Menu       | In Game                   | Keyboard |   Controller: Type A   |   Controller: Type B   |
+| Menu       | In Game                   | Keyboard | Controller: Mapping A  | Controller: Mapping B  |
 | :--------- | :------------------------ | :------: | :--------------------: | :--------------------: |
 | Move Up    |                           |    ↑     |           ↑            |           ↑            |
 | Move Down  | Soft Drop                 |    ↓     |           ↓            |           ↓            |

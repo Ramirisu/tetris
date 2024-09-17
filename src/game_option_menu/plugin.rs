@@ -5,7 +5,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::{drop_speed::DropSpeed, transition::Transition},
-    inputs::{ControllerType, PlayerInputs},
+    inputs::{ControllerMapping, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
     scale::plugin::ScaleFactor,
@@ -49,7 +49,7 @@ enum GameOptionMenuSelection {
     Transition,
     Linecap,
     DropSpeed,
-    ControllerType,
+    ControllerMapping,
     BlankLine2,
     VideoCategory,
     BlankLine3,
@@ -72,7 +72,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::Transition,
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::DropSpeed,
-            GameOptionMenuSelection::ControllerType,
+            GameOptionMenuSelection::ControllerMapping,
             GameOptionMenuSelection::BlankLine2,
             GameOptionMenuSelection::VideoCategory,
             GameOptionMenuSelection::BlankLine3,
@@ -206,7 +206,7 @@ fn setup_screen(
 fn update_ui_system(
     mut query: Query<(&mut Text, &GameOptionEntityMarker)>,
     game_option_menu_data: Res<GameOptionMenuData>,
-    controller_type: Res<ControllerType>,
+    controller_mapping: Res<ControllerMapping>,
     scale_factor: Res<ScaleFactor>,
 ) {
     query.iter_mut().for_each(|(mut text, marker)| {
@@ -216,14 +216,14 @@ fn update_ui_system(
         }
         let fname = |name, kind: NameKind| -> String {
             match kind {
-                NameKind::Category => format!("{:23}", name),
+                NameKind::Category => format!("{:25} ", name),
                 NameKind::Option => {
                     let s = if marker.0 == game_option_menu_data.selection {
                         ">>"
                     } else {
                         ""
                     };
-                    format!("{:>4} {:18}", s, name)
+                    format!("{:>4} {:20} ", s, name)
                 }
             }
         };
@@ -276,11 +276,15 @@ fn update_ui_system(
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
-            GameOptionMenuSelection::ControllerType => {
-                text.sections[0].value = fname("CONTROLLER TYPE", NameKind::Option);
-                match *controller_type {
-                    ControllerType::TypeA => text.sections[1].value = fopt("TYPE A", false, true),
-                    ControllerType::TypeB => text.sections[1].value = fopt("TYPE B", true, false),
+            GameOptionMenuSelection::ControllerMapping => {
+                text.sections[0].value = fname("CONTROLLER MAPPING", NameKind::Option);
+                match *controller_mapping {
+                    ControllerMapping::MappingA => {
+                        text.sections[1].value = fopt("MAPPING A", false, true)
+                    }
+                    ControllerMapping::MappingB => {
+                        text.sections[1].value = fopt("MAPPING B", true, false)
+                    }
                 };
             }
             GameOptionMenuSelection::BlankLine2 => {
@@ -330,7 +334,7 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<GamepadButton>>,
     controller: Res<Controller>,
-    mut controller_type: ResMut<ControllerType>,
+    mut controller_mapping: ResMut<ControllerMapping>,
     mut game_option_menu_data: ResMut<GameOptionMenuData>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut app_state: ResMut<NextState<AppState>>,
@@ -339,7 +343,7 @@ fn handle_input_system(
     #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
     if player_inputs.soft_reset {
         e_play_sound.send(PlaySoundEvent::StartGame);
@@ -368,7 +372,7 @@ fn handle_input_system(
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
+                    game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
                 }
                 selection_changed = true;
             } else if player_inputs.down.0 {
@@ -439,7 +443,7 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
                 selection_changed = true;
             }
             if player_inputs.right.0 {
@@ -450,7 +454,7 @@ fn handle_input_system(
                 option_changed = true;
             }
         }
-        GameOptionMenuSelection::ControllerType => {
+        GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.up.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
@@ -459,10 +463,10 @@ fn handle_input_system(
                 selection_changed = true;
             }
             if player_inputs.right.0 {
-                *controller_type = ControllerType::TypeB;
+                *controller_mapping = ControllerMapping::MappingB;
                 option_changed = true;
             } else if player_inputs.left.0 {
-                *controller_type = ControllerType::TypeA;
+                *controller_mapping = ControllerMapping::MappingA;
                 option_changed = true;
             }
         }
@@ -471,7 +475,7 @@ fn handle_input_system(
         GameOptionMenuSelection::BlankLine3 => (),
         GameOptionMenuSelection::ScaleFactor => {
             if player_inputs.up.0 {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerType;
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
                 selection_changed = true;
             } else if player_inputs.down.0 {
                 #[cfg(not(target_arch = "wasm32"))]

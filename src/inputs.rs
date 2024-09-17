@@ -3,14 +3,14 @@ use bevy::prelude::*;
 use crate::controller::Controller;
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(ControllerType::default());
+    app.insert_resource(ControllerMapping::default());
 }
 
 #[derive(Default, Clone, Copy, Resource)]
-pub enum ControllerType {
+pub enum ControllerMapping {
     #[default]
-    TypeA,
-    TypeB,
+    MappingA,
+    MappingB,
 }
 
 #[derive(Clone, Copy)]
@@ -77,11 +77,11 @@ impl PlayerInputs {
     pub fn with_gamepads(
         buttons: &ButtonInput<GamepadButton>,
         controller: &Controller,
-        controller_type: ControllerType,
+        controller_mapping: ControllerMapping,
     ) -> Self {
         let mut inputs = Self::new();
         for gamepad in &controller.gamepads {
-            inputs |= Self::with_gamepad(buttons, *gamepad, controller_type);
+            inputs |= Self::with_gamepad(buttons, *gamepad, controller_mapping);
         }
         inputs
     }
@@ -89,15 +89,15 @@ impl PlayerInputs {
     fn with_gamepad(
         buttons: &ButtonInput<GamepadButton>,
         gamepad: Gamepad,
-        controller_type: ControllerType,
+        controller_mapping: ControllerMapping,
     ) -> Self {
-        match controller_type {
-            ControllerType::TypeA => Self::with_gamepad_type_a(buttons, gamepad),
-            ControllerType::TypeB => Self::with_gamepad_type_b(buttons, gamepad),
+        match controller_mapping {
+            ControllerMapping::MappingA => Self::with_gamepad_mapping_a(buttons, gamepad),
+            ControllerMapping::MappingB => Self::with_gamepad_mapping_b(buttons, gamepad),
         }
     }
 
-    fn with_gamepad_type_a(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+    fn with_gamepad_mapping_a(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
         Self {
             up: (
                 buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadUp)),
@@ -132,7 +132,7 @@ impl PlayerInputs {
         }
     }
 
-    fn with_gamepad_type_b(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+    fn with_gamepad_mapping_b(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
         Self {
             up: (
                 buttons.just_pressed(Self::gamepad_button(gamepad, GamepadButtonType::DPadUp)),

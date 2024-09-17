@@ -9,7 +9,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    inputs::{ControllerType, PlayerInputs},
+    inputs::{ControllerMapping, PlayerInputs},
     utility::{despawn_all, format_hhmmss},
 };
 
@@ -550,7 +550,7 @@ mod state_game_running {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        controller_type: Res<ControllerType>,
+        controller_mapping: Res<ControllerMapping>,
         mut query: ParamSet<(
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
@@ -563,7 +563,7 @@ mod state_game_running {
         game_transform: Res<GameTransform>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
             e_play_sound.send(PlaySoundEvent::StartGame);
@@ -875,14 +875,14 @@ mod state_game_pause {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        controller_type: Res<ControllerType>,
+        controller_mapping: Res<ControllerMapping>,
         mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_state: ResMut<NextState<PlayerState>>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
             e_play_sound.send(PlaySoundEvent::StartGame);
@@ -904,12 +904,12 @@ mod state_game_over {
         keys: Res<ButtonInput<KeyCode>>,
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
-        controller_type: Res<ControllerType>,
+        controller_mapping: Res<ControllerMapping>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_type);
+            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
             e_play_sound.send(PlaySoundEvent::StartGame);
