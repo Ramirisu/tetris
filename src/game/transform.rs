@@ -141,7 +141,7 @@ impl GameTransform {
     pub fn piece_count_translation(&self, index: usize, x: i32, y: i32) -> Vec3 {
         (Vec2::new(x as f32 + 0.5, y as f32) * self.piece_count_square_size()
             + Vec2::new(
-                -self.board_width() - self.square_width(),
+                -self.board_width() - self.square_width() * 2.0,
                 -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
             ))
         .extend(BOARD_LAYER)
@@ -149,7 +149,7 @@ impl GameTransform {
 
     pub fn piece_count_counter_translation(&self, index: usize) -> Vec3 {
         Vec3::new(
-            -self.board_width() + self.square_width() * 2.0,
+            -self.board_width() + self.square_width(),
             -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
             BOARD_LAYER,
         )
