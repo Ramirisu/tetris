@@ -344,7 +344,10 @@ fn update_ui_system(
                         text.sections[1].value = fopt("WINDOWED", false, true);
                     }
                     WindowMode::BorderlessFullscreen => {
-                        text.sections[1].value = fopt("BORDERLESS", true, false);
+                        text.sections[1].value = fopt("BORDERLESS", true, true);
+                    }
+                    WindowMode::Fullscreen => {
+                        text.sections[1].value = fopt("FULLSCREEN", true, false);
                     }
                     _ => (),
                 };
@@ -560,8 +563,17 @@ fn handle_input_system(
                     }
                 }
                 WindowMode::BorderlessFullscreen => {
-                    if player_inputs.left.0 {
+                    if player_inputs.right.0 {
+                        game_option_menu_data.window_mode = WindowMode::Fullscreen;
+                        window_mode_changed = true;
+                    } else if player_inputs.left.0 {
                         game_option_menu_data.window_mode = WindowMode::Windowed;
+                        window_mode_changed = true;
+                    }
+                }
+                WindowMode::Fullscreen => {
+                    if player_inputs.left.0 {
+                        game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
                         window_mode_changed = true;
                     }
                 }
