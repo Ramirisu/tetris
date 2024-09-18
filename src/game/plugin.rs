@@ -39,6 +39,7 @@ pub fn setup(app: &mut App) {
             Update,
             (
                 (
+                    increase_game_stopwatch_system,
                     state_game_running::tick_system,
                     state_game_running::handle_input_system,
                     state_game_running::curr_piece_fall_system,
@@ -46,12 +47,20 @@ pub fn setup(app: &mut App) {
                 )
                     .chain()
                     .run_if(in_state(PlayerState::GameRunning)),
-                (state_game_line_clear::tick_system, update_statistics_system)
+                (
+                    increase_game_stopwatch_system,
+                    state_game_line_clear::tick_system,
+                    update_statistics_system,
+                )
                     .chain()
                     .run_if(in_state(PlayerState::GameLineClear)),
                 state_game_update_assets::update_square_image_assets
                     .run_if(in_state(PlayerState::GameUpdateSquareImageAssets)),
-                state_game_entry_delay::tick_system.run_if(in_state(PlayerState::GameEntryDelay)),
+                (
+                    increase_game_stopwatch_system,
+                    state_game_entry_delay::tick_system,
+                )
+                    .run_if(in_state(PlayerState::GameEntryDelay)),
                 state_game_pause::handle_input_system.run_if(in_state(PlayerState::GamePause)),
                 state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
             )
@@ -473,6 +482,10 @@ fn setup_screen(
         });
 }
 
+fn increase_game_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+    player_data.game_stopwatch.tick(time.delta());
+}
+
 fn update_statistics_system(
     mut query: ParamSet<(
         Query<&mut Text, With<LinesEntityMarker>>,
@@ -540,7 +553,6 @@ mod state_game_running {
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-        player_data.game_stopwatch.tick(time.delta());
         player_data.game_timer.tick(time.delta());
         player_data.press_down_timer.tick(time.delta());
     }
