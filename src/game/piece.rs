@@ -42,7 +42,7 @@ const PIECE_SHAPE_Z: &[[Square; 4]; 2] = &[
     [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
 ];
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum PieceShape {
     T,
     J,
@@ -51,11 +51,17 @@ pub enum PieceShape {
     S,
     L,
     I,
+    #[default]
+    X, // placeholder for the type without a shape
 }
 
 impl PieceShape {
-    pub const fn variant_count() -> usize {
+    pub const fn variant_size() -> usize {
         7
+    }
+
+    pub fn is_placeholder(&self) -> bool {
+        *self == PieceShape::X
     }
 
     pub fn len(&self) -> usize {
@@ -67,11 +73,12 @@ impl PieceShape {
             PieceShape::S => PIECE_SHAPE_S.len(),
             PieceShape::L => PIECE_SHAPE_L.len(),
             PieceShape::I => PIECE_SHAPE_I.len(),
+            PieceShape::X => panic!("PieceShape::X is a placeholder."),
         }
     }
 
     pub fn iter() -> std::slice::Iter<'static, PieceShape> {
-        const SHAPES: [PieceShape; 7] = [
+        const SHAPES: [PieceShape; PieceShape::variant_size() + 1] = [
             PieceShape::T,
             PieceShape::J,
             PieceShape::Z,
@@ -79,6 +86,7 @@ impl PieceShape {
             PieceShape::S,
             PieceShape::L,
             PieceShape::I,
+            PieceShape::X,
         ];
         SHAPES.iter()
     }
@@ -86,7 +94,7 @@ impl PieceShape {
 
 impl From<usize> for PieceShape {
     fn from(value: usize) -> Self {
-        match value % 7 {
+        match value % PieceShape::variant_size() {
             0 => PieceShape::T,
             1 => PieceShape::J,
             2 => PieceShape::Z,
@@ -110,12 +118,16 @@ impl Piece {
     }
 
     pub fn rand() -> Self {
-        Self::new(rand::thread_rng().gen_range(0..7).into())
+        Self::new(
+            rand::thread_rng()
+                .gen_range(0..PieceShape::variant_size())
+                .into(),
+        )
     }
 
     pub fn rand_1h2r(&self) -> Piece {
-        let shape = rand::thread_rng().gen_range(0..8);
-        if shape != 7 && shape != self.shape as usize {
+        let shape = rand::thread_rng().gen_range(0..(PieceShape::variant_size() + 1));
+        if shape != PieceShape::variant_size() && shape != self.shape as usize {
             Self::new(shape.into())
         } else {
             Self::rand()
@@ -135,6 +147,7 @@ impl Piece {
             PieceShape::S => PIECE_SHAPE_S[self.state],
             PieceShape::L => PIECE_SHAPE_L[self.state],
             PieceShape::I => PIECE_SHAPE_I[self.state],
+            PieceShape::X => panic!("PieceShape::X is a placeholder."),
         }
     }
 

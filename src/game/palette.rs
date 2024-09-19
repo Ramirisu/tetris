@@ -26,12 +26,9 @@ pub fn get_square_image(size: SquareImageSize, shape: PieceShape, level: usize) 
         PieceShape::S => SquareImage::new(size, SquarePattern::Z, palette),
         PieceShape::L => SquareImage::new(size, SquarePattern::Y, palette),
         PieceShape::I => SquareImage::new(size, SquarePattern::X, palette),
+        PieceShape::X => SquareImage::new_empty(size),
     }
     .into()
-}
-
-pub fn get_empty_square_image(size: SquareImageSize) -> Image {
-    SquareImage::new_empty(size).into()
 }
 
 fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
