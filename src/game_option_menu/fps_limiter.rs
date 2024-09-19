@@ -6,8 +6,8 @@ use num_traits::FromPrimitive;
 #[derive(Default, Clone, Copy, FromPrimitive, Resource)]
 pub enum FPSLimiter {
     #[default]
-    Auto,
     Unlimited,
+    Auto,
     F60,
     F144,
     F240,
@@ -27,8 +27,8 @@ impl FPSLimiter {
     pub fn get_limiter(&self) -> bevy_framepace::Limiter {
         let ft = |fps| Duration::from_secs_f32(1.0 / fps as f32);
         match self {
-            FPSLimiter::Auto => bevy_framepace::Limiter::Auto,
             FPSLimiter::Unlimited => bevy_framepace::Limiter::Off,
+            FPSLimiter::Auto => bevy_framepace::Limiter::Auto,
             FPSLimiter::F60 => bevy_framepace::Limiter::Manual(ft(60)),
             FPSLimiter::F144 => bevy_framepace::Limiter::Manual(ft(144)),
             FPSLimiter::F240 => bevy_framepace::Limiter::Manual(ft(240)),

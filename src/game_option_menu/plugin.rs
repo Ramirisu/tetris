@@ -15,13 +15,11 @@ use crate::{
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::window::WindowMode;
 
-use super::transform::GameOptionMenuTransform;
-
-#[cfg(not(target_arch = "wasm32"))]
-use super::fps_limiter::FPSLimiter;
+use super::{fps_limiter::FPSLimiter, transform::GameOptionMenuTransform};
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(GameOptionMenuTransform::default())
+    app.add_systems(Startup, init_framepace_settings)
+        .insert_resource(GameOptionMenuTransform::default())
         .insert_resource(GameOptionMenuData::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
         .add_systems(
@@ -34,6 +32,12 @@ pub fn setup(app: &mut App) {
             OnExit(AppState::GameModeMenu),
             despawn_all::<GameOptionMenuEntityMarker>,
         );
+}
+
+fn init_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::FramepaceSettings>) {
+    *framepace_settins = bevy_framepace::FramepaceSettings {
+        limiter: FPSLimiter::default().get_limiter(),
+    };
 }
 
 #[derive(Component)]
