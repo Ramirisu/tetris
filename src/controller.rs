@@ -13,6 +13,30 @@ pub struct Controller {
     pub gamepads: Vec<Gamepad>,
 }
 
+impl Controller {
+    pub fn insert(&mut self, target: Gamepad) {
+        match self
+            .gamepads
+            .binary_search_by(|gamepad| gamepad.id.cmp(&target.id))
+        {
+            Ok(_) => (),
+            Err(pos) => self.gamepads.insert(pos, target),
+        };
+    }
+
+    pub fn remove(&mut self, target: Gamepad) {
+        match self
+            .gamepads
+            .binary_search_by(|gamepad| gamepad.id.cmp(&target.id))
+        {
+            Ok(pos) => {
+                self.gamepads.remove(pos);
+            }
+            Err(_) => (),
+        };
+    }
+}
+
 fn controller_connection_system(
     mut controller: ResMut<Controller>,
     mut event_reader: EventReader<GamepadEvent>,
@@ -22,26 +46,8 @@ fn controller_connection_system(
             continue;
         };
         match &event.connection {
-            GamepadConnection::Connected(_) => {
-                match controller
-                    .gamepads
-                    .binary_search_by(|gamepad| gamepad.id.cmp(&event.gamepad.id))
-                {
-                    Ok(_) => (),
-                    Err(pos) => controller.gamepads.insert(pos, event.gamepad),
-                };
-            }
-            GamepadConnection::Disconnected => {
-                match controller
-                    .gamepads
-                    .binary_search_by(|gamepad| gamepad.id.cmp(&event.gamepad.id))
-                {
-                    Ok(pos) => {
-                        controller.gamepads.remove(pos);
-                    }
-                    Err(_) => (),
-                };
-            }
+            GamepadConnection::Connected(_) => controller.insert(event.gamepad),
+            GamepadConnection::Disconnected => controller.remove(event.gamepad),
         }
     }
 }
