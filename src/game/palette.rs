@@ -14,7 +14,7 @@ use bevy::{
 };
 use image::{DynamicImage, Rgb32FImage};
 
-use super::piece::PieceShape;
+use super::{level::LEVEL_COUNT, piece::PieceShape};
 
 pub fn get_square_image(size: SquareImageSize, shape: PieceShape, level: usize) -> Image {
     let palette = get_level_palette(level);
@@ -32,7 +32,7 @@ pub fn get_square_image(size: SquareImageSize, shape: PieceShape, level: usize) 
 }
 
 fn get_level_palette(level: usize) -> &'static [Srgba; 4] {
-    match level % 256 {
+    match level % LEVEL_COUNT {
         0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100 | 110 | 120 | 130 | 192 => {
             &[BLACK, WHITE, DODGER_BLUE, BLUE]
         }

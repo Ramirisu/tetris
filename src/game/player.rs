@@ -14,7 +14,6 @@ pub enum PlayerState {
     #[default]
     GameRunning,
     GameLineClear,
-    GameUpdateSquareImageAssets,
     GameEntryDelay,
     GamePause,
     GameOver,
