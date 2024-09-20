@@ -126,7 +126,7 @@ fn unload_square_image_assets(mut commands: Commands) {
 
 fn setup_screen(
     mut commands: Commands,
-    player_data: ResMut<PlayerData>,
+    player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
     game_transform: Res<GameTransform>,
 ) {
