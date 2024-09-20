@@ -9,8 +9,13 @@ use crate::{
 
 pub fn setup(app: &mut App) {
     app.insert_resource(ScaleFactor::default())
-        .add_systems(Startup, init_scale_system)
-        .add_systems(OnEnter(AppState::ChangeScale), change_scale_system);
+        .add_systems(Startup, change_scale_system)
+        .add_systems(
+            Update,
+            (change_scale_system, restore_app_state_system)
+                .chain()
+                .run_if(in_state(AppState::ChangeScale)),
+        );
 }
 
 #[derive(Default, Clone, Copy, FromPrimitive, Resource)]
@@ -49,7 +54,7 @@ impl ScaleFactor {
     }
 }
 
-fn init_scale_system(
+fn change_scale_system(
     scale_factor: Res<ScaleFactor>,
     mut splash_transform: ResMut<SplashTransform>,
     mut game_option_menu_transform: ResMut<GameOptionMenuTransform>,
@@ -62,18 +67,6 @@ fn init_scale_system(
     *game_transform = GameTransform::new(scale_factor.mul());
 }
 
-fn change_scale_system(
-    scale_factor: Res<ScaleFactor>,
-    mut splash_transform: ResMut<SplashTransform>,
-    mut game_option_menu_transform: ResMut<GameOptionMenuTransform>,
-    mut level_menu_transform: ResMut<LevelMenuTransform>,
-    mut game_transform: ResMut<GameTransform>,
-    mut app_state: ResMut<NextState<AppState>>,
-) {
-    *splash_transform = SplashTransform::new(scale_factor.mul());
-    *game_option_menu_transform = GameOptionMenuTransform::new(scale_factor.mul());
-    *level_menu_transform = LevelMenuTransform::new(scale_factor.mul());
-    *game_transform = GameTransform::new(scale_factor.mul());
-
+fn restore_app_state_system(mut app_state: ResMut<NextState<AppState>>) {
     app_state.set(AppState::GameModeMenu);
 }
