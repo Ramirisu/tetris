@@ -13,6 +13,7 @@ mod audio;
 mod controller;
 mod game;
 mod game_option_menu;
+mod init;
 mod inputs;
 mod level_menu;
 mod logo;
@@ -29,8 +30,14 @@ fn main() {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resolution: WindowResolution::new(1440.0, 1080.0)
+                        resolution: WindowResolution::new(960.0, 720.0)
                             .with_scale_factor_override(1.0),
+                        resize_constraints: WindowResizeConstraints {
+                            min_width: 960.0,
+                            min_height: 720.0,
+                            max_width: f32::INFINITY,
+                            max_height: f32::INFINITY,
+                        },
                         present_mode: PresentMode::AutoNoVsync,
                         position: WindowPosition::Centered(MonitorSelection::Primary),
                         cursor: Cursor {
@@ -53,19 +60,19 @@ fn main() {
                 },
             },
         })
-        .add_plugins(bevy_framepace::FramepacePlugin)
         .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
         .add_systems(Startup, setup_camera)
         .add_plugins((
             controller::setup,
             inputs::setup,
+            scale::plugin::setup,
             audio::plugin::setup,
+            init::plugin::setup,
             splash::plugin::setup,
             game_option_menu::plugin::setup,
             level_menu::plugin::setup,
             game::plugin::setup,
-            scale::plugin::setup,
         ))
         .run();
 }

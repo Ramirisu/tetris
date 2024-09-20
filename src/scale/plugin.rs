@@ -9,13 +9,14 @@ use crate::{
 
 pub fn setup(app: &mut App) {
     app.insert_resource(ScaleFactor::default())
+        .add_systems(Startup, init_scale_system)
         .add_systems(OnEnter(AppState::ChangeScale), change_scale_system);
 }
 
 #[derive(Default, Clone, Copy, FromPrimitive, Resource)]
 pub enum ScaleFactor {
-    S720 = 0,
     #[default]
+    S720 = 0,
     S1080,
     S1440,
     S1800,
@@ -46,6 +47,19 @@ impl ScaleFactor {
             ScaleFactor::S4320 => 4320.0 / base,
         }
     }
+}
+
+fn init_scale_system(
+    scale_factor: Res<ScaleFactor>,
+    mut splash_transform: ResMut<SplashTransform>,
+    mut game_option_menu_transform: ResMut<GameOptionMenuTransform>,
+    mut level_menu_transform: ResMut<LevelMenuTransform>,
+    mut game_transform: ResMut<GameTransform>,
+) {
+    *splash_transform = SplashTransform::new(scale_factor.mul());
+    *game_option_menu_transform = GameOptionMenuTransform::new(scale_factor.mul());
+    *level_menu_transform = LevelMenuTransform::new(scale_factor.mul());
+    *game_transform = GameTransform::new(scale_factor.mul());
 }
 
 fn change_scale_system(

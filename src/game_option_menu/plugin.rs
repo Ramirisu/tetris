@@ -18,7 +18,8 @@ use bevy::window::WindowMode;
 use super::{fps_limiter::FPSLimiter, transform::GameOptionMenuTransform};
 
 pub fn setup(app: &mut App) {
-    app.add_systems(Startup, init_framepace_settings)
+    app.add_plugins(bevy_framepace::FramepacePlugin)
+        .add_systems(Startup, init_framepace_settings)
         .insert_resource(GameOptionMenuTransform::default())
         .insert_resource(GameOptionMenuData::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
