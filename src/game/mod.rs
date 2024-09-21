@@ -4,6 +4,7 @@ pub mod drop_speed;
 pub mod game;
 mod level;
 pub mod linecap;
+pub mod next_piece_hint;
 pub mod palette;
 pub mod piece;
 pub mod player;

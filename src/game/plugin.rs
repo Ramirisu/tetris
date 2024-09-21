@@ -451,6 +451,7 @@ fn setup_screen(
                         SquareImageSize::Normal,
                         player_data.board.get_next_piece().shape(),
                     ),
+                    visibility: player_data.next_piece_hint.into(),
                     ..default()
                 },
                 GameEntityMarker,

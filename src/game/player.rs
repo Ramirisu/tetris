@@ -3,6 +3,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use super::{
     board::Board,
     game::GameConfig,
+    next_piece_hint::NextPieceHint,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
 };
@@ -19,6 +20,7 @@ pub enum PlayerState {
 
 #[derive(Resource)]
 pub struct PlayerData {
+    pub next_piece_hint: NextPieceHint,
     pub board: Board,
     pub game_stopwatch: Stopwatch,
     pub game_timer: GameTimer,
@@ -36,6 +38,7 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
         Self {
+            next_piece_hint: config.next_piece_hint,
             board: Board::new(config.start_level, config.transition),
             game_stopwatch: Stopwatch::new(),
             game_timer: GameTimer::default(),

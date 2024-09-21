@@ -1,4 +1,6 @@
-use super::{drop_speed::DropSpeed, linecap::Linecap, transition::Transition};
+use super::{
+    drop_speed::DropSpeed, linecap::Linecap, next_piece_hint::NextPieceHint, transition::Transition,
+};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct GameConfig {
@@ -6,6 +8,7 @@ pub struct GameConfig {
     pub transition: Transition,
     pub linecap: Linecap,
     pub drop_speed: DropSpeed,
+    pub next_piece_hint: NextPieceHint,
 }
 
 impl Default for GameConfig {
@@ -15,6 +18,7 @@ impl Default for GameConfig {
             linecap: Linecap::default(),
             transition: Transition::default(),
             drop_speed: DropSpeed::default(),
+            next_piece_hint: NextPieceHint::default(),
         }
     }
 }

@@ -4,7 +4,10 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::{drop_speed::DropSpeed, game::GameConfig, linecap::Linecap, transition::Transition},
+    game::{
+        drop_speed::DropSpeed, game::GameConfig, linecap::Linecap, next_piece_hint::NextPieceHint,
+        transition::Transition,
+    },
     inputs::{ControllerMapping, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -57,6 +60,7 @@ enum GameOptionMenuSelection {
     Transition,
     Linecap,
     DropSpeed,
+    NextPieceHint,
     ControllerMapping,
     BlankLine2,
     VideoCategory,
@@ -71,9 +75,9 @@ enum GameOptionMenuSelection {
 impl GameOptionMenuSelection {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 14];
+        type ArrayType = [GameOptionMenuSelection; 15];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuSelection; 12];
+        type ArrayType = [GameOptionMenuSelection; 13];
         const STATES: ArrayType = [
             GameOptionMenuSelection::Tetris,
             GameOptionMenuSelection::BlankLine0,
@@ -82,6 +86,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::Transition,
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::DropSpeed,
+            GameOptionMenuSelection::NextPieceHint,
             GameOptionMenuSelection::ControllerMapping,
             GameOptionMenuSelection::BlankLine2,
             GameOptionMenuSelection::VideoCategory,
@@ -296,6 +301,13 @@ fn update_ui_system(
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
             }
+            GameOptionMenuSelection::NextPieceHint => {
+                text.sections[0].value = fname("NEXT PIECE HINT", NameKind::Option);
+                match game_option_menu_data.game_config.next_piece_hint {
+                    NextPieceHint::Off => text.sections[1].value = fopt("OFF", false, true),
+                    NextPieceHint::One => text.sections[1].value = fopt("CLASSIC", true, false),
+                }
+            }
             GameOptionMenuSelection::ControllerMapping => {
                 text.sections[0].value = fname("CONTROLLER MAPPING", NameKind::Option);
                 match *controller_mapping {
@@ -440,11 +452,11 @@ fn handle_input_system(
 
             if player_inputs.right.0 {
                 if let Some(_) = game_option_menu_data.game_config.transition.enum_next() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             } else if player_inputs.left.0 {
                 if let Some(_) = game_option_menu_data.game_config.transition.enum_prev() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             }
         }
@@ -459,11 +471,11 @@ fn handle_input_system(
 
             if player_inputs.right.0 {
                 if let Some(_) = game_option_menu_data.game_config.linecap.enum_next() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             } else if player_inputs.left.0 {
                 if let Some(_) = game_option_menu_data.game_config.linecap.enum_prev() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             }
         }
@@ -472,23 +484,50 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
+                game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
                 selection_changed = true;
             }
 
             if player_inputs.right.0 {
                 if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_next() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             } else if player_inputs.left.0 {
                 if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_prev() {
-                    scale_changed = true;
+                    option_changed = true;
+                }
+            }
+        }
+        GameOptionMenuSelection::NextPieceHint => {
+            if player_inputs.up.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                selection_changed = true;
+            } else if player_inputs.down.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
+                selection_changed = true;
+            }
+
+            if player_inputs.right.0 {
+                if let Some(_) = game_option_menu_data
+                    .game_config
+                    .next_piece_hint
+                    .enum_next()
+                {
+                    option_changed = true;
+                }
+            } else if player_inputs.left.0 {
+                if let Some(_) = game_option_menu_data
+                    .game_config
+                    .next_piece_hint
+                    .enum_prev()
+                {
+                    option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.up.0 {
-                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
                 selection_changed = true;
             } else if player_inputs.down.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
@@ -496,11 +535,11 @@ fn handle_input_system(
             }
             if player_inputs.right.0 {
                 if let Some(_) = controller_mapping.enum_next() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             } else if player_inputs.left.0 {
                 if let Some(_) = controller_mapping.enum_prev() {
-                    scale_changed = true;
+                    option_changed = true;
                 }
             }
         }
