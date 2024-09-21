@@ -224,7 +224,16 @@ fn update_ui_system(
     game_option_menu_data: Res<GameOptionMenuData>,
     controller_mapping: Res<ControllerMapping>,
     scale_factor: Res<ScaleFactor>,
+    app_state: Res<State<AppState>>,
 ) {
+    if !app_state.is_changed()
+        && !game_option_menu_data.is_changed()
+        && !controller_mapping.is_changed()
+        && !scale_factor.is_changed()
+    {
+        return;
+    }
+
     query.iter_mut().for_each(|(mut text, marker)| {
         enum NameKind {
             Category,
