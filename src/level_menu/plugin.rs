@@ -7,7 +7,10 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::player::{PlayerConfig, PlayerData, PlayerState},
+    game::{
+        game::GameConfig,
+        player::{PlayerData, PlayerState},
+    },
     inputs::{ControllerMapping, PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
@@ -42,14 +45,14 @@ struct LevelButtonEntityMarker {
 #[derive(Resource)]
 pub struct LevelMenuData {
     selected_level: (i32, i32),
-    pub config: PlayerConfig,
+    pub game_config: GameConfig,
 }
 
 impl LevelMenuData {
     pub fn new() -> Self {
         Self {
             selected_level: (0, 0),
-            config: PlayerConfig::default(),
+            game_config: GameConfig::default(),
         }
     }
 }
@@ -303,9 +306,9 @@ fn handle_input_system(
         if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
             [level_menu_data.selected_level.0 as usize]
         {
-            level_menu_data.config.start_level = level;
+            level_menu_data.game_config.start_level = level;
 
-            *player_data = PlayerData::new(level_menu_data.config);
+            *player_data = PlayerData::new(level_menu_data.game_config);
             e_play_sound.send(PlaySoundEvent::StartGame);
             player_state.set(PlayerState::GameRunning);
             app_state.set(AppState::Game);

@@ -2,11 +2,9 @@ use bevy::{prelude::*, time::Stopwatch};
 
 use super::{
     board::Board,
-    drop_speed::DropSpeed,
-    linecap::Linecap,
+    game::GameConfig,
     tick::{EntryDelayTick, FallTick, LineClearTick},
     timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
-    transition::Transition,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -17,25 +15,6 @@ pub enum PlayerState {
     GameEntryDelay,
     GamePause,
     GameOver,
-}
-
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub struct PlayerConfig {
-    pub start_level: usize,
-    pub transition: Transition,
-    pub linecap: Linecap,
-    pub drop_speed: DropSpeed,
-}
-
-impl Default for PlayerConfig {
-    fn default() -> Self {
-        Self {
-            start_level: 0,
-            linecap: Linecap::default(),
-            transition: Transition::default(),
-            drop_speed: DropSpeed::default(),
-        }
-    }
 }
 
 #[derive(Resource)]
@@ -55,7 +34,7 @@ pub struct PlayerData {
 }
 
 impl PlayerData {
-    pub fn new(config: PlayerConfig) -> Self {
+    pub fn new(config: GameConfig) -> Self {
         Self {
             board: Board::new(config.start_level, config.transition),
             game_stopwatch: Stopwatch::new(),
@@ -75,7 +54,7 @@ impl PlayerData {
 
 impl Default for PlayerData {
     fn default() -> Self {
-        Self::new(PlayerConfig::default())
+        Self::new(GameConfig::default())
     }
 }
 

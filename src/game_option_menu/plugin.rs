@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::{drop_speed::DropSpeed, linecap::Linecap, transition::Transition},
+    game::{drop_speed::DropSpeed, game::GameConfig, linecap::Linecap, transition::Transition},
     inputs::{ControllerMapping, PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -99,9 +99,7 @@ impl GameOptionMenuSelection {
 #[derive(Resource)]
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
-    transition: Transition,
-    linecap: Linecap,
-    drop_speed: DropSpeed,
+    game_config: GameConfig,
     #[cfg(not(target_arch = "wasm32"))]
     fps_limiter: FPSLimiter,
     #[cfg(not(target_arch = "wasm32"))]
@@ -112,9 +110,7 @@ impl GameOptionMenuData {
     pub fn new() -> Self {
         Self {
             selection: GameOptionMenuSelection::default(),
-            transition: Transition::default(),
-            linecap: Linecap::default(),
-            drop_speed: DropSpeed::default(),
+            game_config: GameConfig::default(),
             #[cfg(not(target_arch = "wasm32"))]
             fps_limiter: FPSLimiter::default(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -276,7 +272,7 @@ fn update_ui_system(
             }
             GameOptionMenuSelection::Transition => {
                 text.sections[0].value = fname("TRANSITION", NameKind::Option);
-                match game_option_menu_data.transition {
+                match game_option_menu_data.game_config.transition {
                     Transition::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
                     Transition::Every10Lines => {
                         text.sections[1].value = fopt("10 LINES", true, true)
@@ -288,14 +284,14 @@ fn update_ui_system(
             }
             GameOptionMenuSelection::Linecap => {
                 text.sections[0].value = fname("LINECAP", NameKind::Option);
-                match game_option_menu_data.linecap {
+                match game_option_menu_data.game_config.linecap {
                     Linecap::None => text.sections[1].value = fopt("OFF", false, true),
                     Linecap::KillScreenX2 => text.sections[1].value = fopt("ON", true, false),
                 }
             }
             GameOptionMenuSelection::DropSpeed => {
                 text.sections[0].value = fname("DROPSPEED", NameKind::Option);
-                match game_option_menu_data.drop_speed {
+                match game_option_menu_data.game_config.drop_speed {
                     DropSpeed::Level => text.sections[1].value = fopt("LEVEL", false, true),
                     DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
                 };
@@ -425,9 +421,7 @@ fn handle_input_system(
                 selection_changed = true;
             }
             if player_inputs.start {
-                level_menu_data.config.transition = game_option_menu_data.transition;
-                level_menu_data.config.linecap = game_option_menu_data.linecap;
-                level_menu_data.config.drop_speed = game_option_menu_data.drop_speed;
+                level_menu_data.game_config = game_option_menu_data.game_config;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
@@ -445,11 +439,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.0 {
-                if let Some(_) = game_option_menu_data.transition.enum_next() {
+                if let Some(_) = game_option_menu_data.game_config.transition.enum_next() {
                     scale_changed = true;
                 }
             } else if player_inputs.left.0 {
-                if let Some(_) = game_option_menu_data.transition.enum_prev() {
+                if let Some(_) = game_option_menu_data.game_config.transition.enum_prev() {
                     scale_changed = true;
                 }
             }
@@ -464,11 +458,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.0 {
-                if let Some(_) = game_option_menu_data.linecap.enum_next() {
+                if let Some(_) = game_option_menu_data.game_config.linecap.enum_next() {
                     scale_changed = true;
                 }
             } else if player_inputs.left.0 {
-                if let Some(_) = game_option_menu_data.linecap.enum_prev() {
+                if let Some(_) = game_option_menu_data.game_config.linecap.enum_prev() {
                     scale_changed = true;
                 }
             }
@@ -483,11 +477,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.0 {
-                if let Some(_) = game_option_menu_data.drop_speed.enum_next() {
+                if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_next() {
                     scale_changed = true;
                 }
             } else if player_inputs.left.0 {
-                if let Some(_) = game_option_menu_data.drop_speed.enum_prev() {
+                if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_prev() {
                     scale_changed = true;
                 }
             }
