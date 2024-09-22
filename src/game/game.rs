@@ -1,6 +1,16 @@
+use bevy::prelude::*;
+
 use super::{
     drop_speed::DropSpeed, linecap::Linecap, next_piece_hint::NextPieceHint, transition::Transition,
 };
+
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
+pub enum GameState {
+    #[default]
+    Running,
+    Pause,
+    Over,
+}
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct GameConfig {

@@ -8,8 +8,8 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::{
-        game::GameConfig,
-        player::{PlayerData, PlayerState},
+        game::{GameConfig, GameState},
+        player::{PlayerData, PlayerPhase},
     },
     inputs::{ControllerMapping, PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -254,7 +254,8 @@ fn handle_input_system(
     mut level_menu_data: ResMut<LevelMenuData>,
     mut e_play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
-    mut player_state: ResMut<NextState<PlayerState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+    mut player_phase: ResMut<NextState<PlayerPhase>>,
     mut player_data: ResMut<PlayerData>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -310,7 +311,8 @@ fn handle_input_system(
 
             *player_data = PlayerData::new(level_menu_data.game_config);
             e_play_sound.send(PlaySoundEvent::StartGame);
-            player_state.set(PlayerState::GameRunning);
+            game_state.set(GameState::Running);
+            player_phase.set(PlayerPhase::Dropping);
             app_state.set(AppState::Game);
         }
     } else if player_inputs.b.0 {

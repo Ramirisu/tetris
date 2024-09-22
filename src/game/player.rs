@@ -9,13 +9,12 @@ use super::{
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
-pub enum PlayerState {
+pub enum PlayerPhase {
     #[default]
-    GameRunning,
-    GameLineClear,
-    GameEntryDelay,
-    GamePause,
-    GameOver,
+    Dropping,
+    LineClear,
+    EntryDelay,
+    Over,
 }
 
 #[derive(Resource)]

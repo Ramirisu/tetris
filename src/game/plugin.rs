@@ -14,17 +14,19 @@ use crate::{
 use super::{
     asset::SquareImageAssets,
     board::Board,
+    game::GameState,
     palette::SquareImageSize,
     piece::{Piece, PieceShape},
-    player::{LineClearPhase, PlayerData, PlayerState},
+    player::{LineClearPhase, PlayerData, PlayerPhase},
     tick::{duration_to_ticks, EntryDelayTick, LineClearTick},
     transform::GameTransform,
 };
 
 pub fn setup(app: &mut App) {
     app.insert_resource(GameTransform::default())
+        .init_state::<GameState>()
         .insert_resource(PlayerData::default())
-        .init_state::<PlayerState>()
+        .init_state::<PlayerPhase>()
         .add_systems(
             OnEnter(AppState::Game),
             (load_square_image_assets, setup_screen).chain(),
@@ -37,28 +39,31 @@ pub fn setup(app: &mut App) {
             Update,
             (
                 (
-                    increase_game_stopwatch_system,
-                    state_game_running::tick_system,
-                    state_game_running::handle_input_system,
-                    state_game_running::curr_piece_fall_system,
-                    update_statistics_system,
+                    (
+                        increase_game_stopwatch_system,
+                        state_game_running::tick_system,
+                        state_game_running::handle_input_system,
+                        state_game_running::curr_piece_fall_system,
+                        update_statistics_system,
+                    )
+                        .chain()
+                        .run_if(in_state(PlayerPhase::Dropping)),
+                    (
+                        increase_game_stopwatch_system,
+                        state_game_line_clear::tick_system,
+                        update_statistics_system,
+                    )
+                        .chain()
+                        .run_if(in_state(PlayerPhase::LineClear)),
+                    (
+                        increase_game_stopwatch_system,
+                        state_game_entry_delay::tick_system,
+                    )
+                        .run_if(in_state(PlayerPhase::EntryDelay)),
                 )
-                    .chain()
-                    .run_if(in_state(PlayerState::GameRunning)),
-                (
-                    increase_game_stopwatch_system,
-                    state_game_line_clear::tick_system,
-                    update_statistics_system,
-                )
-                    .chain()
-                    .run_if(in_state(PlayerState::GameLineClear)),
-                (
-                    increase_game_stopwatch_system,
-                    state_game_entry_delay::tick_system,
-                )
-                    .run_if(in_state(PlayerState::GameEntryDelay)),
-                state_game_pause::handle_input_system.run_if(in_state(PlayerState::GamePause)),
-                state_game_over::handle_input_system.run_if(in_state(PlayerState::GameOver)),
+                    .run_if(in_state(GameState::Running)),
+                state_game_pause::handle_input_system.run_if(in_state(GameState::Pause)),
+                state_game_over::handle_input_system.run_if(in_state(GameState::Over)),
             )
                 .run_if(in_state(AppState::Game)),
         );
@@ -547,7 +552,7 @@ mod state_game_running {
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
-        mut player_state: ResMut<NextState<PlayerState>>,
+        mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
         game_transform: Res<GameTransform>,
     ) {
@@ -562,7 +567,7 @@ mod state_game_running {
 
         if player_inputs.start {
             *query.p1().single_mut() = Visibility::Inherited;
-            player_state.set(PlayerState::GamePause);
+            game_state.set(GameState::Pause);
             return;
         }
 
@@ -659,8 +664,9 @@ mod state_game_running {
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut game_state: ResMut<NextState<GameState>>,
+        mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut player_data: ResMut<PlayerData>,
-        mut player_state: ResMut<NextState<PlayerState>>,
         square_image_assets: Res<SquareImageAssets>,
         game_transform: Res<GameTransform>,
     ) {
@@ -687,7 +693,8 @@ mod state_game_running {
                 });
             } else if !player_data.board.is_curr_position_valid() {
                 e_play_sound.send(PlaySoundEvent::GameOver);
-                player_state.set(PlayerState::GameOver);
+                game_state.set(GameState::Over);
+                player_phase.set(PlayerPhase::Over);
             } else {
                 player_data.can_press_down = false; // keep pressing down will not affect next piece
 
@@ -730,9 +737,9 @@ mod state_game_running {
                     player_data.line_clear_tick = LineClearTick::new((Board::BOARD_COLS + 1) / 2);
                     player_data.line_clear_rows = lines;
                     player_data.line_clear_phase = LineClearPhase::new();
-                    player_state.set(PlayerState::GameLineClear);
+                    player_phase.set(PlayerPhase::LineClear);
                 } else {
-                    player_state.set(PlayerState::GameEntryDelay);
+                    player_phase.set(PlayerPhase::EntryDelay);
                 }
             }
         }
@@ -747,7 +754,7 @@ mod state_game_line_clear {
         mut query: Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
-        mut player_state: ResMut<NextState<PlayerState>>,
+        mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut square_image_assets: ResMut<SquareImageAssets>,
         mut image_assets: ResMut<Assets<Image>>,
     ) {
@@ -773,7 +780,7 @@ mod state_game_line_clear {
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
                 }
-                player_state.set(PlayerState::GameEntryDelay);
+                player_phase.set(PlayerPhase::EntryDelay);
             }
         }
     }
@@ -791,7 +798,7 @@ mod state_game_entry_delay {
             Query<(&mut Handle<Image>, &PieceCountEntityMarker)>,
         )>,
         mut player_data: ResMut<PlayerData>,
-        mut player_state: ResMut<NextState<PlayerState>>,
+        mut player_phase: ResMut<NextState<PlayerPhase>>,
         square_image_assets: Res<SquareImageAssets>,
         game_transform: Res<GameTransform>,
     ) {
@@ -835,7 +842,7 @@ mod state_game_entry_delay {
                 *image = square_image_assets.get_image(SquareImageSize::Small, shape.0);
             });
 
-            player_state.set(PlayerState::GameRunning);
+            player_phase.set(PlayerPhase::Dropping);
         }
     }
 }
@@ -850,7 +857,7 @@ mod state_game_pause {
         controller_mapping: Res<ControllerMapping>,
         mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
-        mut player_state: ResMut<NextState<PlayerState>>,
+        mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -864,7 +871,7 @@ mod state_game_pause {
 
         if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
-            player_state.set(PlayerState::GameRunning);
+            player_phase.set(PlayerPhase::Dropping);
         }
     }
 }
