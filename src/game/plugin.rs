@@ -281,7 +281,7 @@ fn setup_screen(
                     ..default()
                 }),
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 24.0,
+                    font_size: game_transform.scale() * 36.0,
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -334,14 +334,22 @@ fn setup_screen(
     ));
     commands.spawn((
         Text2dBundle {
-            text: Text::from_section(
-                "",
-                TextStyle {
+            text: Text::from_sections([
+                TextSection {
+                    value: "TIME ".into(),
+                    style: TextStyle {
+                        font_size: game_transform.scale() * 36.0,
+                        color: WHITE.into(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextSection::from_style(TextStyle {
                     font_size: game_transform.scale() * 36.0,
                     color: WHITE.into(),
                     ..default()
-                },
-            ),
+                }),
+            ]),
             transform: Transform::from_translation(game_transform.game_stopwatch_translation()),
             ..default()
         },
@@ -493,7 +501,7 @@ fn update_statistics_system(
     }
     if let Ok(mut text) = query.p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());
-        text.sections[2].value = format!(" {:02}", player_data.board.start_level());
+        text.sections[2].value = format!(" ({:02})", player_data.board.start_level());
     }
     if let Ok(mut text) = query.p3().get_single_mut() {
         text.sections[0].value = format!("BRN {:4}\n", player_data.board.burned_lines());
@@ -529,7 +537,7 @@ fn update_statistics_system(
         }
     }
     if let Ok(mut text) = query.p5().get_single_mut() {
-        text.sections[0].value = format_hhmmss(player_data.game_stopwatch.elapsed());
+        text.sections[1].value = format_hhmmss(player_data.game_stopwatch.elapsed());
     }
     for (mut text, piece) in query.p6().iter_mut() {
         text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));

@@ -90,8 +90,24 @@ impl GameTransform {
         Vec3::new(self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
     }
 
+    pub fn das_translation(&self) -> Vec3 {
+        Vec3::new(
+            self.board_width() * 0.8,
+            -self.square_height() * 6.0,
+            BOARD_LAYER,
+        )
+    }
+
     pub fn level_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.square_height() * 6.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), -self.square_height() * 8.0, BOARD_LAYER)
+    }
+
+    pub fn game_stopwatch_translation(&self) -> Vec3 {
+        Vec3::new(
+            self.board_width(),
+            -self.square_height() * 10.0,
+            BOARD_LAYER,
+        )
     }
 
     fn next_piece_translation_offset(&self) -> Vec2 {
@@ -125,18 +141,6 @@ impl GameTransform {
 
     pub fn statistics_translation(&self) -> Vec3 {
         Vec3::new(-self.board_width(), self.square_height() * 3.0, BOARD_LAYER)
-    }
-
-    pub fn das_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.square_height() * 8.0, BOARD_LAYER)
-    }
-
-    pub fn game_stopwatch_translation(&self) -> Vec3 {
-        Vec3::new(
-            self.board_width(),
-            -self.square_height() * 10.0,
-            BOARD_LAYER,
-        )
     }
 
     pub fn piece_count_square_size(&self) -> Vec2 {
