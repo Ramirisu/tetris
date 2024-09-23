@@ -1,161 +1,351 @@
-use rand::Rng;
+use num_traits::FromPrimitive;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub i32, pub i32);
 
-const PIECE_SHAPE_T: &[[Square; 4]; 4] = &[
-    [Square(0, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
-    [Square(0, -1), Square(-1, 0), Square(0, 0), Square(0, 1)],
-    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(0, 1)],
-    [Square(0, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
-];
+impl Square {
+    pub fn to_coordinate(&self, x: i32, y: i32) -> (i32, i32) {
+        (self.0 + x, self.1 + y)
+    }
+}
 
-const PIECE_SHAPE_I: &[[Square; 4]; 2] = &[
-    [Square(-2, 0), Square(-1, 0), Square(0, 0), Square(1, 0)],
-    [Square(0, -1), Square(0, 0), Square(0, 1), Square(0, 2)],
-];
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceT {
+    #[default]
+    T0,
+    T1,
+    T2,
+    T3,
+}
 
-const PIECE_SHAPE_J: &[[Square; 4]; 4] = &[
-    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, -1)],
-    [Square(-1, -1), Square(0, -1), Square(0, 0), Square(0, 1)],
-    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(-1, 1)],
-    [Square(0, -1), Square(0, 0), Square(0, 1), Square(1, 1)],
-];
+impl PieceT {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceT::T0 => [Square(0, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
+            PieceT::T1 => [Square(0, -1), Square(-1, 0), Square(0, 0), Square(0, 1)],
+            PieceT::T2 => [Square(-1, 0), Square(0, 0), Square(1, 0), Square(0, 1)],
+            PieceT::T3 => [Square(0, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
+        }
+    }
 
-const PIECE_SHAPE_L: &[[Square; 4]; 4] = &[
-    [Square(-1, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
-    [Square(0, -1), Square(0, 0), Square(-1, 1), Square(0, 1)],
-    [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, 1)],
-    [Square(0, -1), Square(1, -1), Square(0, 0), Square(0, 1)],
-];
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceT::T0,
+        };
+    }
 
-const PIECE_SHAPE_O: &[[Square; 4]; 1] =
-    &[[Square(-1, -1), Square(0, -1), Square(-1, 0), Square(0, 0)]];
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceT::T3,
+        };
+    }
+}
 
-const PIECE_SHAPE_S: &[[Square; 4]; 2] = &[
-    [Square(-1, -1), Square(0, -1), Square(0, 0), Square(1, 0)],
-    [Square(1, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
-];
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceJ {
+    #[default]
+    J0,
+    J1,
+    J2,
+    J3,
+}
 
-const PIECE_SHAPE_Z: &[[Square; 4]; 2] = &[
-    [Square(0, -1), Square(1, -1), Square(-1, 0), Square(0, 0)],
-    [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
-];
+impl PieceJ {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceJ::J0 => [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, -1)],
+            PieceJ::J1 => [Square(-1, -1), Square(0, -1), Square(0, 0), Square(0, 1)],
+            PieceJ::J2 => [Square(-1, 0), Square(0, 0), Square(1, 0), Square(-1, 1)],
+            PieceJ::J3 => [Square(0, -1), Square(0, 0), Square(0, 1), Square(1, 1)],
+        }
+    }
+
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceJ::J0,
+        };
+    }
+
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceJ::J3,
+        };
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceZ {
+    #[default]
+    Z0,
+    Z1,
+}
+
+impl PieceZ {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceZ::Z0 => [Square(0, -1), Square(1, -1), Square(-1, 0), Square(0, 0)],
+            PieceZ::Z1 => [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
+        }
+    }
+
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceZ::Z0,
+        };
+    }
+
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceZ::Z1,
+        };
+    }
+}
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
-pub enum PieceShape {
-    T,
-    J,
-    Z,
-    O,
-    S,
-    L,
-    I,
+pub enum PieceO {
+    #[default]
+    O0,
+}
+
+impl PieceO {
+    pub fn to_squares(&self) -> [Square; 4] {
+        [Square(-1, -1), Square(0, -1), Square(-1, 0), Square(0, 0)]
+    }
+
+    pub fn rotate_clockwise(&mut self) {}
+
+    pub fn rotate_counterclockwise(&mut self) {}
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceS {
+    #[default]
+    S0,
+    S1,
+}
+
+impl PieceS {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceS::S0 => [Square(-1, -1), Square(0, -1), Square(0, 0), Square(1, 0)],
+            PieceS::S1 => [Square(1, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
+        }
+    }
+
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceS::S0,
+        };
+    }
+
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceS::S1,
+        };
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceL {
+    #[default]
+    L0,
+    L1,
+    L2,
+    L3,
+}
+
+impl PieceL {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceL::L0 => [Square(-1, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
+            PieceL::L1 => [Square(0, -1), Square(0, 0), Square(-1, 1), Square(0, 1)],
+            PieceL::L2 => [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, 1)],
+            PieceL::L3 => [Square(0, -1), Square(1, -1), Square(0, 0), Square(0, 1)],
+        }
+    }
+
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceL::L0,
+        };
+    }
+
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceL::L3,
+        };
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+pub enum PieceI {
+    #[default]
+    I0,
+    I1,
+}
+
+impl PieceI {
+    pub fn to_squares(&self) -> [Square; 4] {
+        match self {
+            PieceI::I0 => [Square(-2, 0), Square(-1, 0), Square(0, 0), Square(1, 0)],
+            PieceI::I1 => [Square(0, -1), Square(0, 0), Square(0, 1), Square(0, 2)],
+        }
+    }
+
+    pub fn rotate_clockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 + 1) {
+            Some(p) => *self = p,
+            None => *self = PieceI::I0,
+        };
+    }
+
+    pub fn rotate_counterclockwise(&mut self) {
+        match FromPrimitive::from_i8(*self as i8 - 1) {
+            Some(p) => *self = p,
+            None => *self = PieceI::I1,
+        };
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+pub enum Piece {
+    T(PieceT),
+    J(PieceJ),
+    Z(PieceZ),
+    O(PieceO),
+    S(PieceS),
+    L(PieceL),
+    I(PieceI),
     #[default]
     X, // placeholder for the type without a shape
 }
 
-impl PieceShape {
-    pub const fn variant_size() -> usize {
-        7
+impl Piece {
+    pub const fn variant_len() -> usize {
+        8
+    }
+
+    pub fn new_t() -> Self {
+        Piece::T(PieceT::default())
+    }
+
+    pub fn new_j() -> Self {
+        Piece::J(PieceJ::default())
+    }
+
+    pub fn new_z() -> Self {
+        Piece::Z(PieceZ::default())
+    }
+
+    pub fn new_o() -> Self {
+        Piece::O(PieceO::default())
+    }
+
+    pub fn new_s() -> Self {
+        Piece::S(PieceS::default())
+    }
+
+    pub fn new_l() -> Self {
+        Piece::L(PieceL::default())
+    }
+
+    pub fn new_i() -> Self {
+        Piece::I(PieceI::default())
     }
 
     pub fn is_placeholder(&self) -> bool {
-        *self == PieceShape::X
+        *self == Piece::X
     }
 
-    pub fn len(&self) -> usize {
+    pub fn variant_index(&self) -> usize {
         match self {
-            PieceShape::T => PIECE_SHAPE_T.len(),
-            PieceShape::J => PIECE_SHAPE_J.len(),
-            PieceShape::Z => PIECE_SHAPE_Z.len(),
-            PieceShape::O => PIECE_SHAPE_O.len(),
-            PieceShape::S => PIECE_SHAPE_S.len(),
-            PieceShape::L => PIECE_SHAPE_L.len(),
-            PieceShape::I => PIECE_SHAPE_I.len(),
-            PieceShape::X => panic!("PieceShape::X is a placeholder."),
+            Piece::T(_) => 0,
+            Piece::J(_) => 1,
+            Piece::Z(_) => 2,
+            Piece::O(_) => 3,
+            Piece::S(_) => 4,
+            Piece::L(_) => 5,
+            Piece::I(_) => 6,
+            Piece::X => 7,
         }
-    }
-
-    pub fn iter() -> std::slice::Iter<'static, PieceShape> {
-        const SHAPES: [PieceShape; PieceShape::variant_size() + 1] = [
-            PieceShape::T,
-            PieceShape::J,
-            PieceShape::Z,
-            PieceShape::O,
-            PieceShape::S,
-            PieceShape::L,
-            PieceShape::I,
-            PieceShape::X,
-        ];
-        SHAPES.iter()
-    }
-}
-
-impl From<usize> for PieceShape {
-    fn from(value: usize) -> Self {
-        match value % PieceShape::variant_size() {
-            0 => PieceShape::T,
-            1 => PieceShape::J,
-            2 => PieceShape::Z,
-            3 => PieceShape::O,
-            4 => PieceShape::S,
-            5 => PieceShape::L,
-            _ => PieceShape::I,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct Piece {
-    shape: PieceShape,
-    state: usize,
-}
-
-impl Piece {
-    pub fn new(shape: PieceShape) -> Self {
-        Self { shape, state: 0 }
-    }
-
-    pub fn rand() -> Self {
-        Self::new(
-            rand::thread_rng()
-                .gen_range(0..PieceShape::variant_size())
-                .into(),
-        )
-    }
-
-    pub fn rand_1h2r(&self) -> Piece {
-        let shape = rand::thread_rng().gen_range(0..(PieceShape::variant_size() + 1));
-        if shape != PieceShape::variant_size() && shape != self.shape as usize {
-            Self::new(shape.into())
-        } else {
-            Self::rand()
-        }
-    }
-
-    pub fn shape(&self) -> PieceShape {
-        self.shape
     }
 
     pub fn to_squares(&self) -> [Square; 4] {
-        match self.shape {
-            PieceShape::T => PIECE_SHAPE_T[self.state],
-            PieceShape::J => PIECE_SHAPE_J[self.state],
-            PieceShape::Z => PIECE_SHAPE_Z[self.state],
-            PieceShape::O => PIECE_SHAPE_O[self.state],
-            PieceShape::S => PIECE_SHAPE_S[self.state],
-            PieceShape::L => PIECE_SHAPE_L[self.state],
-            PieceShape::I => PIECE_SHAPE_I[self.state],
-            PieceShape::X => panic!("PieceShape::X is a placeholder."),
+        match self {
+            Piece::T(piece) => piece.to_squares(),
+            Piece::J(piece) => piece.to_squares(),
+            Piece::Z(piece) => piece.to_squares(),
+            Piece::O(piece) => piece.to_squares(),
+            Piece::S(piece) => piece.to_squares(),
+            Piece::L(piece) => piece.to_squares(),
+            Piece::I(piece) => piece.to_squares(),
+            Piece::X => panic!("Piece::X is a placeholder"),
         }
     }
 
-    pub fn next_state(&mut self) {
-        self.state = (self.state + 1) % self.shape.len();
+    pub fn rotate_clockwise(&mut self) {
+        match self {
+            Piece::T(piece) => piece.rotate_clockwise(),
+            Piece::J(piece) => piece.rotate_clockwise(),
+            Piece::Z(piece) => piece.rotate_clockwise(),
+            Piece::O(piece) => piece.rotate_clockwise(),
+            Piece::S(piece) => piece.rotate_clockwise(),
+            Piece::L(piece) => piece.rotate_clockwise(),
+            Piece::I(piece) => piece.rotate_clockwise(),
+            Piece::X => (),
+        }
     }
 
-    pub fn prev_state(&mut self) {
-        self.state = (self.state + self.shape.len() - 1) % self.shape.len();
+    pub fn rotate_counterclockwise(&mut self) {
+        match self {
+            Piece::T(piece) => piece.rotate_counterclockwise(),
+            Piece::J(piece) => piece.rotate_counterclockwise(),
+            Piece::Z(piece) => piece.rotate_counterclockwise(),
+            Piece::O(piece) => piece.rotate_counterclockwise(),
+            Piece::S(piece) => piece.rotate_counterclockwise(),
+            Piece::L(piece) => piece.rotate_counterclockwise(),
+            Piece::I(piece) => piece.rotate_counterclockwise(),
+            Piece::X => (),
+        }
+    }
+
+    pub fn iter() -> std::slice::Iter<'static, Piece> {
+        const PIECES: [Piece; 8] = [
+            Piece::T(PieceT::T0),
+            Piece::J(PieceJ::J0),
+            Piece::Z(PieceZ::Z0),
+            Piece::O(PieceO::O0),
+            Piece::S(PieceS::S0),
+            Piece::L(PieceL::L0),
+            Piece::I(PieceI::I0),
+            Piece::X,
+        ];
+        PIECES.iter()
+    }
+}
+
+impl From<usize> for Piece {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Piece::new_t(),
+            1 => Piece::new_j(),
+            2 => Piece::new_z(),
+            3 => Piece::new_o(),
+            4 => Piece::new_s(),
+            5 => Piece::new_l(),
+            6 => Piece::new_i(),
+            7 => Piece::X,
+            _ => panic!("value exceeds range"),
+        }
     }
 }

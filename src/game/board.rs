@@ -1,5 +1,6 @@
 use super::{
-    piece::{Piece, PieceShape, Square},
+    piece::{Piece, Square},
+    rand::PieceRandomizer,
     score::get_score,
     transition::Transition,
 };
@@ -7,7 +8,8 @@ use super::{
 pub struct Board {
     start_level: usize,
     transition: Transition,
-    squares: Vec<Vec<PieceShape>>,
+    randomizer: PieceRandomizer,
+    squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_translation: (i32, i32),
     next_piece: Piece,
@@ -19,7 +21,7 @@ pub struct Board {
     tetris: usize,
     drought: usize,
     max_drought: usize,
-    piece_count: [usize; PieceShape::variant_size()],
+    piece_count: [usize; Piece::variant_len()],
 }
 
 impl Board {
@@ -30,13 +32,16 @@ impl Board {
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
     pub fn new(start_level: usize, transition: Transition) -> Self {
+        let randomizer = PieceRandomizer::System;
+        let next_piece = randomizer.gen();
         let mut board = Self {
             start_level,
             transition,
-            squares: vec![vec![PieceShape::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
-            curr_piece: Piece::rand(),
+            randomizer,
+            squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
+            curr_piece: Piece::X,
             curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
-            next_piece: Piece::rand(),
+            next_piece: next_piece,
             lines: 0,
             score: 0,
             single: 0,
@@ -45,7 +50,7 @@ impl Board {
             tetris: 0,
             drought: 0,
             max_drought: 0,
-            piece_count: [0; PieceShape::variant_size()],
+            piece_count: [0; Piece::variant_len()],
         };
 
         // auto apply `drought` and `rand_1h2r`
@@ -105,7 +110,7 @@ impl Board {
         self.max_drought
     }
 
-    pub fn get_square(&self, x: i32, y: i32) -> PieceShape {
+    pub fn get_square(&self, x: i32, y: i32) -> Piece {
         self.squares[y as usize][x as usize]
     }
 
@@ -120,13 +125,13 @@ impl Board {
         indexes
     }
 
-    pub fn get_piece_count(&self, shape: PieceShape) -> usize {
-        self.piece_count[shape as usize]
+    pub fn get_piece_count(&self, piece: Piece) -> usize {
+        self.piece_count[piece.variant_index()]
     }
 
     pub fn lock_curr_piece(&mut self) {
         for sqr in self.get_curr_piece_squares() {
-            self.squares[sqr.1 as usize][sqr.0 as usize] = self.curr_piece.shape();
+            self.squares[sqr.1 as usize][sqr.0 as usize] = self.curr_piece;
         }
     }
 
@@ -145,22 +150,24 @@ impl Board {
             4 => self.tetris += 1,
             _ => (),
         }
-        self.squares.resize(
-            Self::BOARD_ROWS,
-            vec![PieceShape::default(); Self::BOARD_COLS],
-        );
+        self.squares
+            .resize(Self::BOARD_ROWS, vec![Piece::default(); Self::BOARD_COLS]);
     }
 
     pub fn switch_to_next_piece(&mut self) {
-        self.curr_piece = std::mem::replace(&mut self.next_piece, self.curr_piece.rand_1h2r());
+        self.curr_piece = std::mem::replace(
+            &mut self.next_piece,
+            self.randomizer.gen_1h2r(self.curr_piece),
+        );
         self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
-        if self.curr_piece.shape() == PieceShape::I {
-            self.drought = 0;
-        } else {
-            self.drought += 1;
-            self.max_drought = self.max_drought.max(self.drought);
+        match self.curr_piece {
+            Piece::I(_) => self.drought = 0,
+            _ => {
+                self.drought += 1;
+                self.max_drought = self.max_drought.max(self.drought);
+            }
         }
-        self.piece_count[self.curr_piece.shape() as usize] += 1;
+        self.piece_count[self.curr_piece.variant_index()] += 1;
     }
 
     pub fn get_curr_piece(&self) -> Piece {
@@ -182,8 +189,7 @@ impl Board {
 
     pub fn is_left_movable(&self) -> bool {
         self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0 - 1;
-            let y = sqr.1;
+            let (x, y) = sqr.to_coordinate(-1, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
         })
@@ -191,8 +197,7 @@ impl Board {
 
     pub fn is_right_movable(&self) -> bool {
         self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0 + 1;
-            let y = sqr.1;
+            let (x, y) = sqr.to_coordinate(1, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
         })
@@ -200,8 +205,7 @@ impl Board {
 
     pub fn is_curr_position_valid(&self) -> bool {
         self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0;
-            let y = sqr.1;
+            let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && y < Self::BOARD_ROWS as i32
                 && self.get_square(x, y).is_placeholder()
@@ -210,8 +214,7 @@ impl Board {
 
     pub fn move_piece_down(&mut self) -> bool {
         let movable = self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0;
-            let y = sqr.1 - 1;
+            let (x, y) = sqr.to_coordinate(0, -1);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
         });
@@ -242,30 +245,28 @@ impl Board {
     }
 
     pub fn rotate_piece_clockwise(&mut self) -> bool {
-        self.curr_piece.next_state();
+        self.curr_piece.rotate_clockwise();
         let rotatable = self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0;
-            let y = sqr.1;
+            let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
         });
         if !rotatable {
-            self.curr_piece.prev_state();
+            self.curr_piece.rotate_counterclockwise();
         }
 
         rotatable
     }
 
     pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
-        self.curr_piece.prev_state();
+        self.curr_piece.rotate_counterclockwise();
         let rotatable = self.get_curr_piece_squares().iter().all(|sqr| {
-            let x = sqr.0;
-            let y = sqr.1;
+            let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
         });
         if !rotatable {
-            self.curr_piece.next_state();
+            self.curr_piece.rotate_clockwise();
         }
 
         rotatable

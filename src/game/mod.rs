@@ -9,6 +9,7 @@ pub mod palette;
 pub mod piece;
 pub mod player;
 pub mod plugin;
+mod rand;
 mod score;
 mod tick;
 mod timer;

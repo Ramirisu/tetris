@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     palette::{get_square_image, SquareImageSize},
-    piece::PieceShape,
+    piece::Piece,
 };
 
 #[derive(Resource)]
@@ -14,23 +14,23 @@ pub struct SquareImageAssets {
 impl SquareImageAssets {
     pub fn new(image_assets: &mut Assets<Image>, level: usize) -> Self {
         Self {
-            normal: PieceShape::iter()
-                .map(|shape| {
-                    image_assets.add(get_square_image(SquareImageSize::Normal, *shape, level))
+            normal: Piece::iter()
+                .map(|piece| {
+                    image_assets.add(get_square_image(SquareImageSize::Normal, *piece, level))
                 })
                 .collect(),
-            small: PieceShape::iter()
-                .map(|shape| {
-                    image_assets.add(get_square_image(SquareImageSize::Small, *shape, level))
+            small: Piece::iter()
+                .map(|piece| {
+                    image_assets.add(get_square_image(SquareImageSize::Small, *piece, level))
                 })
                 .collect(),
         }
     }
 
-    pub fn get_image(&self, size: SquareImageSize, shape: PieceShape) -> Handle<Image> {
+    pub fn get_image(&self, size: SquareImageSize, piece: Piece) -> Handle<Image> {
         match size {
-            SquareImageSize::Normal => self.normal[shape as usize].clone(),
-            SquareImageSize::Small => self.small[shape as usize].clone(),
+            SquareImageSize::Normal => self.normal[piece.variant_index()].clone(),
+            SquareImageSize::Small => self.small[piece.variant_index()].clone(),
         }
     }
 }

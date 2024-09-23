@@ -29,16 +29,16 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
 ## Keybindings
 
-| Menu       | In Game                   | Keyboard | Controller: Mapping A  | Controller: Mapping B  |
-| :--------- | :------------------------ | :------: | :--------------------: | :--------------------: |
-| Move Up    |                           |    ↑     |           ↑            |           ↑            |
-| Move Down  | Soft Drop                 |    ↓     |           ↓            |           ↓            |
-| Move Left  | Move Left                 |    ←     |           ←            |           ←            |
-| Move Right | Move Right                |    →     |           →            |           →            |
-|            | Rotate Clockwisely        |    X     |         A (→)          |         B (↓)          |
-| Back       | Rotate Counterclockwisely |    Z     |         B (↓)          |         Y (←)          |
-| Start      | Pause/Resume              |  Enter   |         Start          |         Start          |
-| Soft Reset | Soft Reset                |   Esc    | Select + Start + A + B | Select + Start + B + Y |
+| Menu       | In Game                 | Keyboard | Controller: Mapping A  | Controller: Mapping B  |
+| :--------- | :---------------------- | :------: | :--------------------: | :--------------------: |
+| Move Up    |                         |    ↑     |           ↑            |           ↑            |
+| Move Down  | Soft Drop               |    ↓     |           ↓            |           ↓            |
+| Move Left  | Move Left               |    ←     |           ←            |           ←            |
+| Move Right | Move Right              |    →     |           →            |           →            |
+|            | Rotate Clockwise        |    X     |         A (→)          |         B (↓)          |
+| Back       | Rotate Counterclockwise |    Z     |         B (↓)          |         Y (←)          |
+| Start      | Pause/Resume            |  Enter   |         Start          |         Start          |
+| Soft Reset | Soft Reset              |   Esc    | Select + Start + A + B | Select + Start + B + Y |
 
 > A, B, X and Y button mapping is in NES/SNES/NSwitch Controller layout.
 

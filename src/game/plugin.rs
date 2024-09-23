@@ -16,7 +16,7 @@ use super::{
     board::Board,
     game::GameState,
     palette::SquareImageSize,
-    piece::{Piece, PieceShape},
+    piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
     tick::{duration_to_ticks, EntryDelayTick, LineClearTick},
     transform::GameTransform,
@@ -103,10 +103,10 @@ struct GameStopwatchEntityMarker;
 struct StatisticsEntityMarker;
 
 #[derive(Component)]
-struct PieceCountEntityMarker(PieceShape);
+struct PieceCountEntityMarker(Piece);
 
 #[derive(Component)]
-struct PieceCountCounterEntityMarker(PieceShape);
+struct PieceCountCounterEntityMarker(Piece);
 
 #[derive(Component)]
 struct CurrPieceEntityMarker;
@@ -349,42 +349,46 @@ fn setup_screen(
         GameStopwatchEntityMarker,
     ));
 
-    for shape in PieceShape::iter().filter(|shape| **shape != PieceShape::X) {
-        for square in Piece::new(*shape).to_squares() {
-            commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(game_transform.piece_count_translation(
-                        *shape as usize,
-                        square.0,
-                        square.1,
-                    )),
-                    sprite: Sprite {
-                        custom_size: Some(game_transform.piece_count_square_size()),
+    Piece::iter()
+        .filter(|piece| **piece != Piece::X)
+        .for_each(|piece| {
+            piece.to_squares().iter().for_each(|square| {
+                commands.spawn((
+                    SpriteBundle {
+                        transform: Transform::from_translation(
+                            game_transform.piece_count_translation(
+                                piece.variant_index(),
+                                square.0,
+                                square.1,
+                            ),
+                        ),
+                        sprite: Sprite {
+                            custom_size: Some(game_transform.piece_count_square_size()),
+                            ..default()
+                        },
+                        texture: square_image_assets.get_image(SquareImageSize::Small, *piece),
                         ..default()
                     },
-                    texture: square_image_assets.get_image(SquareImageSize::Small, *shape),
-                    ..default()
-                },
-                GameEntityMarker,
-                PieceCountEntityMarker(*shape),
-            ));
-            commands.spawn((
-                Text2dBundle {
-                    text: Text::from_sections([TextSection::from_style(TextStyle {
-                        font_size: game_transform.scale() * 36.0,
-                        color: WHITE.into(),
+                    GameEntityMarker,
+                    PieceCountEntityMarker(*piece),
+                ));
+                commands.spawn((
+                    Text2dBundle {
+                        text: Text::from_sections([TextSection::from_style(TextStyle {
+                            font_size: game_transform.scale() * 36.0,
+                            color: WHITE.into(),
+                            ..default()
+                        })]),
+                        transform: Transform::from_translation(
+                            game_transform.piece_count_counter_translation(piece.variant_index()),
+                        ),
                         ..default()
-                    })]),
-                    transform: Transform::from_translation(
-                        game_transform.piece_count_counter_translation(*shape as usize),
-                    ),
-                    ..default()
-                },
-                GameEntityMarker,
-                PieceCountCounterEntityMarker(*shape),
-            ));
-        }
-    }
+                    },
+                    GameEntityMarker,
+                    PieceCountCounterEntityMarker(*piece),
+                ));
+            });
+        });
 
     player_data
         .board
@@ -400,10 +404,8 @@ fn setup_screen(
                         custom_size: Some(game_transform.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets.get_image(
-                        SquareImageSize::Normal,
-                        player_data.board.get_curr_piece().shape(),
-                    ),
+                    texture: square_image_assets
+                        .get_image(SquareImageSize::Normal, player_data.board.get_curr_piece()),
                     ..default()
                 },
                 GameEntityMarker,
@@ -452,10 +454,8 @@ fn setup_screen(
                         custom_size: Some(game_transform.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets.get_image(
-                        SquareImageSize::Normal,
-                        player_data.board.get_next_piece().shape(),
-                    ),
+                    texture: square_image_assets
+                        .get_image(SquareImageSize::Normal, player_data.board.get_next_piece()),
                     visibility: player_data.next_piece_hint.into(),
                     ..default()
                 },
@@ -527,8 +527,8 @@ fn update_statistics_system(
     if let Ok(mut text) = query.p5().get_single_mut() {
         text.sections[0].value = format_hhmmss(player_data.game_stopwatch.elapsed());
     }
-    for (mut text, shape) in query.p6().iter_mut() {
-        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(shape.0));
+    for (mut text, piece) in query.p6().iter_mut() {
+        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 }
 
@@ -766,8 +766,7 @@ mod state_game_line_clear {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
-                        *image =
-                            square_image_assets.get_image(SquareImageSize::Normal, PieceShape::X);
+                        *image = square_image_assets.get_image(SquareImageSize::Normal, Piece::X);
                     }
                 }
             } else {
@@ -821,10 +820,8 @@ mod state_game_entry_delay {
                 player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
-                *image = square_image_assets.get_image(
-                    SquareImageSize::Normal,
-                    player_data.board.get_curr_piece().shape(),
-                );
+                *image = square_image_assets
+                    .get_image(SquareImageSize::Normal, player_data.board.get_curr_piece());
                 transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
             });
             std::iter::zip(
@@ -832,14 +829,12 @@ mod state_game_entry_delay {
                 player_data.board.get_next_piece().to_squares(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
-                *image = square_image_assets.get_image(
-                    SquareImageSize::Normal,
-                    player_data.board.get_next_piece().shape(),
-                );
+                *image = square_image_assets
+                    .get_image(SquareImageSize::Normal, player_data.board.get_next_piece());
                 transform.translation = game_transform.next_piece_translation(sqr.0, sqr.1);
             });
-            query.p3().iter_mut().for_each(|(mut image, shape)| {
-                *image = square_image_assets.get_image(SquareImageSize::Small, shape.0);
+            query.p3().iter_mut().for_each(|(mut image, piece)| {
+                *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);
             });
 
             player_phase.set(PlayerPhase::Dropping);

@@ -2,18 +2,18 @@ use bevy::prelude::*;
 
 use crate::game::{
     palette::{get_square_image, SquareImageSize},
-    piece::PieceShape,
+    piece::Piece,
 };
 
 pub fn load_logo_images(image_assets: &mut Assets<Image>) -> [Handle<Image>; 7] {
     [
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::X, 0)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::J, 8)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::T, 2)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 8)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 9)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 0)),
-        image_assets.add(get_square_image(SquareImageSize::Small, PieceShape::Z, 1)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::X, 0)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_j(), 8)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_t(), 2)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_z(), 8)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_z(), 9)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_z(), 0)),
+        image_assets.add(get_square_image(SquareImageSize::Small, Piece::new_z(), 1)),
     ]
 }
 

@@ -14,19 +14,19 @@ use bevy::{
 };
 use image::{DynamicImage, Rgb32FImage};
 
-use super::{level::LEVEL_COUNT, piece::PieceShape};
+use super::{level::LEVEL_COUNT, piece::Piece};
 
-pub fn get_square_image(size: SquareImageSize, shape: PieceShape, level: usize) -> Image {
+pub fn get_square_image(size: SquareImageSize, piece: Piece, level: usize) -> Image {
     let palette = get_level_palette(level);
-    match shape {
-        PieceShape::T => SquareImage::new(size, SquarePattern::X, palette),
-        PieceShape::J => SquareImage::new(size, SquarePattern::Z, palette),
-        PieceShape::Z => SquareImage::new(size, SquarePattern::Y, palette),
-        PieceShape::O => SquareImage::new(size, SquarePattern::X, palette),
-        PieceShape::S => SquareImage::new(size, SquarePattern::Z, palette),
-        PieceShape::L => SquareImage::new(size, SquarePattern::Y, palette),
-        PieceShape::I => SquareImage::new(size, SquarePattern::X, palette),
-        PieceShape::X => SquareImage::new_empty(size),
+    match piece {
+        Piece::T(_) => SquareImage::new(size, SquarePattern::X, palette),
+        Piece::J(_) => SquareImage::new(size, SquarePattern::Z, palette),
+        Piece::Z(_) => SquareImage::new(size, SquarePattern::Y, palette),
+        Piece::O(_) => SquareImage::new(size, SquarePattern::X, palette),
+        Piece::S(_) => SquareImage::new(size, SquarePattern::Z, palette),
+        Piece::L(_) => SquareImage::new(size, SquarePattern::Y, palette),
+        Piece::I(_) => SquareImage::new(size, SquarePattern::X, palette),
+        Piece::X => SquareImage::new_empty(size),
     }
     .into()
 }
