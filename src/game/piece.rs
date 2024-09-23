@@ -19,7 +19,7 @@ pub enum PieceT {
 }
 
 impl PieceT {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceT::T0 => [Square(0, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
             PieceT::T1 => [Square(0, -1), Square(-1, 0), Square(0, 0), Square(0, 1)],
@@ -53,7 +53,7 @@ pub enum PieceJ {
 }
 
 impl PieceJ {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceJ::J0 => [Square(-1, 0), Square(0, 0), Square(1, 0), Square(1, -1)],
             PieceJ::J1 => [Square(-1, -1), Square(0, -1), Square(0, 0), Square(0, 1)],
@@ -85,7 +85,7 @@ pub enum PieceZ {
 }
 
 impl PieceZ {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceZ::Z0 => [Square(0, -1), Square(1, -1), Square(-1, 0), Square(0, 0)],
             PieceZ::Z1 => [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
@@ -114,7 +114,7 @@ pub enum PieceO {
 }
 
 impl PieceO {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         [Square(-1, -1), Square(0, -1), Square(-1, 0), Square(0, 0)]
     }
 
@@ -131,7 +131,7 @@ pub enum PieceS {
 }
 
 impl PieceS {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceS::S0 => [Square(-1, -1), Square(0, -1), Square(0, 0), Square(1, 0)],
             PieceS::S1 => [Square(1, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
@@ -163,7 +163,7 @@ pub enum PieceL {
 }
 
 impl PieceL {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceL::L0 => [Square(-1, -1), Square(-1, 0), Square(0, 0), Square(1, 0)],
             PieceL::L1 => [Square(0, -1), Square(0, 0), Square(-1, 1), Square(0, 1)],
@@ -195,7 +195,7 @@ pub enum PieceI {
 }
 
 impl PieceI {
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
             PieceI::I0 => [Square(-2, 0), Square(-1, 0), Square(0, 0), Square(1, 0)],
             PieceI::I1 => [Square(0, -1), Square(0, 0), Square(0, 1), Square(0, 2)],
@@ -280,17 +280,33 @@ impl Piece {
         }
     }
 
-    pub fn to_squares(&self) -> [Square; 4] {
+    pub fn get_squares(&self) -> [Square; 4] {
         match self {
-            Piece::T(piece) => piece.to_squares(),
-            Piece::J(piece) => piece.to_squares(),
-            Piece::Z(piece) => piece.to_squares(),
-            Piece::O(piece) => piece.to_squares(),
-            Piece::S(piece) => piece.to_squares(),
-            Piece::L(piece) => piece.to_squares(),
-            Piece::I(piece) => piece.to_squares(),
+            Piece::T(piece) => piece.get_squares(),
+            Piece::J(piece) => piece.get_squares(),
+            Piece::Z(piece) => piece.get_squares(),
+            Piece::O(piece) => piece.get_squares(),
+            Piece::S(piece) => piece.get_squares(),
+            Piece::L(piece) => piece.get_squares(),
+            Piece::I(piece) => piece.get_squares(),
             Piece::X => panic!("Piece::X is a placeholder"),
         }
+    }
+
+    pub fn get_center_offset(&self) -> (f32, f32) {
+        let mut maxx = 0;
+        let mut minx = 0;
+        let mut maxy = 0;
+        let mut miny = 0;
+
+        self.get_squares().iter().for_each(|sqr| {
+            maxx = maxx.max(sqr.0);
+            minx = minx.min(sqr.0);
+            maxy = maxy.max(sqr.1);
+            miny = miny.min(sqr.1);
+        });
+
+        ((maxx + minx) as f32 / -2.0, (maxy + miny) as f32 / -2.0)
     }
 
     pub fn rotate_clockwise(&mut self) {

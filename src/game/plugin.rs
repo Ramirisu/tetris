@@ -352,7 +352,7 @@ fn setup_screen(
     Piece::iter()
         .filter(|piece| **piece != Piece::X)
         .for_each(|piece| {
-            piece.to_squares().iter().for_each(|square| {
+            piece.get_squares().iter().for_each(|square| {
                 commands.spawn((
                     SpriteBundle {
                         transform: Transform::from_translation(
@@ -360,6 +360,7 @@ fn setup_screen(
                                 piece.variant_index(),
                                 square.0,
                                 square.1,
+                                piece.get_center_offset(),
                             ),
                         ),
                         sprite: Sprite {
@@ -439,17 +440,20 @@ fn setup_screen(
         },
         GameEntityMarker,
     ));
+
     player_data
         .board
         .get_next_piece()
-        .to_squares()
+        .get_squares()
         .iter()
         .for_each(|sqr| {
             commands.spawn((
                 SpriteBundle {
-                    transform: Transform::from_translation(
-                        game_transform.next_piece_translation(sqr.0, sqr.1),
-                    ),
+                    transform: Transform::from_translation(game_transform.next_piece_translation(
+                        sqr.0,
+                        sqr.1,
+                        player_data.board.get_next_piece().get_center_offset(),
+                    )),
                     sprite: Sprite {
                         custom_size: Some(game_transform.square_size()),
                         ..default()
@@ -826,12 +830,16 @@ mod state_game_entry_delay {
             });
             std::iter::zip(
                 query.p2().iter_mut(),
-                player_data.board.get_next_piece().to_squares(),
+                player_data.board.get_next_piece().get_squares(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
                 *image = square_image_assets
                     .get_image(SquareImageSize::Normal, player_data.board.get_next_piece());
-                transform.translation = game_transform.next_piece_translation(sqr.0, sqr.1);
+                transform.translation = game_transform.next_piece_translation(
+                    sqr.0,
+                    sqr.1,
+                    player_data.board.get_next_piece().get_center_offset(),
+                );
             });
             query.p3().iter_mut().for_each(|(mut image, piece)| {
                 *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);

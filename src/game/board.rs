@@ -175,7 +175,7 @@ impl Board {
     }
 
     pub fn get_curr_piece_squares(&self) -> [Square; 4] {
-        self.curr_piece.to_squares().map(|sqr| {
+        self.curr_piece.get_squares().map(|sqr| {
             Square(
                 sqr.0 + self.curr_translation.0,
                 sqr.1 + self.curr_translation.1,

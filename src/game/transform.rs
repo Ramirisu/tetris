@@ -94,28 +94,33 @@ impl GameTransform {
         Vec3::new(self.board_width(), -self.square_height() * 6.0, BOARD_LAYER)
     }
 
-    pub fn next_piece_translation(&self, x: i32, y: i32) -> Vec3 {
+    fn next_piece_translation_offset(&self) -> Vec2 {
+        Vec2::new(self.board_width() * 0.9, 0.0)
+    }
+
+    pub fn next_piece_translation(&self, x: i32, y: i32, offset: (f32, f32)) -> Vec3 {
         (Vec2::new(
-            (x as f32) * self.square_width(),
-            (y as f32) * self.square_height(),
-        ) + Vec2::new(self.board_width(), 0.0))
+            (x as f32 + offset.0) * self.square_width(),
+            (y as f32 + offset.1) * self.square_height(),
+        ) + self.next_piece_translation_offset())
         .extend(CURR_PIECE_LAYER)
     }
 
     pub fn next_piece_slot_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), 0.0, BOARD_LAYER)
+        self.next_piece_translation_offset().extend(BOARD_LAYER)
     }
 
     pub fn next_piece_slot_size(&self) -> Vec2 {
-        Vec2::new(self.square_width() * 6.0, self.square_height() * 6.0)
+        Vec2::new(self.square_width() * 5.0, self.square_height() * 5.0)
     }
 
     pub fn next_piece_slot_background_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), 0.0, BOARD_BACKGROUND_LAYER)
+        self.next_piece_translation_offset()
+            .extend(BOARD_BACKGROUND_LAYER)
     }
 
     pub fn next_piece_slot_background_size(&self) -> Vec2 {
-        Vec2::new(self.square_width() * 6.1, self.square_height() * 6.1)
+        Vec2::new(self.square_width() * 5.1, self.square_height() * 5.1)
     }
 
     pub fn statistics_translation(&self) -> Vec3 {
@@ -138,8 +143,14 @@ impl GameTransform {
         Vec2::new(self.square_width() * 0.5, self.square_height() * 0.5)
     }
 
-    pub fn piece_count_translation(&self, index: usize, x: i32, y: i32) -> Vec3 {
-        (Vec2::new(x as f32 + 0.5, y as f32) * self.piece_count_square_size()
+    pub fn piece_count_translation(
+        &self,
+        index: usize,
+        x: i32,
+        y: i32,
+        offset: (f32, f32),
+    ) -> Vec3 {
+        (Vec2::new(x as f32 + 0.5 + offset.0, y as f32 + offset.1) * self.piece_count_square_size()
             + Vec2::new(
                 -self.board_width() - self.square_width() * 2.0,
                 -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
