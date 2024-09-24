@@ -360,43 +360,46 @@ fn setup_screen(
     Piece::iter()
         .filter(|piece| **piece != Piece::X)
         .for_each(|piece| {
-            piece.get_squares().iter().for_each(|square| {
-                commands.spawn((
-                    SpriteBundle {
-                        transform: Transform::from_translation(
-                            game_transform.piece_count_translation(
-                                piece.variant_index(),
-                                square.0,
-                                square.1,
-                                piece.get_center_offset(),
+            piece
+                .get_squares_with_piece_center_align()
+                .iter()
+                .for_each(|square| {
+                    commands.spawn((
+                        SpriteBundle {
+                            transform: Transform::from_translation(
+                                game_transform.piece_count_translation(
+                                    piece.variant_index(),
+                                    square.0,
+                                    square.1,
+                                ),
                             ),
-                        ),
-                        sprite: Sprite {
-                            custom_size: Some(game_transform.piece_count_square_size()),
+                            sprite: Sprite {
+                                custom_size: Some(game_transform.piece_count_square_size()),
+                                ..default()
+                            },
+                            texture: square_image_assets.get_image(SquareImageSize::Small, *piece),
                             ..default()
                         },
-                        texture: square_image_assets.get_image(SquareImageSize::Small, *piece),
-                        ..default()
-                    },
-                    GameEntityMarker,
-                    PieceCountEntityMarker(*piece),
-                ));
-                commands.spawn((
-                    Text2dBundle {
-                        text: Text::from_sections([TextSection::from_style(TextStyle {
-                            font_size: game_transform.scale() * 36.0,
-                            color: WHITE.into(),
+                        GameEntityMarker,
+                        PieceCountEntityMarker(*piece),
+                    ));
+                    commands.spawn((
+                        Text2dBundle {
+                            text: Text::from_sections([TextSection::from_style(TextStyle {
+                                font_size: game_transform.scale() * 36.0,
+                                color: WHITE.into(),
+                                ..default()
+                            })]),
+                            transform: Transform::from_translation(
+                                game_transform
+                                    .piece_count_counter_translation(piece.variant_index()),
+                            ),
                             ..default()
-                        })]),
-                        transform: Transform::from_translation(
-                            game_transform.piece_count_counter_translation(piece.variant_index()),
-                        ),
-                        ..default()
-                    },
-                    GameEntityMarker,
-                    PieceCountCounterEntityMarker(*piece),
-                ));
-            });
+                        },
+                        GameEntityMarker,
+                        PieceCountCounterEntityMarker(*piece),
+                    ));
+                });
         });
 
     player_data
@@ -452,16 +455,14 @@ fn setup_screen(
     player_data
         .board
         .get_next_piece()
-        .get_squares()
+        .get_squares_with_piece_center_align()
         .iter()
         .for_each(|sqr| {
             commands.spawn((
                 SpriteBundle {
-                    transform: Transform::from_translation(game_transform.next_piece_translation(
-                        sqr.0,
-                        sqr.1,
-                        player_data.board.get_next_piece().get_center_offset(),
-                    )),
+                    transform: Transform::from_translation(
+                        game_transform.next_piece_translation(sqr.0, sqr.1),
+                    ),
                     sprite: Sprite {
                         custom_size: Some(game_transform.square_size()),
                         ..default()
@@ -732,7 +733,7 @@ mod state_game_running {
                     );
                 });
 
-                let lines = player_data.board.get_line_clear_indexes();
+                let lines = player_data.board.get_line_clear_rows();
                 match lines.len() {
                     0 => {
                         e_play_sound.send(PlaySoundEvent::LockCurrPiece);
@@ -838,16 +839,15 @@ mod state_game_entry_delay {
             });
             std::iter::zip(
                 query.p2().iter_mut(),
-                player_data.board.get_next_piece().get_squares(),
+                player_data
+                    .board
+                    .get_next_piece()
+                    .get_squares_with_piece_center_align(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
                 *image = square_image_assets
                     .get_image(SquareImageSize::Normal, player_data.board.get_next_piece());
-                transform.translation = game_transform.next_piece_translation(
-                    sqr.0,
-                    sqr.1,
-                    player_data.board.get_next_piece().get_center_offset(),
-                );
+                transform.translation = game_transform.next_piece_translation(sqr.0, sqr.1);
             });
             query.p3().iter_mut().for_each(|(mut image, piece)| {
                 *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);

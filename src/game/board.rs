@@ -11,7 +11,7 @@ pub struct Board {
     randomizer: PieceRandomizer,
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
-    curr_translation: (i32, i32),
+    curr_pos: (i32, i32),
     next_piece: Piece,
     lines: usize,
     score: usize,
@@ -40,7 +40,7 @@ impl Board {
             randomizer,
             squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece: Piece::X,
-            curr_translation: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
+            curr_pos: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_piece: next_piece,
             lines: 0,
             score: 0,
@@ -114,15 +114,15 @@ impl Board {
         self.squares[y as usize][x as usize]
     }
 
-    pub fn get_line_clear_indexes(&self) -> Vec<usize> {
-        let mut indexes = vec![];
-        for index in 0..Self::BOARD_ROWS {
-            if self.squares[index].iter().all(|sqr| !sqr.is_placeholder()) {
-                indexes.push(index);
+    pub fn get_line_clear_rows(&self) -> Vec<usize> {
+        let mut rows = vec![];
+        for row in 0..Self::BOARD_ROWS {
+            if self.squares[row].iter().all(|sqr| !sqr.is_placeholder()) {
+                rows.push(row);
             }
         }
 
-        indexes
+        rows
     }
 
     pub fn get_piece_count(&self, piece: Piece) -> usize {
@@ -136,14 +136,14 @@ impl Board {
     }
 
     pub fn clear_lines(&mut self) {
-        let indexes = self.get_line_clear_indexes();
-        indexes.iter().rev().for_each(|index| {
-            self.squares.remove(*index);
+        let rows = self.get_line_clear_rows();
+        rows.iter().rev().for_each(|row| {
+            self.squares.remove(*row);
         });
 
-        self.score += get_score(indexes.len(), self.level());
-        self.lines += indexes.len();
-        match indexes.len() {
+        self.score += get_score(rows.len(), self.level());
+        self.lines += rows.len();
+        match rows.len() {
             1 => self.single += 1,
             2 => self.double += 1,
             3 => self.triple += 1,
@@ -159,7 +159,7 @@ impl Board {
             &mut self.next_piece,
             self.randomizer.gen_1h2r(self.curr_piece),
         );
-        self.curr_translation = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
+        self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
         match self.curr_piece {
             Piece::I(_) => self.drought = 0,
             _ => {
@@ -175,12 +175,9 @@ impl Board {
     }
 
     pub fn get_curr_piece_squares(&self) -> [Square; 4] {
-        self.curr_piece.get_squares().map(|sqr| {
-            Square(
-                sqr.0 + self.curr_translation.0,
-                sqr.1 + self.curr_translation.1,
-            )
-        })
+        self.curr_piece
+            .get_squares()
+            .map(|sqr| Square(sqr.0 + self.curr_pos.0, sqr.1 + self.curr_pos.1))
     }
 
     pub fn get_next_piece(&self) -> Piece {
@@ -220,7 +217,7 @@ impl Board {
         });
 
         if movable {
-            self.curr_translation.1 -= 1;
+            self.curr_pos.1 -= 1;
         }
 
         movable
@@ -229,7 +226,7 @@ impl Board {
     pub fn move_piece_left(&mut self) -> bool {
         let movable = self.is_left_movable();
         if movable {
-            self.curr_translation.0 -= 1;
+            self.curr_pos.0 -= 1;
         }
 
         movable
@@ -238,7 +235,7 @@ impl Board {
     pub fn move_piece_right(&mut self) -> bool {
         let movable = self.is_right_movable();
         if movable {
-            self.curr_translation.0 += 1;
+            self.curr_pos.0 += 1;
         }
 
         movable
