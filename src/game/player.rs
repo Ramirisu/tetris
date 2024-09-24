@@ -2,6 +2,7 @@ use bevy::{prelude::*, time::Stopwatch};
 
 use super::{
     board::Board,
+    das_indicator::DASIndicator,
     game::GameConfig,
     next_piece_hint::NextPieceHint,
     tick::{EntryDelayTick, FallTick, LineClearTick},
@@ -20,6 +21,7 @@ pub enum PlayerPhase {
 #[derive(Resource)]
 pub struct PlayerData {
     pub next_piece_hint: NextPieceHint,
+    pub das_indicator: DASIndicator,
     pub board: Board,
     pub stopwatch: Stopwatch,
     pub game_timer: GameTimer,
@@ -38,6 +40,7 @@ impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
         Self {
             next_piece_hint: config.next_piece_hint,
+            das_indicator: config.das_indicator,
             board: Board::new(config.start_level, config.transition),
             stopwatch: Stopwatch::new(),
             game_timer: GameTimer::default(),

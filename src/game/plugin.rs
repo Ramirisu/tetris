@@ -14,6 +14,7 @@ use crate::{
 use super::{
     asset::SquareImageAssets,
     board::Board,
+    das_indicator::DASIndicator,
     game::GameState,
     palette::SquareImageSize,
     piece::Piece,
@@ -97,6 +98,9 @@ struct LevelEntityMarker;
 struct DASEntityMarker;
 
 #[derive(Component)]
+struct DASIndicatorEntityMarker;
+
+#[derive(Component)]
 struct GameStopwatchEntityMarker;
 
 #[derive(Component)]
@@ -139,13 +143,14 @@ fn setup_screen(
         SpriteBundle {
             transform: Transform::from_translation(game_transform.board_background_translation()),
             sprite: Sprite {
-                color: RED.into(),
+                color: WHITE.into(),
                 custom_size: Some(game_transform.board_background_size()),
                 ..default()
             },
             ..default()
         },
         GameEntityMarker,
+        DASIndicatorEntityMarker,
     ));
     commands.spawn((
         SpriteBundle {
@@ -437,7 +442,7 @@ fn setup_screen(
                         game_transform.next_piece_slot_background_translation(index),
                     ),
                     sprite: Sprite {
-                        color: RED.into(),
+                        color: WHITE.into(),
                         custom_size: Some(game_transform.next_piece_slot_background_size(index)),
                         ..default()
                     },
@@ -512,6 +517,7 @@ fn update_statistics_system(
         Query<&mut Text, With<LevelEntityMarker>>,
         Query<&mut Text, With<StatisticsEntityMarker>>,
         Query<&mut Text, With<DASEntityMarker>>,
+        Query<&mut Sprite, With<DASIndicatorEntityMarker>>,
         Query<&mut Text, With<GameStopwatchEntityMarker>>,
         Query<(&mut Text, &PieceCountCounterEntityMarker)>,
     )>,
@@ -551,19 +557,28 @@ fn update_statistics_system(
         }
         text.sections[9].value = format!(" ({:02})\n", player_data.board.max_drought());
     }
+    let get_das_color = |tick| -> Color {
+        if tick >= 10 {
+            GREEN.into()
+        } else {
+            RED.into()
+        }
+    };
     if let Ok(mut text) = query.p4().get_single_mut() {
         let ticks = duration_to_ticks(player_data.das_timer.duration());
         text.sections[1].value = format!("{:02}", ticks);
-        if ticks >= 10 {
-            text.sections[1].style.color = GREEN.into();
-        } else {
-            text.sections[1].style.color = RED.into();
+        text.sections[1].style.color = get_das_color(ticks);
+    }
+    if player_data.das_indicator == DASIndicator::On {
+        if let Ok(mut sprite) = query.p5().get_single_mut() {
+            let ticks = duration_to_ticks(player_data.das_timer.duration());
+            sprite.color = get_das_color(ticks);
         }
     }
-    if let Ok(mut text) = query.p5().get_single_mut() {
+    if let Ok(mut text) = query.p6().get_single_mut() {
         text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
     }
-    for (mut text, piece) in query.p6().iter_mut() {
+    for (mut text, piece) in query.p7().iter_mut() {
         text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 }

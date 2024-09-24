@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
 use super::{
-    drop_speed::DropSpeed, linecap::Linecap, next_piece_hint::NextPieceHint, transition::Transition,
+    das_indicator::DASIndicator, drop_speed::DropSpeed, linecap::Linecap,
+    next_piece_hint::NextPieceHint, transition::Transition,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -19,6 +20,7 @@ pub struct GameConfig {
     pub linecap: Linecap,
     pub drop_speed: DropSpeed,
     pub next_piece_hint: NextPieceHint,
+    pub das_indicator: DASIndicator,
 }
 
 impl Default for GameConfig {
@@ -29,6 +31,7 @@ impl Default for GameConfig {
             transition: Transition::default(),
             drop_speed: DropSpeed::default(),
             next_piece_hint: NextPieceHint::default(),
+            das_indicator: DASIndicator::default(),
         }
     }
 }

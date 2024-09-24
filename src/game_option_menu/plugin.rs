@@ -5,8 +5,8 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::{
-        drop_speed::DropSpeed, game::GameConfig, linecap::Linecap, next_piece_hint::NextPieceHint,
-        transition::Transition,
+        das_indicator::DASIndicator, drop_speed::DropSpeed, game::GameConfig, linecap::Linecap,
+        next_piece_hint::NextPieceHint, transition::Transition,
     },
     inputs::{ControllerMapping, PlayerInputs},
     level_menu::plugin::LevelMenuData,
@@ -61,6 +61,7 @@ enum GameOptionMenuSelection {
     Linecap,
     DropSpeed,
     NextPieceHint,
+    DASIndicator,
     ControllerMapping,
     BlankLine2,
     VideoCategory,
@@ -75,9 +76,9 @@ enum GameOptionMenuSelection {
 impl GameOptionMenuSelection {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 15];
+        type ArrayType = [GameOptionMenuSelection; 16];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuSelection; 13];
+        type ArrayType = [GameOptionMenuSelection; 14];
         const STATES: ArrayType = [
             GameOptionMenuSelection::Tetris,
             GameOptionMenuSelection::BlankLine0,
@@ -87,6 +88,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::DropSpeed,
             GameOptionMenuSelection::NextPieceHint,
+            GameOptionMenuSelection::DASIndicator,
             GameOptionMenuSelection::ControllerMapping,
             GameOptionMenuSelection::BlankLine2,
             GameOptionMenuSelection::VideoCategory,
@@ -309,6 +311,13 @@ fn update_ui_system(
                     NextPieceHint::Modern => text.sections[1].value = fopt("MODERN", true, false),
                 }
             }
+            GameOptionMenuSelection::DASIndicator => {
+                text.sections[0].value = fname("DAS INDICATOR", NameKind::Option);
+                match game_option_menu_data.game_config.das_indicator {
+                    DASIndicator::Off => text.sections[1].value = fopt("OFF", false, true),
+                    DASIndicator::On => text.sections[1].value = fopt("ON", true, false),
+                }
+            }
             GameOptionMenuSelection::ControllerMapping => {
                 text.sections[0].value = fname("CONTROLLER MAPPING", NameKind::Option);
                 match *controller_mapping {
@@ -504,7 +513,7 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
             } else if player_inputs.down.0 {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
+                game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
                 selection_changed = true;
             }
 
@@ -526,14 +535,34 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::ControllerMapping => {
+        GameOptionMenuSelection::DASIndicator => {
             if player_inputs.up.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
+                selection_changed = true;
+            } else if player_inputs.down.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
+                selection_changed = true;
+            }
+
+            if player_inputs.right.0 {
+                if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_next() {
+                    option_changed = true;
+                }
+            } else if player_inputs.left.0 {
+                if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_prev() {
+                    option_changed = true;
+                }
+            }
+        }
+        GameOptionMenuSelection::ControllerMapping => {
+            if player_inputs.up.0 {
+                game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
                 selection_changed = true;
             } else if player_inputs.down.0 {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
                 selection_changed = true;
             }
+
             if player_inputs.right.0 {
                 if let Some(_) = controller_mapping.enum_next() {
                     option_changed = true;
