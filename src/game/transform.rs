@@ -38,6 +38,10 @@ impl GameTransform {
         self.scale * 2.0
     }
 
+    fn border_size(&self) -> Vec2 {
+        Vec2::splat(self.border_width())
+    }
+
     pub fn board_translation(&self) -> Vec3 {
         Vec3::new(0.0, 0.0, BOARD_LAYER)
     }
@@ -99,52 +103,81 @@ impl GameTransform {
 
     pub fn das_translation(&self) -> Vec3 {
         Vec3::new(
-            self.board_width() * 0.8,
-            -self.square_height() * 6.0,
+            0.0,
+            -self.board_height() / 2.0 - self.square_height(),
             BOARD_LAYER,
         )
     }
 
     pub fn level_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.square_height() * 8.0, BOARD_LAYER)
+        Vec3::new(self.board_width(), -self.square_height() * 7.0, BOARD_LAYER)
     }
 
     pub fn stopwatch_translation(&self) -> Vec3 {
-        Vec3::new(
-            self.board_width(),
-            -self.square_height() * 10.0,
-            BOARD_LAYER,
-        )
+        Vec3::new(self.board_width(), -self.square_height() * 9.0, BOARD_LAYER)
+    }
+
+    pub fn next_piece_square_size(&self, index: usize) -> Vec2 {
+        match index {
+            0 => self.square_size(),
+            _ => self.square_size() / 2.0,
+        }
     }
 
     fn next_piece_translation_offset(&self) -> Vec2 {
         Vec2::new(self.board_width() * 0.9, 0.0)
     }
 
-    pub fn next_piece_translation(&self, x: f32, y: f32) -> Vec3 {
-        (Vec2::new(x * self.square_width(), y * self.square_height())
-            + self.next_piece_translation_offset())
+    fn next_piece_translation_offset_for_index(&self, index: usize) -> Vec2 {
+        Vec2::new(
+            -self.square_width() * 5.0 + index as f32 * self.next_piece_square_size(index).x * 5.5,
+            -self.square_height() * 4.0,
+        )
+    }
+
+    pub fn next_piece_translation(&self, x: f32, y: f32, index: usize) -> Vec3 {
+        match index {
+            0 => {
+                Vec2::new(x, y) * self.next_piece_square_size(index)
+                    + self.next_piece_translation_offset()
+            }
+            _ => {
+                Vec2::new(x, y) * self.next_piece_square_size(index)
+                    + self.next_piece_translation_offset()
+                    + self.next_piece_translation_offset_for_index(index)
+            }
+        }
         .extend(CURR_PIECE_LAYER)
     }
 
-    pub fn next_piece_slot_translation(&self) -> Vec3 {
-        self.next_piece_translation_offset().extend(BOARD_LAYER)
+    pub fn next_piece_slot_translation(&self, index: usize) -> Vec3 {
+        match index {
+            0 => self.next_piece_translation_offset(),
+            _ => {
+                self.next_piece_translation_offset()
+                    + self.next_piece_translation_offset_for_index(index)
+            }
+        }
+        .extend(BOARD_LAYER)
     }
 
-    pub fn next_piece_slot_size(&self) -> Vec2 {
-        Vec2::new(self.square_width() * 5.0, self.square_height() * 5.0)
+    pub fn next_piece_slot_size(&self, index: usize) -> Vec2 {
+        self.next_piece_square_size(index) * 5.0
     }
 
-    pub fn next_piece_slot_background_translation(&self) -> Vec3 {
-        self.next_piece_translation_offset()
-            .extend(BOARD_BACKGROUND_LAYER)
+    pub fn next_piece_slot_background_translation(&self, index: usize) -> Vec3 {
+        match index {
+            0 => self.next_piece_translation_offset(),
+            _ => {
+                self.next_piece_translation_offset()
+                    + self.next_piece_translation_offset_for_index(index)
+            }
+        }
+        .extend(BOARD_BACKGROUND_LAYER)
     }
 
-    pub fn next_piece_slot_background_size(&self) -> Vec2 {
-        Vec2::new(
-            self.square_width() * 5.0 + self.border_width() * 2.0,
-            self.square_height() * 5.0 + self.border_width() * 2.0,
-        )
+    pub fn next_piece_slot_background_size(&self, index: usize) -> Vec2 {
+        self.next_piece_slot_size(index) + self.border_size() * 2.0
     }
 
     pub fn statistics_translation(&self) -> Vec3 {

@@ -305,7 +305,8 @@ fn update_ui_system(
                 text.sections[0].value = fname("NEXT PIECE HINT", NameKind::Option);
                 match game_option_menu_data.game_config.next_piece_hint {
                     NextPieceHint::Off => text.sections[1].value = fopt("OFF", false, true),
-                    NextPieceHint::One => text.sections[1].value = fopt("CLASSIC", true, false),
+                    NextPieceHint::Classic => text.sections[1].value = fopt("CLASSIC", true, true),
+                    NextPieceHint::Modern => text.sections[1].value = fopt("MODERN", true, false),
                 }
             }
             GameOptionMenuSelection::ControllerMapping => {

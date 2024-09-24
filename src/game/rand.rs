@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use num_traits::FromPrimitive;
 use rand::Rng;
 
@@ -26,16 +28,19 @@ impl PieceRandomizer {
         }
     }
 
-    pub fn gen_1h2r(&self, piece: Piece) -> Piece {
+    pub fn gen_1h2r(&self, history: &VecDeque<Piece>) -> Piece {
         match self {
-            PieceRandomizer::System => {
-                let index = rand::thread_rng().gen_range(0..Piece::variant_len());
-                if index + 1 != Piece::variant_len() && index != piece.variant_index() {
-                    index.into()
-                } else {
-                    self.gen()
+            PieceRandomizer::System => match history.back() {
+                Some(piece) => {
+                    let index = rand::thread_rng().gen_range(0..Piece::variant_len());
+                    if index + 1 != Piece::variant_len() && index != piece.variant_index() {
+                        index.into()
+                    } else {
+                        self.gen()
+                    }
                 }
-            }
+                None => self.gen(),
+            },
         }
     }
 }

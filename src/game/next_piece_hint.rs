@@ -5,7 +5,8 @@ use num_traits::FromPrimitive;
 pub enum NextPieceHint {
     Off,
     #[default]
-    One,
+    Classic, // 1
+    Modern, // 5
 }
 
 impl NextPieceHint {
@@ -16,13 +17,17 @@ impl NextPieceHint {
     pub fn enum_next(&mut self) -> Option<Self> {
         FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
     }
-}
 
-impl Into<Visibility> for NextPieceHint {
-    fn into(self) -> Visibility {
-        match self {
-            NextPieceHint::Off => Visibility::Hidden,
-            NextPieceHint::One => Visibility::Inherited,
+    pub fn get_visibility(&self, index: usize) -> Visibility {
+        let visible = match self {
+            NextPieceHint::Off => 0,
+            NextPieceHint::Classic => 1,
+            NextPieceHint::Modern => 5,
+        };
+        if index >= visible {
+            Visibility::Hidden
+        } else {
+            Visibility::Inherited
         }
     }
 }

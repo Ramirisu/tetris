@@ -112,7 +112,7 @@ struct PieceCountCounterEntityMarker(Piece);
 struct CurrPieceEntityMarker;
 
 #[derive(Component)]
-struct NextPieceEntityMarker;
+struct NextPieceEntityMarker(usize);
 
 fn load_square_image_assets(
     mut commands: Commands,
@@ -425,56 +425,79 @@ fn setup_screen(
             ));
         });
 
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(
-                game_transform.next_piece_slot_background_translation(),
-            ),
-            sprite: Sprite {
-                color: RED.into(),
-                custom_size: Some(game_transform.next_piece_slot_background_size()),
-                ..default()
-            },
-            ..default()
-        },
-        GameEntityMarker,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(game_transform.next_piece_slot_translation()),
-            sprite: Sprite {
-                color: BLACK.into(),
-                custom_size: Some(game_transform.next_piece_slot_size()),
-                ..default()
-            },
-            ..default()
-        },
-        GameEntityMarker,
-    ));
-
     player_data
         .board
-        .get_next_piece()
-        .get_squares_with_piece_center_align()
+        .get_next_pieces()
         .iter()
-        .for_each(|sqr| {
+        .enumerate()
+        .for_each(|(index, _)| {
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        game_transform.next_piece_translation(sqr.0, sqr.1),
+                        game_transform.next_piece_slot_background_translation(index),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(game_transform.square_size()),
+                        color: RED.into(),
+                        custom_size: Some(game_transform.next_piece_slot_background_size(index)),
                         ..default()
                     },
-                    texture: square_image_assets
-                        .get_image(SquareImageSize::Normal, player_data.board.get_next_piece()),
-                    visibility: player_data.next_piece_hint.into(),
+                    visibility: player_data.next_piece_hint.get_visibility(index),
                     ..default()
                 },
                 GameEntityMarker,
-                NextPieceEntityMarker,
             ));
+        });
+
+    player_data
+        .board
+        .get_next_pieces()
+        .iter()
+        .enumerate()
+        .for_each(|(index, _)| {
+            commands.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(
+                        game_transform.next_piece_slot_translation(index),
+                    ),
+                    sprite: Sprite {
+                        color: BLACK.into(),
+                        custom_size: Some(game_transform.next_piece_slot_size(index)),
+                        ..default()
+                    },
+                    visibility: player_data.next_piece_hint.get_visibility(index),
+                    ..default()
+                },
+                GameEntityMarker,
+            ));
+        });
+
+    player_data
+        .board
+        .get_next_pieces()
+        .iter()
+        .enumerate()
+        .for_each(|(index, piece)| {
+            piece
+                .get_squares_with_piece_center_align()
+                .iter()
+                .for_each(|sqr| {
+                    commands.spawn((
+                        SpriteBundle {
+                            transform: Transform::from_translation(
+                                game_transform.next_piece_translation(sqr.0, sqr.1, index),
+                            ),
+                            sprite: Sprite {
+                                custom_size: Some(game_transform.next_piece_square_size(index)),
+                                ..default()
+                            },
+                            texture: square_image_assets.get_image(SquareImageSize::Normal, *piece),
+                            visibility: player_data.next_piece_hint.get_visibility(index),
+                            ..default()
+                        },
+                        GameEntityMarker,
+                        NextPieceEntityMarker(index),
+                    ));
+                });
         });
 }
 
@@ -806,7 +829,7 @@ mod state_game_entry_delay {
         mut query: ParamSet<(
             Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
-            Query<(&mut Transform, &mut Handle<Image>), With<NextPieceEntityMarker>>,
+            Query<(&mut Transform, &mut Handle<Image>, &NextPieceEntityMarker)>,
             Query<(&mut Handle<Image>, &PieceCountEntityMarker)>,
         )>,
         mut player_data: ResMut<PlayerData>,
@@ -841,13 +864,18 @@ mod state_game_entry_delay {
                 query.p2().iter_mut(),
                 player_data
                     .board
-                    .get_next_piece()
-                    .get_squares_with_piece_center_align(),
+                    .get_next_pieces()
+                    .iter()
+                    .flat_map(|piece| piece.get_squares_with_piece_center_align())
+                    .collect::<Vec<_>>(),
             )
-            .for_each(|((mut transform, mut image), sqr)| {
-                *image = square_image_assets
-                    .get_image(SquareImageSize::Normal, player_data.board.get_next_piece());
-                transform.translation = game_transform.next_piece_translation(sqr.0, sqr.1);
+            .for_each(|((mut transform, mut image, index), sqr)| {
+                *image = square_image_assets.get_image(
+                    SquareImageSize::Normal,
+                    player_data.board.get_next_pieces()[index.0],
+                );
+                transform.translation =
+                    game_transform.next_piece_translation(sqr.0, sqr.1, index.0);
             });
             query.p3().iter_mut().for_each(|(mut image, piece)| {
                 *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);

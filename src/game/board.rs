@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use super::{
     piece::{Piece, Square},
     rand::PieceRandomizer,
@@ -12,7 +14,7 @@ pub struct Board {
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_pos: (i32, i32),
-    next_piece: Piece,
+    next_pieces: VecDeque<Piece>,
     lines: usize,
     score: usize,
     single: usize,
@@ -33,7 +35,10 @@ impl Board {
 
     pub fn new(start_level: usize, transition: Transition) -> Self {
         let randomizer = PieceRandomizer::System;
-        let next_piece = randomizer.gen();
+        let next_pieces = (0..5).fold(VecDeque::new(), |mut accu, _| {
+            accu.push_back(randomizer.gen_1h2r(&accu));
+            accu
+        });
         let mut board = Self {
             start_level,
             transition,
@@ -41,7 +46,7 @@ impl Board {
             squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece: Piece::X,
             curr_pos: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
-            next_piece: next_piece,
+            next_pieces,
             lines: 0,
             score: 0,
             single: 0,
@@ -53,7 +58,7 @@ impl Board {
             piece_count: [0; Piece::variant_len()],
         };
 
-        // auto apply `drought` and `rand_1h2r`
+        // auto apply `drought` and `curr_piece`
         board.switch_to_next_piece();
         board
     }
@@ -155,11 +160,12 @@ impl Board {
     }
 
     pub fn switch_to_next_piece(&mut self) {
-        self.curr_piece = std::mem::replace(
-            &mut self.next_piece,
-            self.randomizer.gen_1h2r(self.curr_piece),
-        );
+        self.next_pieces
+            .push_back(self.randomizer.gen_1h2r(&self.next_pieces));
+        self.curr_piece = self.next_pieces.pop_front().unwrap();
+
         self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
+        self.piece_count[self.curr_piece.variant_index()] += 1;
         match self.curr_piece {
             Piece::I(_) => self.drought = 0,
             _ => {
@@ -167,7 +173,6 @@ impl Board {
                 self.max_drought = self.max_drought.max(self.drought);
             }
         }
-        self.piece_count[self.curr_piece.variant_index()] += 1;
     }
 
     pub fn get_curr_piece(&self) -> Piece {
@@ -180,8 +185,8 @@ impl Board {
             .map(|sqr| Square(sqr.0 + self.curr_pos.0, sqr.1 + self.curr_pos.1))
     }
 
-    pub fn get_next_piece(&self) -> Piece {
-        self.next_piece
+    pub fn get_next_pieces(&self) -> &VecDeque<Piece> {
+        &self.next_pieces
     }
 
     pub fn is_left_movable(&self) -> bool {
