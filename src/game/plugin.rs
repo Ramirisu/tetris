@@ -42,23 +42,23 @@ pub fn setup(app: &mut App) {
                 (
                     (
                         increase_stopwatch_system,
-                        state_game_running::tick_system,
-                        state_game_running::handle_input_system,
-                        state_game_running::curr_piece_fall_system,
+                        state_player_dropping::tick_system,
+                        state_player_dropping::handle_input_system,
+                        state_player_dropping::curr_piece_fall_system,
                         update_statistics_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::Dropping)),
                     (
                         increase_stopwatch_system,
-                        state_game_line_clear::tick_system,
+                        state_player_line_clear::tick_system,
                         update_statistics_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::LineClear)),
                     (
                         increase_stopwatch_system,
-                        state_game_entry_delay::tick_system,
+                        state_player_entry_delay::tick_system,
                     )
                         .run_if(in_state(PlayerPhase::EntryDelay)),
                 )
@@ -583,7 +583,7 @@ fn update_statistics_system(
     }
 }
 
-mod state_game_running {
+mod state_player_dropping {
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
@@ -797,7 +797,7 @@ mod state_game_running {
     }
 }
 
-mod state_game_line_clear {
+mod state_player_line_clear {
     use super::*;
 
     pub(super) fn tick_system(
@@ -836,7 +836,7 @@ mod state_game_line_clear {
     }
 }
 
-mod state_game_entry_delay {
+mod state_player_entry_delay {
     use super::*;
 
     pub(super) fn tick_system(
@@ -911,7 +911,7 @@ mod state_game_pause {
         controller_mapping: Res<ControllerMapping>,
         mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
-        mut player_phase: ResMut<NextState<PlayerPhase>>,
+        mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -925,7 +925,7 @@ mod state_game_pause {
 
         if player_inputs.start {
             *query.p0().single_mut() = Visibility::Hidden;
-            player_phase.set(PlayerPhase::Dropping);
+            game_state.set(GameState::Running);
         }
     }
 }
