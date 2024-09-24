@@ -21,7 +21,7 @@ pub enum PlayerPhase {
 pub struct PlayerData {
     pub next_piece_hint: NextPieceHint,
     pub board: Board,
-    pub game_stopwatch: Stopwatch,
+    pub stopwatch: Stopwatch,
     pub game_timer: GameTimer,
     pub lock_curr_piece_immediately: bool,
     pub can_press_down: bool,
@@ -39,7 +39,7 @@ impl PlayerData {
         Self {
             next_piece_hint: config.next_piece_hint,
             board: Board::new(config.start_level, config.transition),
-            game_stopwatch: Stopwatch::new(),
+            stopwatch: Stopwatch::new(),
             game_timer: GameTimer::default(),
             lock_curr_piece_immediately: false,
             can_press_down: false,

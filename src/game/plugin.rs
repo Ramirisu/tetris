@@ -40,7 +40,7 @@ pub fn setup(app: &mut App) {
             (
                 (
                     (
-                        increase_game_stopwatch_system,
+                        increase_stopwatch_system,
                         state_game_running::tick_system,
                         state_game_running::handle_input_system,
                         state_game_running::curr_piece_fall_system,
@@ -49,14 +49,14 @@ pub fn setup(app: &mut App) {
                         .chain()
                         .run_if(in_state(PlayerPhase::Dropping)),
                     (
-                        increase_game_stopwatch_system,
+                        increase_stopwatch_system,
                         state_game_line_clear::tick_system,
                         update_statistics_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::LineClear)),
                     (
-                        increase_game_stopwatch_system,
+                        increase_stopwatch_system,
                         state_game_entry_delay::tick_system,
                     )
                         .run_if(in_state(PlayerPhase::EntryDelay)),
@@ -321,7 +321,7 @@ fn setup_screen(
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 36.0,
+                    font_size: game_transform.scale() * 48.0,
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -350,7 +350,7 @@ fn setup_screen(
                     ..default()
                 }),
             ]),
-            transform: Transform::from_translation(game_transform.game_stopwatch_translation()),
+            transform: Transform::from_translation(game_transform.stopwatch_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -478,8 +478,8 @@ fn setup_screen(
         });
 }
 
-fn increase_game_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-    player_data.game_stopwatch.tick(time.delta());
+fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
+    player_data.stopwatch.tick(time.delta());
 }
 
 fn update_statistics_system(
@@ -538,7 +538,7 @@ fn update_statistics_system(
         }
     }
     if let Ok(mut text) = query.p5().get_single_mut() {
-        text.sections[1].value = format_hhmmss(player_data.game_stopwatch.elapsed());
+        text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
     }
     for (mut text, piece) in query.p6().iter_mut() {
         text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));

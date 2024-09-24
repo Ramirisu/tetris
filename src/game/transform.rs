@@ -34,6 +34,10 @@ impl GameTransform {
         Vec2::new(self.square_width(), self.square_height())
     }
 
+    fn border_width(&self) -> f32 {
+        self.scale * 2.0
+    }
+
     pub fn board_translation(&self) -> Vec3 {
         Vec3::new(0.0, 0.0, BOARD_LAYER)
     }
@@ -51,11 +55,14 @@ impl GameTransform {
     }
 
     pub fn board_background_size(&self) -> Vec2 {
-        Vec2::new(self.board_width() * 1.01, self.board_height() * 1.0025)
+        Vec2::new(
+            self.board_width() + self.border_width() * 2.0,
+            self.board_height() + self.border_width(),
+        )
     }
 
     pub fn board_background_translation(&self) -> Vec3 {
-        Vec3::new(0.0, -self.board_height() * 0.0025, BOARD_BACKGROUND_LAYER)
+        Vec3::new(0.0, -self.border_width(), BOARD_BACKGROUND_LAYER)
     }
 
     pub fn board_cover_size(&self) -> Vec2 {
@@ -102,7 +109,7 @@ impl GameTransform {
         Vec3::new(self.board_width(), -self.square_height() * 8.0, BOARD_LAYER)
     }
 
-    pub fn game_stopwatch_translation(&self) -> Vec3 {
+    pub fn stopwatch_translation(&self) -> Vec3 {
         Vec3::new(
             self.board_width(),
             -self.square_height() * 10.0,
@@ -134,7 +141,10 @@ impl GameTransform {
     }
 
     pub fn next_piece_slot_background_size(&self) -> Vec2 {
-        Vec2::new(self.square_width() * 5.1, self.square_height() * 5.1)
+        Vec2::new(
+            self.square_width() * 5.0 + self.border_width() * 2.0,
+            self.square_height() * 5.0 + self.border_width() * 2.0,
+        )
     }
 
     pub fn statistics_translation(&self) -> Vec3 {
