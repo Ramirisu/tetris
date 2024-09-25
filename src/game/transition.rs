@@ -5,7 +5,8 @@ use num_traits::FromPrimitive;
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Transition {
     #[default]
-    Classic = 0,
+    Classic,
+    Fxied,
     Every10Lines,
     Every4Lines,
 }
@@ -22,6 +23,7 @@ impl Transition {
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
             Transition::Classic => Self::get_level_classic(start_level, lines),
+            Transition::Fxied => Self::get_level_fixed(start_level, lines),
             Transition::Every10Lines => Self::get_level_every_n_lines(start_level, lines, 10),
             Transition::Every4Lines => Self::get_level_every_n_lines(start_level, lines, 4),
         }
@@ -45,6 +47,10 @@ impl Transition {
         }
 
         start_level
+    }
+
+    fn get_level_fixed(start_level: usize, lines: usize) -> usize {
+        start_level.max(lines / 10)
     }
 
     fn get_level_every_n_lines(start_level: usize, lines: usize, every: usize) -> usize {

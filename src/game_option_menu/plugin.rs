@@ -281,6 +281,7 @@ fn update_ui_system(
                 text.sections[0].value = fname("TRANSITION", NameKind::Option);
                 match game_option_menu_data.game_config.transition {
                     Transition::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
+                    Transition::Fxied => text.sections[1].value = fopt("FIXED", true, true),
                     Transition::Every10Lines => {
                         text.sections[1].value = fopt("10 LINES", true, true)
                     }
