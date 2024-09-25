@@ -5,16 +5,12 @@
 
 A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 
-![splash](https://github.com/Ramirisu/tetris/blob/main/docs/splash.png)
-![game_play](https://github.com/Ramirisu/tetris/blob/main/docs/game_play.png)
+![gameplay](https://github.com/Ramirisu/tetris/blob/main/docs/gameplay.png)
 
 ## Features
 
 - Game Play
-  - [x] DAS (16 ticks / 6 ticks)
-  - [x] Initial Entry Delay (96 ticks)
-  - [x] Entry Delay (10 ~ 18 ticks)
-  - [x] Line Clear Delay (18 ticks)
+  - [x] DAS
   - [x] 1H2R RNG for Next Piece
   - [X] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
@@ -26,6 +22,41 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 - Platform
   - [x] High FPS Support
   - [x] Cross-platform (Web/Windows/Linux/MacOS)
+
+
+## Game Options
+
+**TRANSITION**
+
+|  Options |                                                                                                                                                                                                       |
+| -------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  Classic | When the player line clear `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` lines, whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
+|    Fixed | When the player line clear `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
+| 10 Lines | The level advacnes by 1 for every `10` lines.                                                                                                                                                         |
+|  4 Lines | The level advacnes by 1 for every `4` lines.                                                                                                                                                          |
+
+**LINECAP**
+
+| Options |                                                                                                         |
+| ------: | :------------------------------------------------------------------------------------------------------ |
+|     Off | The drop speed is the same as Level 29 for Level 39 and beyond.                                         |
+|      On | The drop speed is *200%* of Level 29 starting from Level 39. This is also known as *Super Kill Screen*. |
+
+**DROPSPEED**
+
+| Options |                                                   |
+| ------: | :------------------------------------------------ |
+|   Level | The drop speed increases when the level advances. |
+|  Locked | The drop speed is locked at the `startLevel`.     |
+
+**NEXT PIECE HINT**
+
+| Options |                       |
+| ------: | :-------------------- |
+|     Off |                       |
+| Classic | Show next piece only. |
+|  Modern | Show next 5 pieces.   |
+
 
 ## Keybindings
 
