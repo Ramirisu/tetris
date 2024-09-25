@@ -55,7 +55,7 @@ enum GameOptionMenuSelection {
     #[default]
     Tetris,
     BlankLine0,
-    OptionsCategory,
+    GameOptionsCategory,
     BlankLine1,
     Transition,
     Linecap,
@@ -64,7 +64,7 @@ enum GameOptionMenuSelection {
     DASIndicator,
     ControllerMapping,
     BlankLine2,
-    VideoCategory,
+    VideoOptionsCategory,
     BlankLine3,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
@@ -82,7 +82,7 @@ impl GameOptionMenuSelection {
         const STATES: ArrayType = [
             GameOptionMenuSelection::Tetris,
             GameOptionMenuSelection::BlankLine0,
-            GameOptionMenuSelection::OptionsCategory,
+            GameOptionMenuSelection::GameOptionsCategory,
             GameOptionMenuSelection::BlankLine1,
             GameOptionMenuSelection::Transition,
             GameOptionMenuSelection::Linecap,
@@ -91,7 +91,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::DASIndicator,
             GameOptionMenuSelection::ControllerMapping,
             GameOptionMenuSelection::BlankLine2,
-            GameOptionMenuSelection::VideoCategory,
+            GameOptionMenuSelection::VideoOptionsCategory,
             GameOptionMenuSelection::BlankLine3,
             GameOptionMenuSelection::ScaleFactor,
             #[cfg(not(target_arch = "wasm32"))]
@@ -238,149 +238,140 @@ fn update_ui_system(
     }
 
     query.iter_mut().for_each(|(mut text, marker)| {
-        enum NameKind {
-            Category,
-            Option,
-        }
-        let fname = |name, kind: NameKind| -> String {
-            match kind {
-                NameKind::Category => format!("{:25} ", name),
-                NameKind::Option => {
-                    let s = if marker.0 == game_option_menu_data.selection {
-                        ">>"
-                    } else {
-                        ""
-                    };
-                    format!("{:>4} {:20} ", s, name)
-                }
+        let fname_impl = |name, category| -> String {
+            if category {
+                format!("{:25} ", name)
+            } else {
+                let s = if marker.0 == game_option_menu_data.selection {
+                    ">>"
+                } else {
+                    ""
+                };
+                format!("{:>4} {:20} ", s, name)
             }
         };
-        let fopt = |name, l, r| -> String {
-            let l = if l { "<" } else { "" };
-            let r = if r { ">" } else { "" };
+        let fname_cat = |name| -> String { fname_impl(name, true) };
+        let fname_opt = |name| -> String { fname_impl(name, false) };
+        let fopt_impl = |name, left_arrow, right_arrow| -> String {
+            let l = if left_arrow { "<" } else { "" };
+            let r = if right_arrow { ">" } else { "" };
             format!("{:1} {:12} {:1}", l, name, r)
         };
+        let fopt_n = |name| -> String { fopt_impl(name, false, false) };
+        let fopt_l = |name| -> String { fopt_impl(name, true, false) };
+        let fopt_m = |name| -> String { fopt_impl(name, true, true) };
+        let fopt_r = |name| -> String { fopt_impl(name, false, true) };
         match marker.0 {
             GameOptionMenuSelection::Tetris => {
-                text.sections[0].value = fname("TETRIS", NameKind::Option);
-                text.sections[1].value = fopt("", false, false);
+                text.sections[0].value = fname_opt("TETRIS");
+                text.sections[1].value = fopt_n("");
             }
             GameOptionMenuSelection::BlankLine0 => {
-                text.sections[0].value = fname("", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+                text.sections[0].value = fname_cat("");
+                text.sections[1].value = fopt_n("");
             }
-            GameOptionMenuSelection::OptionsCategory => {
-                text.sections[0].value = fname("# OPTIONS", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+            GameOptionMenuSelection::GameOptionsCategory => {
+                text.sections[0].value = fname_cat("$ GAME OPTIONS");
+                text.sections[1].value = fopt_n("");
             }
             GameOptionMenuSelection::BlankLine1 => {
-                text.sections[0].value = fname("", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+                text.sections[0].value = fname_cat("");
+                text.sections[1].value = fopt_n("");
             }
             GameOptionMenuSelection::Transition => {
-                text.sections[0].value = fname("TRANSITION", NameKind::Option);
+                text.sections[0].value = fname_opt("TRANSITION");
                 match game_option_menu_data.game_config.transition {
-                    Transition::Classic => text.sections[1].value = fopt("CLASSIC", false, true),
-                    Transition::Fxied => text.sections[1].value = fopt("FIXED", true, true),
-                    Transition::Every10Lines => {
-                        text.sections[1].value = fopt("10 LINES", true, true)
-                    }
-                    Transition::Every4Lines => {
-                        text.sections[1].value = fopt(" 4 LINES", true, false)
-                    }
+                    Transition::Classic => text.sections[1].value = fopt_r("CLASSIC"),
+                    Transition::Fxied => text.sections[1].value = fopt_m("FIXED"),
+                    Transition::Every10Lines => text.sections[1].value = fopt_m("10 LINES"),
+                    Transition::Every4Lines => text.sections[1].value = fopt_l(" 4 LINES"),
                 };
             }
             GameOptionMenuSelection::Linecap => {
-                text.sections[0].value = fname("LINECAP", NameKind::Option);
+                text.sections[0].value = fname_opt("LINECAP");
                 match game_option_menu_data.game_config.linecap {
-                    Linecap::None => text.sections[1].value = fopt("OFF", false, true),
-                    Linecap::KillScreenX2 => text.sections[1].value = fopt("ON", true, false),
+                    Linecap::None => text.sections[1].value = fopt_r("OFF"),
+                    Linecap::KillScreenX2 => text.sections[1].value = fopt_l("ON"),
                 }
             }
             GameOptionMenuSelection::DropSpeed => {
-                text.sections[0].value = fname("DROPSPEED", NameKind::Option);
+                text.sections[0].value = fname_opt("DROPSPEED");
                 match game_option_menu_data.game_config.drop_speed {
-                    DropSpeed::Level => text.sections[1].value = fopt("LEVEL", false, true),
-                    DropSpeed::Locked => text.sections[1].value = fopt("LOCKED", true, false),
+                    DropSpeed::Level => text.sections[1].value = fopt_r("LEVEL"),
+                    DropSpeed::Locked => text.sections[1].value = fopt_l("LOCKED"),
                 };
             }
             GameOptionMenuSelection::NextPieceHint => {
-                text.sections[0].value = fname("NEXT PIECE HINT", NameKind::Option);
+                text.sections[0].value = fname_opt("NEXT PIECE HINT");
                 match game_option_menu_data.game_config.next_piece_hint {
-                    NextPieceHint::Off => text.sections[1].value = fopt("OFF", false, true),
-                    NextPieceHint::Classic => text.sections[1].value = fopt("CLASSIC", true, true),
-                    NextPieceHint::Modern => text.sections[1].value = fopt("MODERN", true, false),
+                    NextPieceHint::Off => text.sections[1].value = fopt_r("OFF"),
+                    NextPieceHint::Classic => text.sections[1].value = fopt_m("CLASSIC"),
+                    NextPieceHint::Modern => text.sections[1].value = fopt_l("MODERN"),
                 }
             }
             GameOptionMenuSelection::DASIndicator => {
-                text.sections[0].value = fname("DAS INDICATOR", NameKind::Option);
+                text.sections[0].value = fname_opt("DAS INDICATOR");
                 match game_option_menu_data.game_config.das_indicator {
-                    DASIndicator::Off => text.sections[1].value = fopt("OFF", false, true),
-                    DASIndicator::On => text.sections[1].value = fopt("ON", true, false),
+                    DASIndicator::Off => text.sections[1].value = fopt_r("OFF"),
+                    DASIndicator::On => text.sections[1].value = fopt_l("ON"),
                 }
             }
             GameOptionMenuSelection::ControllerMapping => {
-                text.sections[0].value = fname("CONTROLLER MAPPING", NameKind::Option);
+                text.sections[0].value = fname_opt("CONTROLLER MAPPING");
                 match *controller_mapping {
-                    ControllerMapping::MappingA => {
-                        text.sections[1].value = fopt("MAPPING A", false, true)
-                    }
-                    ControllerMapping::MappingB => {
-                        text.sections[1].value = fopt("MAPPING B", true, false)
-                    }
+                    ControllerMapping::MappingA => text.sections[1].value = fopt_r("MAPPING A"),
+                    ControllerMapping::MappingB => text.sections[1].value = fopt_l("MAPPING B"),
                 };
             }
             GameOptionMenuSelection::BlankLine2 => {
-                text.sections[0].value = fname("", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+                text.sections[0].value = fname_cat("");
+                text.sections[1].value = fopt_n("");
             }
-            GameOptionMenuSelection::VideoCategory => {
-                text.sections[0].value = fname("# VIDEO OPTIONS", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+            GameOptionMenuSelection::VideoOptionsCategory => {
+                text.sections[0].value = fname_cat("$ VIDEO OPTIONS");
+                text.sections[1].value = fopt_n("");
             }
             GameOptionMenuSelection::BlankLine3 => {
-                text.sections[0].value = fname("", NameKind::Category);
-                text.sections[1].value = fopt("", false, false);
+                text.sections[0].value = fname_cat("");
+                text.sections[1].value = fopt_n("");
             }
             GameOptionMenuSelection::ScaleFactor => {
-                text.sections[0].value = fname("SCALE FACTOR", NameKind::Option);
+                text.sections[0].value = fname_opt("SCALE FACTOR");
                 match *scale_factor {
-                    ScaleFactor::S720 => text.sections[1].value = fopt("0.66 (720P)", false, true),
-                    ScaleFactor::S1080 => text.sections[1].value = fopt("1.00 (1080P)", true, true),
-                    ScaleFactor::S1440 => text.sections[1].value = fopt("1.33 (1440P)", true, true),
-                    ScaleFactor::S1800 => text.sections[1].value = fopt("1.66 (1800P)", true, true),
-                    ScaleFactor::S2160 => text.sections[1].value = fopt("2.00 (2160P)", true, true),
-                    ScaleFactor::S3240 => text.sections[1].value = fopt("3.00 (3240P)", true, true),
-                    ScaleFactor::S4320 => {
-                        text.sections[1].value = fopt("4.00 (4320P)", true, false)
-                    }
+                    ScaleFactor::S720 => text.sections[1].value = fopt_r("0.66 (720P)"),
+                    ScaleFactor::S1080 => text.sections[1].value = fopt_m("1.00 (1080P)"),
+                    ScaleFactor::S1440 => text.sections[1].value = fopt_m("1.33 (1440P)"),
+                    ScaleFactor::S1800 => text.sections[1].value = fopt_m("1.66 (1800P)"),
+                    ScaleFactor::S2160 => text.sections[1].value = fopt_m("2.00 (2160P)"),
+                    ScaleFactor::S3240 => text.sections[1].value = fopt_m("3.00 (3240P)"),
+                    ScaleFactor::S4320 => text.sections[1].value = fopt_l("4.00 (4320P)"),
                 }
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::FPSLimiter => {
-                text.sections[0].value = fname("FPS LIMITER", NameKind::Option);
+                text.sections[0].value = fname_opt("FPS LIMITER");
                 match game_option_menu_data.fps_limiter {
-                    FPSLimiter::Auto => text.sections[1].value = fopt("AUTO", false, true),
-                    FPSLimiter::Unlimited => text.sections[1].value = fopt("UNLIMITED", true, true),
-                    FPSLimiter::F60 => text.sections[1].value = fopt("60 FPS", true, true),
-                    FPSLimiter::F144 => text.sections[1].value = fopt("144 FPS", true, true),
-                    FPSLimiter::F240 => text.sections[1].value = fopt("240 FPS", true, true),
-                    FPSLimiter::F360 => text.sections[1].value = fopt("360 FPS", true, true),
-                    FPSLimiter::F480 => text.sections[1].value = fopt("480 FPS", true, false),
+                    FPSLimiter::Auto => text.sections[1].value = fopt_r("AUTO"),
+                    FPSLimiter::Unlimited => text.sections[1].value = fopt_m("UNLIMITED"),
+                    FPSLimiter::F60 => text.sections[1].value = fopt_m("60 FPS"),
+                    FPSLimiter::F144 => text.sections[1].value = fopt_m("144 FPS"),
+                    FPSLimiter::F240 => text.sections[1].value = fopt_m("240 FPS"),
+                    FPSLimiter::F360 => text.sections[1].value = fopt_m("360 FPS"),
+                    FPSLimiter::F480 => text.sections[1].value = fopt_l("480 FPS"),
                 }
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
-                text.sections[0].value = fname("WINDOW MODE", NameKind::Option);
+                text.sections[0].value = fname_opt("WINDOW MODE");
                 match game_option_menu_data.window_mode {
                     WindowMode::Windowed => {
-                        text.sections[1].value = fopt("WINDOWED", false, true);
+                        text.sections[1].value = fopt_r("WINDOWED");
                     }
                     WindowMode::BorderlessFullscreen => {
-                        text.sections[1].value = fopt("BORDERLESS", true, true);
+                        text.sections[1].value = fopt_m("BORDERLESS");
                     }
                     WindowMode::Fullscreen => {
-                        text.sections[1].value = fopt("FULLSCREEN", true, false);
+                        text.sections[1].value = fopt_l("FULLSCREEN");
                     }
                     _ => (),
                 };
@@ -450,7 +441,7 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::BlankLine0 => (),
-        GameOptionMenuSelection::OptionsCategory => (),
+        GameOptionMenuSelection::GameOptionsCategory => (),
         GameOptionMenuSelection::BlankLine1 => (),
         GameOptionMenuSelection::Transition => {
             if player_inputs.up.0 {
@@ -575,7 +566,7 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::BlankLine2 => (),
-        GameOptionMenuSelection::VideoCategory => (),
+        GameOptionMenuSelection::VideoOptionsCategory => (),
         GameOptionMenuSelection::BlankLine3 => (),
         GameOptionMenuSelection::ScaleFactor => {
             if player_inputs.up.0 {
