@@ -208,7 +208,7 @@ fn setup_screen(
                 text: Text::from_section(
                     "PRESS START\nTO CONTINUE",
                     TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
@@ -224,14 +224,14 @@ fn setup_screen(
                 TextSection {
                     value: "LINES\n".into(),
                     style: TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 72.0,
+                    font_size: game_transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -249,14 +249,14 @@ fn setup_screen(
                 TextSection {
                     value: "SCORE\n".into(),
                     style: TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 72.0,
+                    font_size: game_transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -274,19 +274,19 @@ fn setup_screen(
                 TextSection {
                     value: "LEVEL ".into(),
                     style: TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 72.0,
+                    font_size: game_transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 36.0,
+                    font_size: game_transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -301,7 +301,7 @@ fn setup_screen(
         Text2dBundle {
             text: Text::from_sections(vec![
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 36.0,
+                    font_size: game_transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 });
@@ -319,14 +319,14 @@ fn setup_screen(
                 TextSection {
                     value: "DAS ".into(),
                     style: TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 48.0,
+                    font_size: game_transform.fs_large(),
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -343,14 +343,14 @@ fn setup_screen(
                 TextSection {
                     value: "TIME ".into(),
                     style: TextStyle {
-                        font_size: game_transform.scale() * 36.0,
+                        font_size: game_transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.scale() * 36.0,
+                    font_size: game_transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 }),
@@ -391,7 +391,7 @@ fn setup_screen(
                     commands.spawn((
                         Text2dBundle {
                             text: Text::from_sections([TextSection::from_style(TextStyle {
-                                font_size: game_transform.scale() * 36.0,
+                                font_size: game_transform.fs_medium(),
                                 color: WHITE.into(),
                                 ..default()
                             })]),
@@ -429,6 +429,22 @@ fn setup_screen(
                 CurrPieceEntityMarker,
             ));
         });
+
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_section(
+                "NEXT",
+                TextStyle {
+                    font_size: game_transform.fs_large(),
+                    color: WHITE.into(),
+                    ..default()
+                },
+            ),
+            transform: Transform::from_translation(game_transform.next_piece_label_translation()),
+            ..default()
+        },
+        GameEntityMarker,
+    ));
 
     player_data
         .board

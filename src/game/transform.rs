@@ -22,6 +22,18 @@ impl GameTransform {
         self.scale
     }
 
+    pub fn fs_medium(&self) -> f32 {
+        self.scale * 36.0
+    }
+
+    pub fn fs_large(&self) -> f32 {
+        self.scale * 48.0
+    }
+
+    pub fn fs_xlarge(&self) -> f32 {
+        self.scale * 72.0
+    }
+
     fn square_width(&self) -> f32 {
         self.scale * 36.0
     }
@@ -159,6 +171,11 @@ impl GameTransform {
             }
         }
         .extend(BOARD_LAYER)
+    }
+
+    pub fn next_piece_label_translation(&self) -> Vec3 {
+        (self.next_piece_translation_offset() + Vec2::new(0.0, self.square_height() * 3.5))
+            .extend(BOARD_LAYER)
     }
 
     pub fn next_piece_slot_size(&self, index: usize) -> Vec2 {
