@@ -19,7 +19,7 @@ use super::{
     palette::SquareImageSize,
     piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
-    tick::{duration_to_ticks, EntryDelayTick, LineClearTick},
+    tick::{duration_to_ticks, EntryDelayTick},
     transform::GameTransform,
 };
 
@@ -801,7 +801,6 @@ mod state_player_dropping {
                     _ => (),
                 }
                 if lines.len() > 0 {
-                    player_data.line_clear_tick = LineClearTick::new((Board::BOARD_COLS + 1) / 2);
                     player_data.line_clear_rows = lines;
                     player_data.line_clear_phase = LineClearPhase::new();
                     player_phase.set(PlayerPhase::LineClear);
@@ -826,9 +825,11 @@ mod state_player_line_clear {
         mut image_assets: ResMut<Assets<Image>>,
     ) {
         player_data.game_timer.tick(time.delta());
-        let threshold = player_data.line_clear_tick.threshold();
+        let threshold = player_data.line_clear_phase.tick.threshold();
         if player_data.game_timer.commit(threshold) {
-            if let Some((left, right)) = player_data.line_clear_phase.next_cols() {
+            let mut to_next_state = true;
+            if let Some((left, right, end)) = player_data.line_clear_phase.next() {
+                to_next_state = end;
                 for (mut image, coordinate) in query.iter_mut() {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
@@ -836,7 +837,8 @@ mod state_player_line_clear {
                         *image = square_image_assets.get_image(SquareImageSize::Normal, Piece::X);
                     }
                 }
-            } else {
+            }
+            if to_next_state {
                 let old_level = player_data.board.level();
                 player_data.board.clear_lines();
                 let new_level = player_data.board.level();

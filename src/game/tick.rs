@@ -9,7 +9,7 @@ pub const fn ticks_to_duration(count: u64) -> Duration {
 }
 
 // 1 tick = 1000 subticks
-pub const fn sub_ticks_to_duration(count: u64) -> Duration {
+pub const fn subticks_to_duration(count: u64) -> Duration {
     Duration::from_micros(count * 1_000_000_000 / TICKS_PER_MICROSECOND)
 }
 
@@ -69,7 +69,7 @@ impl FallTick {
             29..39 => ticks_to_duration(1),
             _ => match linecap {
                 Linecap::None => ticks_to_duration(1),
-                Linecap::KillScreenX2 => sub_ticks_to_duration(500),
+                Linecap::KillScreenX2 => subticks_to_duration(500),
             },
         }
     }

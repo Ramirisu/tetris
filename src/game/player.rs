@@ -30,7 +30,6 @@ pub struct PlayerData {
     pub press_down_timer: PressDownTimer,
     pub das_timer: DelayAutoShiftTimer,
     pub fall_tick: FallTick,
-    pub line_clear_tick: LineClearTick,
     pub line_clear_rows: Vec<usize>,
     pub line_clear_phase: LineClearPhase,
     pub entry_delay_tick: EntryDelayTick,
@@ -49,7 +48,6 @@ impl PlayerData {
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
             fall_tick: FallTick::new(config.start_level, config.linecap, config.drop_speed),
-            line_clear_tick: LineClearTick::default(),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),
             entry_delay_tick: EntryDelayTick::default(),
@@ -64,30 +62,33 @@ impl Default for PlayerData {
 }
 
 pub struct LineClearPhase {
-    cols: Option<(usize, usize)>, // (left, right)
+    cols: usize,
+    total_phases: usize,
+    curr_phase: usize,
+    pub tick: LineClearTick,
 }
 
 impl LineClearPhase {
     pub fn new() -> Self {
-        const COLS: usize = Board::BOARD_COLS;
+        let cols = Board::BOARD_COLS;
+        let total_phases = (cols + 1) / 2;
         Self {
-            cols: if COLS % 2 == 0 {
-                Some((COLS / 2 - 1, COLS / 2))
-            } else {
-                Some((COLS / 2, COLS / 2))
-            },
+            cols,
+            total_phases,
+            curr_phase: 0,
+            tick: LineClearTick::new(total_phases),
         }
     }
 
-    pub fn next_cols(&mut self) -> Option<(usize, usize)> {
-        self.cols.map(|cols| {
-            if cols.0 > 0 {
-                self.cols = Some((cols.0 - 1, cols.1 + 1));
-            } else {
-                self.cols = None
-            }
-            cols
-        })
+    pub fn next(&mut self) -> Option<(usize, usize, bool)> {
+        if self.curr_phase < self.total_phases {
+            self.curr_phase += 1;
+            let left = self.total_phases - self.curr_phase;
+            let right = self.cols - left - 1;
+            Some((left, right, self.curr_phase == self.total_phases))
+        } else {
+            None
+        }
     }
 }
 
