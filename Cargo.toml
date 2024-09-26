@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.14.2", features = ["wav"] }
-bevy_dev_tools = "0.14.2"
-bevy_framepace = "0.17.1"
-rand = "0.8.5"
+bevy = { version = "0.14", features = ["wav"] }
+bevy_dev_tools = "0.14"
+bevy_framepace = "0.17"
+rand = "0.8"
 num-traits = "0.2"
 num-derive = "0.4"
-image = "0.25.2"
+image = "0.25"
 log = { version = "*", features = [
     "max_level_debug",
     "release_max_level_warn",

@@ -122,13 +122,6 @@ pub enum SquareImageSize {
     Small,
 }
 
-impl SquareImageSize {
-    pub fn iter() -> std::slice::Iter<'static, SquareImageSize> {
-        const SIZES: [SquareImageSize; 2] = [SquareImageSize::Normal, SquareImageSize::Small];
-        SIZES.iter()
-    }
-}
-
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum SquarePattern {
     X,

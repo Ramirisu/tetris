@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 
-use num_traits::FromPrimitive;
 use rand::Rng;
 
 use super::piece::Piece;
@@ -12,14 +11,6 @@ pub enum PieceRandomizer {
 }
 
 impl PieceRandomizer {
-    pub fn enum_prev(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
-    }
-
-    pub fn enum_next(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
-    }
-
     pub fn gen(&self) -> Piece {
         match self {
             PieceRandomizer::System => rand::thread_rng()

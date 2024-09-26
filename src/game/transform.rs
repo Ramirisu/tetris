@@ -18,10 +18,6 @@ impl GameTransform {
         Self { scale }
     }
 
-    pub fn scale(&self) -> f32 {
-        self.scale
-    }
-
     pub fn fs_medium(&self) -> f32 {
         self.scale * 36.0
     }
