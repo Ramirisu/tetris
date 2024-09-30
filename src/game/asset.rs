@@ -34,3 +34,9 @@ impl SquareImageAssets {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct ColorMaterialAssets {
+    pub red: Handle<ColorMaterial>,
+    pub white: Handle<ColorMaterial>,
+}

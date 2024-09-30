@@ -1,6 +1,7 @@
 use bevy::{
     color::palettes::css::{BLACK, GREEN, RED, WHITE, YELLOW},
     prelude::*,
+    sprite::MaterialMesh2dBundle,
 };
 
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
 };
 
 use super::{
-    asset::SquareImageAssets,
+    asset::{ColorMaterialAssets, SquareImageAssets},
     board::Board,
     das_indicator::DASIndicator,
     game::GameState,
@@ -28,13 +29,10 @@ pub fn setup(app: &mut App) {
         .init_state::<GameState>()
         .insert_resource(PlayerData::default())
         .init_state::<PlayerPhase>()
-        .add_systems(
-            OnEnter(AppState::Game),
-            (load_square_image_assets, setup_screen).chain(),
-        )
+        .add_systems(OnEnter(AppState::Game), (load_assets, setup_screen).chain())
         .add_systems(
             OnExit(AppState::Game),
-            (despawn_all::<GameEntityMarker>, unload_square_image_assets),
+            (despawn_all::<GameEntityMarker>, unload_assets),
         )
         .add_systems(
             Update,
@@ -118,19 +116,35 @@ struct CurrPieceEntityMarker;
 #[derive(Component)]
 struct NextPieceEntityMarker(usize);
 
-fn load_square_image_assets(
+#[derive(Component)]
+enum PlayerInputsDisplayEntityMarker {
+    Left,
+    Right,
+    Up,
+    Down,
+    A,
+    B,
+}
+
+fn load_assets(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
+    mut color_material_assets: ResMut<Assets<ColorMaterial>>,
     player_data: Res<PlayerData>,
 ) {
     commands.insert_resource(SquareImageAssets::new(
         &mut image_assets,
         player_data.board.level(),
     ));
+    commands.insert_resource(ColorMaterialAssets {
+        red: color_material_assets.add(Color::from(RED)),
+        white: color_material_assets.add(Color::from(WHITE)),
+    });
 }
 
-fn unload_square_image_assets(mut commands: Commands) {
+fn unload_assets(mut commands: Commands) {
     commands.remove_resource::<SquareImageAssets>();
+    commands.remove_resource::<ColorMaterialAssets>();
 }
 
 fn setup_screen(
@@ -138,6 +152,8 @@ fn setup_screen(
     player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
     game_transform: Res<GameTransform>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    color_materials: Res<ColorMaterialAssets>,
 ) {
     commands.spawn((
         SpriteBundle {
@@ -520,6 +536,94 @@ fn setup_screen(
                     ));
                 });
         });
+
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .into(),
+            transform: Transform::from_translation(
+                game_transform.inputs_button_center_translation(),
+            ),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .into(),
+            transform: Transform::from_translation(game_transform.inputs_button_left_translation()),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::Left,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .into(),
+            transform: Transform::from_translation(
+                game_transform.inputs_button_right_translation(),
+            ),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::Right,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .into(),
+            transform: Transform::from_translation(game_transform.inputs_button_up_translation()),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::Up,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .into(),
+            transform: Transform::from_translation(game_transform.inputs_button_down_translation()),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::Down,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Circle::new(game_transform.inputs_circle_scale()))
+                .into(),
+            transform: Transform::from_translation(game_transform.inputs_button_a_translation()),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::A,
+    ));
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Circle::new(game_transform.inputs_circle_scale()))
+                .into(),
+            transform: Transform::from_translation(game_transform.inputs_button_b_translation()),
+            material: color_materials.white.clone(),
+            ..default()
+        },
+        GameEntityMarker,
+        PlayerInputsDisplayEntityMarker::B,
+    ));
 }
 
 fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
@@ -616,12 +720,14 @@ mod state_player_dropping {
         mut query: ParamSet<(
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
+            Query<(&mut Handle<ColorMaterial>, &PlayerInputsDisplayEntityMarker)>,
         )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
         game_transform: Res<GameTransform>,
+        color_materials: Res<ColorMaterialAssets>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
@@ -637,6 +743,22 @@ mod state_player_dropping {
             game_state.set(GameState::Pause);
             return;
         }
+
+        query.p2().iter_mut().for_each(|(mut color, marker)| {
+            let pressed = match marker {
+                PlayerInputsDisplayEntityMarker::Left => player_inputs.left.pressed,
+                PlayerInputsDisplayEntityMarker::Right => player_inputs.right.pressed,
+                PlayerInputsDisplayEntityMarker::Up => player_inputs.up.pressed,
+                PlayerInputsDisplayEntityMarker::Down => player_inputs.down.pressed,
+                PlayerInputsDisplayEntityMarker::A => player_inputs.a.pressed,
+                PlayerInputsDisplayEntityMarker::B => player_inputs.b.pressed,
+            };
+            if pressed {
+                *color = color_materials.red.clone();
+            } else {
+                *color = color_materials.white.clone();
+            }
+        });
 
         let (moved, lr_moved, rotated) = handle_input(&player_inputs, &time, &mut player_data);
         if moved {

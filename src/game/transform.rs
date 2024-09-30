@@ -101,14 +101,6 @@ impl GameTransform {
             .extend(CURR_PIECE_LAYER)
     }
 
-    pub fn lines_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
-    }
-
-    pub fn score_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
-    }
-
     pub fn das_translation(&self) -> Vec3 {
         Vec3::new(
             0.0,
@@ -117,12 +109,64 @@ impl GameTransform {
         )
     }
 
+    pub fn lines_translation(&self) -> Vec3 {
+        Vec3::new(-self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
+    }
+
+    pub fn score_translation(&self) -> Vec3 {
+        Vec3::new(self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
+    }
+
     pub fn level_translation(&self) -> Vec3 {
         Vec3::new(self.board_width(), -self.square_height() * 7.0, BOARD_LAYER)
     }
 
     pub fn stopwatch_translation(&self) -> Vec3 {
         Vec3::new(self.board_width(), -self.square_height() * 9.0, BOARD_LAYER)
+    }
+
+    pub fn inputs_rect_size(&self) -> Vec2 {
+        Vec2::splat(self.square_width() / 2.0)
+    }
+
+    pub fn inputs_circle_scale(&self) -> f32 {
+        self.square_width() / 3.0
+    }
+
+    fn inputs_translation_offset(&self) -> Vec3 {
+        Vec3::new(
+            self.board_width(),
+            -self.square_height() * 11.0,
+            BOARD_LAYER,
+        )
+    }
+
+    pub fn inputs_button_center_translation(&self) -> Vec3 {
+        self.inputs_translation_offset() + Vec3::new(self.square_width() * -2.0, 0.0, 0.0)
+    }
+
+    pub fn inputs_button_left_translation(&self) -> Vec3 {
+        self.inputs_button_center_translation() + Vec3::new(self.square_width() * -0.5, 0.0, 0.0)
+    }
+
+    pub fn inputs_button_right_translation(&self) -> Vec3 {
+        self.inputs_button_center_translation() + Vec3::new(self.square_width() * 0.5, 0.0, 0.0)
+    }
+
+    pub fn inputs_button_up_translation(&self) -> Vec3 {
+        self.inputs_button_center_translation() + Vec3::new(0.0, self.square_width() * 0.5, 0.0)
+    }
+
+    pub fn inputs_button_down_translation(&self) -> Vec3 {
+        self.inputs_button_center_translation() + Vec3::new(0.0, self.square_width() * -0.5, 0.0)
+    }
+
+    pub fn inputs_button_a_translation(&self) -> Vec3 {
+        self.inputs_translation_offset() + Vec3::new(self.square_width() * 2.0, 0.0, 0.0)
+    }
+
+    pub fn inputs_button_b_translation(&self) -> Vec3 {
+        self.inputs_translation_offset() + Vec3::new(self.square_width() * 1.0, 0.0, 0.0)
     }
 
     pub fn next_piece_square_size(&self, index: usize) -> Vec2 {
