@@ -14,7 +14,7 @@ mod controller;
 mod game;
 mod game_option_menu;
 mod init;
-mod inputs;
+mod input;
 mod level_menu;
 mod logo;
 mod scale;
@@ -65,7 +65,7 @@ fn main() {
         .add_systems(Startup, setup_camera)
         .add_plugins((
             controller::setup,
-            inputs::setup,
+            input::plugin::setup,
             scale::plugin::setup,
             audio::plugin::setup,
             init::plugin::setup,

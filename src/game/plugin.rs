@@ -7,7 +7,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    inputs::{ControllerMapping, PlayerInputs},
+    input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     utility::{despawn_all, format_hhmmss},
 };
 
@@ -632,7 +632,7 @@ mod state_player_dropping {
             return;
         }
 
-        if player_inputs.start {
+        if player_inputs.start.just_pressed {
             *query.p1().single_mut() = Visibility::Inherited;
             game_state.set(GameState::Pause);
             return;
@@ -666,7 +666,7 @@ mod state_player_dropping {
         let mut rotated = false;
 
         if player_data.can_press_down {
-            if inputs.down.1 {
+            if inputs.down.pressed {
                 if player_data.press_down_timer.commit() {
                     down_moved |= player_data.board.move_piece_down();
                     player_data.lock_curr_piece_immediately = !down_moved;
@@ -674,25 +674,25 @@ mod state_player_dropping {
             } else {
                 player_data.can_press_down = false;
             }
-        } else if inputs.down.0 {
+        } else if inputs.down.just_pressed {
             player_data.can_press_down = true;
             player_data.game_timer.reset();
             player_data.fall_tick.set_level(player_data.board.level());
             player_data.press_down_timer.reset();
         }
 
-        if !inputs.down.1 {
+        if !inputs.down.pressed {
             player_data.press_down_timer.reset();
 
-            if inputs.left.0 || inputs.right.0 {
+            if inputs.left.just_pressed || inputs.right.just_pressed {
                 player_data.das_timer.reset();
-                match (inputs.left.0, inputs.right.0) {
+                match (inputs.left.just_pressed, inputs.right.just_pressed) {
                     (true, false) => lr_moved |= player_data.board.move_piece_left(),
                     (false, true) => lr_moved |= player_data.board.move_piece_right(),
                     _ => (),
                 }
             } else {
-                match (inputs.left.1, inputs.right.1) {
+                match (inputs.left.pressed, inputs.right.pressed) {
                     (true, true) => player_data.das_timer.tick(time.delta()),
                     (true, false) => {
                         player_data.das_timer.tick(time.delta());
@@ -715,10 +715,10 @@ mod state_player_dropping {
             }
         }
 
-        if inputs.a.0 {
+        if inputs.a.just_pressed {
             rotated |= player_data.board.rotate_piece_clockwise();
         }
-        if inputs.b.0 {
+        if inputs.b.just_pressed {
             rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
@@ -941,7 +941,7 @@ mod state_game_pause {
             return;
         }
 
-        if player_inputs.start {
+        if player_inputs.start.just_pressed {
             *query.p0().single_mut() = Visibility::Hidden;
             game_state.set(GameState::Running);
         }
@@ -968,7 +968,7 @@ mod state_game_over {
             return;
         }
 
-        if player_inputs.start {
+        if player_inputs.start.just_pressed {
             app_state.set(AppState::LevelMenu);
         }
     }

@@ -11,7 +11,7 @@ use crate::{
         game::{GameConfig, GameState},
         player::{PlayerData, PlayerPhase},
     },
-    inputs::{ControllerMapping, PlayerInputs},
+    input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
 };
@@ -267,7 +267,10 @@ fn handle_input_system(
         return;
     }
 
-    match (player_inputs.up.0, player_inputs.down.0) {
+    match (
+        player_inputs.up.just_pressed,
+        player_inputs.down.just_pressed,
+    ) {
         (true, false) => {
             level_menu_data.selected_level.1 =
                 (level_menu_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
@@ -286,7 +289,10 @@ fn handle_input_system(
         }
         _ => {
             if level_menu_data.selected_level.1 < 4 {
-                match (player_inputs.left.0, player_inputs.right.0) {
+                match (
+                    player_inputs.left.just_pressed,
+                    player_inputs.right.just_pressed,
+                ) {
                     (true, false) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
@@ -303,7 +309,7 @@ fn handle_input_system(
         }
     }
 
-    if player_inputs.start {
+    if player_inputs.start.just_pressed {
         if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
             [level_menu_data.selected_level.0 as usize]
         {
@@ -315,7 +321,7 @@ fn handle_input_system(
             player_phase.set(PlayerPhase::Dropping);
             app_state.set(AppState::Game);
         }
-    } else if player_inputs.b.0 {
+    } else if player_inputs.b.just_pressed {
         e_play_sound.send(PlaySoundEvent::StartGame);
         app_state.set(AppState::GameModeMenu);
     }

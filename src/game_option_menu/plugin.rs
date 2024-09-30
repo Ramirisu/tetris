@@ -8,7 +8,7 @@ use crate::{
         das_indicator::DASIndicator, drop_speed::DropSpeed, game::GameConfig, linecap::Linecap,
         next_piece_hint::NextPieceHint, transition::Transition,
     },
-    inputs::{ControllerMapping, PlayerInputs},
+    input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     level_menu::plugin::LevelMenuData,
     logo::{load_logo_images, TETRIS_BITMAP},
     scale::plugin::ScaleFactor,
@@ -404,7 +404,7 @@ fn handle_input_system(
         return;
     }
 
-    if player_inputs.b.0 {
+    if player_inputs.b.just_pressed {
         app_state.set(AppState::Splash);
         e_play_sound.send(PlaySoundEvent::StartGame);
         return;
@@ -420,7 +420,7 @@ fn handle_input_system(
 
     match game_option_menu_data.selection {
         GameOptionMenuSelection::Tetris => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
@@ -430,11 +430,11 @@ fn handle_input_system(
                     game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
                 }
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Transition;
                 selection_changed = true;
             }
-            if player_inputs.start {
+            if player_inputs.start.just_pressed {
                 level_menu_data.game_config = game_option_menu_data.game_config;
                 e_play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
@@ -444,72 +444,72 @@ fn handle_input_system(
         GameOptionMenuSelection::GameOptionsCategory => (),
         GameOptionMenuSelection::BlankLine1 => (),
         GameOptionMenuSelection::Transition => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.transition.enum_next() {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.transition.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::Linecap => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Transition;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.linecap.enum_next() {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.linecap.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::DropSpeed => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_next() {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.drop_speed.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::NextPieceHint => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data
                     .game_config
                     .next_piece_hint
@@ -517,7 +517,7 @@ fn handle_input_system(
                 {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data
                     .game_config
                     .next_piece_hint
@@ -528,38 +528,38 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::DASIndicator => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_next() {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::ControllerMapping => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = controller_mapping.enum_next() {
                     option_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = controller_mapping.enum_prev() {
                     option_changed = true;
                 }
@@ -569,10 +569,10 @@ fn handle_input_system(
         GameOptionMenuSelection::VideoOptionsCategory => (),
         GameOptionMenuSelection::BlankLine3 => (),
         GameOptionMenuSelection::ScaleFactor => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
@@ -584,11 +584,11 @@ fn handle_input_system(
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = scale_factor.enum_next() {
                     scale_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = scale_factor.enum_prev() {
                     scale_changed = true;
                 }
@@ -596,19 +596,19 @@ fn handle_input_system(
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuSelection::FPSLimiter => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
                 selection_changed = true;
             }
 
-            if player_inputs.right.0 {
+            if player_inputs.right.just_pressed {
                 if let Some(_) = game_option_menu_data.fps_limiter.enum_next() {
                     fps_changed = true;
                 }
-            } else if player_inputs.left.0 {
+            } else if player_inputs.left.just_pressed {
                 if let Some(_) = game_option_menu_data.fps_limiter.enum_prev() {
                     fps_changed = true;
                 }
@@ -616,32 +616,32 @@ fn handle_input_system(
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuSelection::WindowMode => {
-            if player_inputs.up.0 {
+            if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
                 selection_changed = true;
-            } else if player_inputs.down.0 {
+            } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
                 selection_changed = true;
             }
 
             match game_option_menu_data.window_mode {
                 WindowMode::Windowed => {
-                    if player_inputs.right.0 {
+                    if player_inputs.right.just_pressed {
                         game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
                         window_mode_changed = true;
                     }
                 }
                 WindowMode::BorderlessFullscreen => {
-                    if player_inputs.right.0 {
+                    if player_inputs.right.just_pressed {
                         game_option_menu_data.window_mode = WindowMode::Fullscreen;
                         window_mode_changed = true;
-                    } else if player_inputs.left.0 {
+                    } else if player_inputs.left.just_pressed {
                         game_option_menu_data.window_mode = WindowMode::Windowed;
                         window_mode_changed = true;
                     }
                 }
                 WindowMode::Fullscreen => {
-                    if player_inputs.left.0 {
+                    if player_inputs.left.just_pressed {
                         game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
                         window_mode_changed = true;
                     }
