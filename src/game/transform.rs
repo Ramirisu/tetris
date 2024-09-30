@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::board::Board;
 
+const FLASH_LAYER: f32 = 0.0;
 const BOARD_BACKGROUND_LAYER: f32 = 1.0;
 const BOARD_LAYER: f32 = 2.0;
 const SQUARE_LAYER: f32 = 3.0;
@@ -48,6 +49,14 @@ impl GameTransform {
 
     fn border_size(&self) -> Vec2 {
         Vec2::splat(self.border_width())
+    }
+
+    pub fn flash_size(&self) -> Vec2 {
+        Vec2::new(self.board_width() * 4.0, self.board_height() * 2.0)
+    }
+
+    pub fn flash_translation(&self) -> Vec3 {
+        Vec3::new(0.0, 0.0, FLASH_LAYER)
     }
 
     pub fn board_translation(&self) -> Vec3 {

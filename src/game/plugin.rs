@@ -81,6 +81,9 @@ impl Into<(usize, usize)> for &BoardSquareEntityMarker {
 }
 
 #[derive(Component)]
+struct FlashEntityMarker;
+
+#[derive(Component)]
 struct BoardCoverEntityMarker;
 
 #[derive(Component)]
@@ -155,6 +158,20 @@ fn setup_screen(
     mut meshes: ResMut<Assets<Mesh>>,
     color_materials: Res<ColorMaterialAssets>,
 ) {
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform::from_translation(game_transform.flash_translation()),
+            sprite: Sprite {
+                color: WHITE.into(),
+                custom_size: Some(game_transform.flash_size()),
+                ..default()
+            },
+            visibility: Visibility::Hidden,
+            ..default()
+        },
+        GameEntityMarker,
+        FlashEntityMarker,
+    ));
     commands.spawn((
         SpriteBundle {
             transform: Transform::from_translation(game_transform.board_background_translation()),
@@ -939,7 +956,10 @@ mod state_player_line_clear {
 
     pub(super) fn tick_system(
         time: Res<Time>,
-        mut query: Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
+        mut query: ParamSet<(
+            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
+            Query<&mut Visibility, With<FlashEntityMarker>>,
+        )>,
         mut e_play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
@@ -952,11 +972,20 @@ mod state_player_line_clear {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
-                for (mut image, coordinate) in query.iter_mut() {
+                for (mut image, coordinate) in query.p0().iter_mut() {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
                         *image = square_image_assets.get_image(SquareImageSize::Normal, Piece::X);
+                    }
+                }
+                if player_data.line_clear_rows.len() == 4 {
+                    if let Ok(mut visibility) = query.p1().get_single_mut() {
+                        match *visibility {
+                            Visibility::Hidden => *visibility = Visibility::Inherited,
+                            Visibility::Inherited => *visibility = Visibility::Hidden,
+                            _ => (),
+                        }
                     }
                 }
             }
@@ -982,6 +1011,7 @@ mod state_player_entry_delay {
     pub(super) fn tick_system(
         time: Res<Time>,
         mut query: ParamSet<(
+            Query<&mut Visibility, With<FlashEntityMarker>>,
             Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<(&mut Transform, &mut Handle<Image>, &NextPieceEntityMarker)>,
@@ -997,7 +1027,11 @@ mod state_player_entry_delay {
         if player_data.game_timer.commit(threshold) {
             player_data.board.switch_to_next_piece();
 
-            query.p0().iter_mut().for_each(|(mut image, coordinate)| {
+            if let Ok(mut visibility) = query.p0().get_single_mut() {
+                *visibility = Visibility::Hidden;
+            }
+
+            query.p1().iter_mut().for_each(|(mut image, coordinate)| {
                 *image = square_image_assets.get_image(
                     SquareImageSize::Normal,
                     player_data
@@ -1007,7 +1041,7 @@ mod state_player_entry_delay {
             });
 
             std::iter::zip(
-                query.p1().iter_mut(),
+                query.p2().iter_mut(),
                 player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
@@ -1016,7 +1050,7 @@ mod state_player_entry_delay {
                 transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
             });
             std::iter::zip(
-                query.p2().iter_mut(),
+                query.p3().iter_mut(),
                 player_data
                     .board
                     .get_next_pieces()
@@ -1032,7 +1066,7 @@ mod state_player_entry_delay {
                 transform.translation =
                     game_transform.next_piece_translation(sqr.0, sqr.1, index.0);
             });
-            query.p3().iter_mut().for_each(|(mut image, piece)| {
+            query.p4().iter_mut().for_each(|(mut image, piece)| {
                 *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);
             });
 
