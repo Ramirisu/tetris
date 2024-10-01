@@ -20,7 +20,7 @@ use super::{
     palette::SquareImageSize,
     piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
-    tick::{duration_to_ticks, EntryDelayTick},
+    tick::duration_to_ticks,
     transform::GameTransform,
 };
 
@@ -702,13 +702,13 @@ fn update_statistics_system(
         }
     };
     if let Ok(mut text) = query.p4().get_single_mut() {
-        let ticks = duration_to_ticks(player_data.das_timer.duration());
+        let ticks = duration_to_ticks(player_data.das_timer.elapsed());
         text.sections[1].value = format!("{:02}", ticks);
         text.sections[1].style.color = get_das_color(ticks);
     }
     if player_data.das_indicator == DASIndicator::On {
         if let Ok(mut sprite) = query.p5().get_single_mut() {
-            let ticks = duration_to_ticks(player_data.das_timer.duration());
+            let ticks = duration_to_ticks(player_data.das_timer.elapsed());
             sprite.color = get_das_color(ticks);
         }
     }
@@ -721,11 +721,12 @@ fn update_statistics_system(
 }
 
 mod state_player_dropping {
+    use crate::game::timer::EntryDelayTimer;
+
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-        player_data.game_timer.tick(time.delta());
-        player_data.press_down_timer.tick(time.delta());
+        player_data.fall_timer.tick(time.delta());
     }
 
     pub(super) fn handle_input_system(
@@ -806,7 +807,7 @@ mod state_player_dropping {
 
         if player_data.can_press_down {
             if inputs.down.pressed {
-                if player_data.press_down_timer.commit() {
+                if player_data.press_down_timer.tick(time.delta()).consume() {
                     down_moved |= player_data.board.move_piece_down();
                     player_data.lock_curr_piece_immediately = !down_moved;
                 }
@@ -815,8 +816,7 @@ mod state_player_dropping {
             }
         } else if inputs.down.just_pressed {
             player_data.can_press_down = true;
-            player_data.game_timer.reset();
-            player_data.fall_tick.set_level(player_data.board.level());
+            player_data.fall_timer.set_level(player_data.board.level());
             player_data.press_down_timer.reset();
         }
 
@@ -832,20 +832,20 @@ mod state_player_dropping {
                 }
             } else {
                 match (inputs.left.pressed, inputs.right.pressed) {
-                    (true, true) => player_data.das_timer.tick(time.delta()),
-                    (true, false) => {
+                    (true, true) => {
                         player_data.das_timer.tick(time.delta());
+                    }
+                    (true, false) => {
                         if !player_data.board.is_left_movable() {
-                            player_data.das_timer.reset_max();
-                        } else if player_data.das_timer.commit() {
+                            player_data.das_timer.charge();
+                        } else if player_data.das_timer.tick(time.delta()).consume() {
                             lr_moved |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
-                        player_data.das_timer.tick(time.delta());
                         if !player_data.board.is_right_movable() {
-                            player_data.das_timer.reset_max();
-                        } else if player_data.das_timer.commit() {
+                            player_data.das_timer.charge();
+                        } else if player_data.das_timer.tick(time.delta()).consume() {
                             lr_moved |= player_data.board.move_piece_right();
                         }
                     }
@@ -878,16 +878,15 @@ mod state_player_dropping {
     ) {
         let lock = {
             if std::mem::replace(&mut player_data.lock_curr_piece_immediately, false) {
-                player_data.game_timer.reset();
+                player_data.fall_timer.reset();
                 true
             } else {
-                let threshold = player_data.fall_tick.threshold();
-                player_data.game_timer.commit(threshold)
+                player_data.fall_timer.consume()
             }
         };
         if lock {
             let new_level = player_data.board.level();
-            player_data.fall_tick.set_level(new_level);
+            player_data.fall_timer.set_level(new_level);
 
             if player_data.board.move_piece_down() {
                 std::iter::zip(
@@ -909,7 +908,7 @@ mod state_player_dropping {
                     .get_curr_piece_squares()
                     .iter()
                     .fold(19, |acc, sqr| acc.min(sqr.1 as u64));
-                player_data.entry_delay_tick = EntryDelayTick::new(min_y);
+                player_data.entry_delay_timer = EntryDelayTimer::new(min_y);
 
                 player_data.board.lock_curr_piece();
                 query.p1().iter_mut().for_each(|mut transform| {
@@ -966,9 +965,12 @@ mod state_player_line_clear {
         mut square_image_assets: ResMut<SquareImageAssets>,
         mut image_assets: ResMut<Assets<Image>>,
     ) {
-        player_data.game_timer.tick(time.delta());
-        let threshold = player_data.line_clear_phase.tick.threshold();
-        if player_data.game_timer.commit(threshold) {
+        if player_data
+            .line_clear_phase
+            .timer
+            .tick(time.delta())
+            .consume()
+        {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
@@ -995,7 +997,7 @@ mod state_player_line_clear {
                 let new_level = player_data.board.level();
                 if new_level > old_level {
                     e_play_sound.send(PlaySoundEvent::LevelUp);
-                    player_data.fall_tick.set_level(new_level);
+                    player_data.fall_timer.set_level(new_level);
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
                 }
@@ -1022,9 +1024,7 @@ mod state_player_entry_delay {
         square_image_assets: Res<SquareImageAssets>,
         game_transform: Res<GameTransform>,
     ) {
-        player_data.game_timer.tick(time.delta());
-        let threshold = player_data.entry_delay_tick.threshold();
-        if player_data.game_timer.commit(threshold) {
+        if player_data.entry_delay_timer.tick(time.delta()).consume() {
             player_data.board.switch_to_next_piece();
 
             if let Ok(mut visibility) = query.p0().get_single_mut() {

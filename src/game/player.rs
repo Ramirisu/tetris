@@ -5,8 +5,7 @@ use super::{
     das_indicator::DASIndicator,
     game::GameConfig,
     next_piece_hint::NextPieceHint,
-    tick::{EntryDelayTick, FallTick, LineClearTick},
-    timer::{DelayAutoShiftTimer, GameTimer, PressDownTimer},
+    timer::{DelayAutoShiftTimer, EntryDelayTimer, FallTimer, LineClearTimer, PressDownTimer},
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -24,15 +23,14 @@ pub struct PlayerData {
     pub das_indicator: DASIndicator,
     pub board: Board,
     pub stopwatch: Stopwatch,
-    pub game_timer: GameTimer,
+    pub fall_timer: FallTimer,
     pub lock_curr_piece_immediately: bool,
     pub can_press_down: bool,
     pub press_down_timer: PressDownTimer,
     pub das_timer: DelayAutoShiftTimer,
-    pub fall_tick: FallTick,
     pub line_clear_rows: Vec<usize>,
     pub line_clear_phase: LineClearPhase,
-    pub entry_delay_tick: EntryDelayTick,
+    pub entry_delay_timer: EntryDelayTimer,
 }
 
 impl PlayerData {
@@ -42,15 +40,14 @@ impl PlayerData {
             das_indicator: config.das_indicator,
             board: Board::new(config.start_level, config.transition),
             stopwatch: Stopwatch::new(),
-            game_timer: GameTimer::default(),
+            fall_timer: FallTimer::new(config.start_level, config.linecap, true),
             lock_curr_piece_immediately: false,
             can_press_down: false,
             press_down_timer: PressDownTimer::default(),
             das_timer: DelayAutoShiftTimer::default(),
-            fall_tick: FallTick::new(config.start_level, config.linecap, config.drop_speed),
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::default(),
-            entry_delay_tick: EntryDelayTick::default(),
+            entry_delay_timer: EntryDelayTimer::new(0),
         }
     }
 }
@@ -63,29 +60,29 @@ impl Default for PlayerData {
 
 pub struct LineClearPhase {
     cols: usize,
-    total_phases: usize,
-    curr_phase: usize,
-    pub tick: LineClearTick,
+    phase: usize,
+    curr: usize,
+    pub timer: LineClearTimer,
 }
 
 impl LineClearPhase {
     pub fn new() -> Self {
         let cols = Board::BOARD_COLS;
-        let total_phases = (cols + 1) / 2;
+        let phase = (cols + 1) / 2;
         Self {
             cols,
-            total_phases,
-            curr_phase: 0,
-            tick: LineClearTick::new(total_phases),
+            phase,
+            curr: 0,
+            timer: LineClearTimer::new(phase as u32),
         }
     }
 
     pub fn next(&mut self) -> Option<(usize, usize, bool)> {
-        if self.curr_phase < self.total_phases {
-            self.curr_phase += 1;
-            let left = self.total_phases - self.curr_phase;
+        if self.curr < self.phase {
+            self.curr += 1;
+            let left = self.phase - self.curr;
             let right = self.cols - left - 1;
-            Some((left, right, self.curr_phase == self.total_phases))
+            Some((left, right, self.curr == self.phase))
         } else {
             None
         }
