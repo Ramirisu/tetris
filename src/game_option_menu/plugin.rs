@@ -389,7 +389,7 @@ fn handle_input_system(
     mut game_option_menu_data: ResMut<GameOptionMenuData>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut app_state: ResMut<NextState<AppState>>,
-    mut e_play_sound: EventWriter<PlaySoundEvent>,
+    mut play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
     #[cfg(not(target_arch = "wasm32"))] mut framepace_settins: ResMut<
         bevy_framepace::FramepaceSettings,
@@ -400,14 +400,14 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
     if player_inputs.soft_reset {
-        e_play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.send(PlaySoundEvent::StartGame);
         app_state.set(AppState::Splash);
         return;
     }
 
     if player_inputs.b.just_pressed {
         app_state.set(AppState::Splash);
-        e_play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.send(PlaySoundEvent::StartGame);
         return;
     }
 
@@ -437,7 +437,7 @@ fn handle_input_system(
             }
             if player_inputs.start.just_pressed {
                 level_menu_data.game_config = game_option_menu_data.game_config;
-                e_play_sound.send(PlaySoundEvent::StartGame);
+                play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
         }
@@ -674,6 +674,6 @@ fn handle_input_system(
         option_changed |= window_mode_changed;
     }
     if selection_changed || option_changed {
-        e_play_sound.send(PlaySoundEvent::MoveCursor);
+        play_sound.send(PlaySoundEvent::MoveCursor);
     }
 }

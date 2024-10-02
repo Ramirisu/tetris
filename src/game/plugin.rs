@@ -741,7 +741,7 @@ mod state_player_dropping {
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
             Query<(&mut Handle<ColorMaterial>, &PlayerInputsDisplayEntityMarker)>,
         )>,
-        mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
@@ -752,7 +752,7 @@ mod state_player_dropping {
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
-            e_play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.send(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }
@@ -790,10 +790,10 @@ mod state_player_dropping {
             });
         }
         if lr_moved {
-            e_play_sound.send(PlaySoundEvent::MoveCurrPiece);
+            play_sound.send(PlaySoundEvent::MoveCurrPiece);
         }
         if rotated {
-            e_play_sound.send(PlaySoundEvent::RotateCurrPiece);
+            play_sound.send(PlaySoundEvent::RotateCurrPiece);
         }
     }
 
@@ -870,7 +870,7 @@ mod state_player_dropping {
             Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
         )>,
-        mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut player_data: ResMut<PlayerData>,
@@ -898,7 +898,7 @@ mod state_player_dropping {
                     transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
-                e_play_sound.send(PlaySoundEvent::GameOver);
+                play_sound.send(PlaySoundEvent::GameOver);
                 game_state.set(GameState::Over);
                 player_phase.set(PlayerPhase::Over);
             } else {
@@ -929,13 +929,13 @@ mod state_player_dropping {
                 let lines = player_data.board.get_line_clear_rows();
                 match lines.len() {
                     0 => {
-                        e_play_sound.send(PlaySoundEvent::LockCurrPiece);
+                        play_sound.send(PlaySoundEvent::LockCurrPiece);
                     }
                     1 | 2 | 3 => {
-                        e_play_sound.send(PlaySoundEvent::LineClear);
+                        play_sound.send(PlaySoundEvent::LineClear);
                     }
                     4 => {
-                        e_play_sound.send(PlaySoundEvent::TetrisClear);
+                        play_sound.send(PlaySoundEvent::TetrisClear);
                     }
                     _ => (),
                 }
@@ -960,7 +960,7 @@ mod state_player_line_clear {
             Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<FlashEntityMarker>>,
         )>,
-        mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut square_image_assets: ResMut<SquareImageAssets>,
@@ -997,7 +997,7 @@ mod state_player_line_clear {
                 player_data.board.clear_lines();
                 let new_level = player_data.board.level();
                 if new_level > old_level {
-                    e_play_sound.send(PlaySoundEvent::LevelUp);
+                    play_sound.send(PlaySoundEvent::LevelUp);
                     player_data.fall_timer.set_level(new_level);
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
@@ -1084,8 +1084,8 @@ mod state_game_pause {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         controller_mapping: Res<ControllerMapping>,
-        mut query: ParamSet<(Query<&mut Visibility, With<BoardCoverEntityMarker>>,)>,
-        mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut query: Query<&mut Visibility, With<BoardCoverEntityMarker>>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
@@ -1093,13 +1093,13 @@ mod state_game_pause {
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
-            e_play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.send(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }
 
         if player_inputs.start.just_pressed {
-            *query.p0().single_mut() = Visibility::Hidden;
+            *query.single_mut() = Visibility::Hidden;
             game_state.set(GameState::Running);
         }
     }
@@ -1113,14 +1113,14 @@ mod state_game_over {
         buttons: Res<ButtonInput<GamepadButton>>,
         controller: Res<Controller>,
         controller_mapping: Res<ControllerMapping>,
-        mut e_play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
 
         if player_inputs.soft_reset {
-            e_play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.send(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }
