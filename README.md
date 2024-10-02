@@ -3,7 +3,7 @@
 [![Build](https://github.com/Ramirisu/tetris/actions/workflows/build.yml/badge.svg)](https://github.com/Ramirisu/tetris/actions/workflows/build.yml)
 [![dependency status](https://deps.rs/repo/github/Ramirisu/tetris/status.svg)](https://deps.rs/repo/github/Ramirisu/tetris)
 
-A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
+Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 ![gameplay](https://github.com/Ramirisu/tetris/blob/main/docs/gameplay.png)
 
@@ -16,6 +16,7 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
   - [x] Level 39 Super Kill Screen
   - [x] Piece Distribution
   - [x] Statistics
+  - [x] Display Inputs
   - [x] Sound Effects
   - [ ] Musics
 
@@ -55,7 +56,7 @@ A Classic Tetris (NES Tetris) clone written in BEVY/RUST.
 | ------: | :-------------------- |
 |     Off |                       |
 | Classic | Show next piece only. |
-|  Modern | Show next 5 pieces.   |
+|  Modern | Show next `5` pieces. |
 
 
 ## Keybindings
