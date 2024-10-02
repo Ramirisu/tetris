@@ -15,7 +15,7 @@ use crate::{
 use super::{
     asset::{ColorMaterialAssets, SquareImageAssets},
     board::Board,
-    das_indicator::DASIndicator,
+    das_counter::DASCounter,
     game::GameState,
     palette::SquareImageSize,
     piece::Piece,
@@ -96,7 +96,7 @@ struct ScoreEntityMarker;
 struct LevelEntityMarker;
 
 #[derive(Component)]
-struct DASEntityMarker;
+struct DASCounterEntityMarker;
 
 #[derive(Component)]
 struct DASIndicatorEntityMarker;
@@ -365,10 +365,11 @@ fn setup_screen(
                 }),
             ]),
             transform: Transform::from_translation(game_transform.das_translation()),
+            visibility: player_data.das_counter.get_counter_visibility(),
             ..default()
         },
         GameEntityMarker,
-        DASEntityMarker,
+        DASCounterEntityMarker,
     ));
     commands.spawn((
         Text2dBundle {
@@ -653,7 +654,7 @@ fn update_statistics_system(
         Query<&mut Text, With<ScoreEntityMarker>>,
         Query<&mut Text, With<LevelEntityMarker>>,
         Query<&mut Text, With<StatisticsEntityMarker>>,
-        Query<&mut Text, With<DASEntityMarker>>,
+        Query<&mut Text, With<DASCounterEntityMarker>>,
         Query<&mut Sprite, With<DASIndicatorEntityMarker>>,
         Query<&mut Text, With<GameStopwatchEntityMarker>>,
         Query<(&mut Text, &PieceCountCounterEntityMarker)>,
@@ -706,7 +707,7 @@ fn update_statistics_system(
         text.sections[1].value = format!("{:02}", ticks);
         text.sections[1].style.color = get_das_color(ticks);
     }
-    if player_data.das_indicator == DASIndicator::On {
+    if player_data.das_counter == DASCounter::Full {
         if let Ok(mut sprite) = query.p5().get_single_mut() {
             let ticks = duration_to_ticks(player_data.das_timer.elapsed());
             sprite.color = get_das_color(ticks);

@@ -5,7 +5,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::{
-        das_indicator::DASIndicator, drop_speed::DropSpeed, game::GameConfig, linecap::Linecap,
+        das_counter::DASCounter, drop_speed::DropSpeed, game::GameConfig, linecap::Linecap,
         next_piece_hint::NextPieceHint, transition::Transition,
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
@@ -61,7 +61,7 @@ enum GameOptionMenuSelection {
     Linecap,
     DropSpeed,
     NextPieceHint,
-    DASIndicator,
+    DASCounter,
     ControllerMapping,
     BlankLine2,
     VideoOptionsCategory,
@@ -88,7 +88,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::DropSpeed,
             GameOptionMenuSelection::NextPieceHint,
-            GameOptionMenuSelection::DASIndicator,
+            GameOptionMenuSelection::DASCounter,
             GameOptionMenuSelection::ControllerMapping,
             GameOptionMenuSelection::BlankLine2,
             GameOptionMenuSelection::VideoOptionsCategory,
@@ -309,11 +309,12 @@ fn update_ui_system(
                     NextPieceHint::Modern => text.sections[1].value = fopt_l("MODERN"),
                 }
             }
-            GameOptionMenuSelection::DASIndicator => {
-                text.sections[0].value = fname_opt("DAS INDICATOR");
-                match game_option_menu_data.game_config.das_indicator {
-                    DASIndicator::Off => text.sections[1].value = fopt_r("OFF"),
-                    DASIndicator::On => text.sections[1].value = fopt_l("ON"),
+            GameOptionMenuSelection::DASCounter => {
+                text.sections[0].value = fname_opt("DAS COUNTER");
+                match game_option_menu_data.game_config.das_counter {
+                    DASCounter::Off => text.sections[1].value = fopt_r("OFF"),
+                    DASCounter::Default => text.sections[1].value = fopt_m("DEFAULT"),
+                    DASCounter::Full => text.sections[1].value = fopt_l("FULL"),
                 }
             }
             GameOptionMenuSelection::ControllerMapping => {
@@ -505,7 +506,7 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
+                game_option_menu_data.selection = GameOptionMenuSelection::DASCounter;
                 selection_changed = true;
             }
 
@@ -527,7 +528,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::DASIndicator => {
+        GameOptionMenuSelection::DASCounter => {
             if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
                 selection_changed = true;
@@ -537,18 +538,18 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_next() {
+                if let Some(_) = game_option_menu_data.game_config.das_counter.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_option_menu_data.game_config.das_indicator.enum_prev() {
+                if let Some(_) = game_option_menu_data.game_config.das_counter.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DASIndicator;
+                game_option_menu_data.selection = GameOptionMenuSelection::DASCounter;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;

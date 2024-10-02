@@ -1,6 +1,6 @@
 mod asset;
 mod board;
-pub mod das_indicator;
+pub mod das_counter;
 pub mod drop_speed;
 pub mod game;
 mod level;
