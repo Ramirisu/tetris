@@ -21,7 +21,7 @@ pub fn setup(app: &mut App) {
 #[derive(Default, Clone, Copy, FromPrimitive, Resource)]
 pub enum ScaleFactor {
     #[default]
-    S720 = 0,
+    S720,
     S1080,
     S1440,
     S1800,

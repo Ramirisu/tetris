@@ -1,8 +1,8 @@
 mod asset;
 mod board;
 pub mod das_counter;
-pub mod drop_speed;
 pub mod game;
+pub mod gravity;
 mod level;
 pub mod linecap;
 pub mod next_piece_hint;

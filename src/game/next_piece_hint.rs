@@ -5,8 +5,8 @@ use num_traits::FromPrimitive;
 pub enum NextPieceHint {
     Off,
     #[default]
-    Classic, // 1
-    Modern, // 5
+    Classic,
+    Modern,
 }
 
 impl NextPieceHint {

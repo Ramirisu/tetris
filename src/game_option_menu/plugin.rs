@@ -5,7 +5,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     game::{
-        das_counter::DASCounter, drop_speed::DropSpeed, game::GameConfig, linecap::Linecap,
+        das_counter::DASCounter, game::GameConfig, gravity::Gravity, linecap::Linecap,
         next_piece_hint::NextPieceHint, transition::Transition, tv_system::TVSystem,
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
@@ -58,7 +58,7 @@ enum GameOptionMenuSelection {
     BlankLine1,
     Transition,
     Linecap,
-    DropSpeed,
+    Gravity,
     TVSystem,
     NextPieceHint,
     DASCounter,
@@ -86,7 +86,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::BlankLine1,
             GameOptionMenuSelection::Transition,
             GameOptionMenuSelection::Linecap,
-            GameOptionMenuSelection::DropSpeed,
+            GameOptionMenuSelection::Gravity,
             GameOptionMenuSelection::TVSystem,
             GameOptionMenuSelection::NextPieceHint,
             GameOptionMenuSelection::DASCounter,
@@ -295,11 +295,11 @@ fn update_ui_system(
                     Linecap::KillScreenX2 => text.sections[1].value = fopt_l("ON"),
                 }
             }
-            GameOptionMenuSelection::DropSpeed => {
-                text.sections[0].value = fname_opt("DROPSPEED");
-                match game_config.drop_speed {
-                    DropSpeed::Level => text.sections[1].value = fopt_r("LEVEL"),
-                    DropSpeed::Locked => text.sections[1].value = fopt_l("LOCKED"),
+            GameOptionMenuSelection::Gravity => {
+                text.sections[0].value = fname_opt("GRAVITY");
+                match game_config.gravity {
+                    Gravity::Level => text.sections[1].value = fopt_r("LEVEL"),
+                    Gravity::Locked => text.sections[1].value = fopt_l("LOCKED"),
                 };
             }
             GameOptionMenuSelection::TVSystem => {
@@ -475,7 +475,7 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::Transition;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                game_option_menu_data.selection = GameOptionMenuSelection::Gravity;
                 selection_changed = true;
             }
 
@@ -489,7 +489,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::DropSpeed => {
+        GameOptionMenuSelection::Gravity => {
             if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
                 selection_changed = true;
@@ -499,18 +499,18 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.drop_speed.enum_next() {
+                if let Some(_) = game_config.gravity.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.drop_speed.enum_prev() {
+                if let Some(_) = game_config.gravity.enum_prev() {
                     option_changed = true;
                 }
             }
         }
         GameOptionMenuSelection::TVSystem => {
             if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DropSpeed;
+                game_option_menu_data.selection = GameOptionMenuSelection::Gravity;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;

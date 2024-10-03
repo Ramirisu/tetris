@@ -3,7 +3,7 @@ use num_traits::FromPrimitive;
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Linecap {
     #[default]
-    None = 0,
+    None,
     KillScreenX2,
 }
 

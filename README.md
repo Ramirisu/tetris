@@ -38,17 +38,17 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 **LINECAP**
 
-| Options |                                                                                                         |
-| ------: | :------------------------------------------------------------------------------------------------------ |
-|     Off | The drop speed is the same as Level 29 for Level 39 and beyond.                                         |
-|      On | The drop speed is *200%* of Level 29 starting from Level 39. This is also known as *Super Kill Screen*. |
+| Options |                                                                                                      |
+| ------: | :--------------------------------------------------------------------------------------------------- |
+|     Off | The gravity is the same as Level 29 for Level 39 and beyond.                                         |
+|      On | The gravity is *200%* of Level 29 starting from Level 39. This is also known as *Super Kill Screen*. |
 
-**DROPSPEED**
+**GRAVITY**
 
-| Options |                                                   |
-| ------: | :------------------------------------------------ |
-|   Level | The drop speed increases when the level advances. |
-|  Locked | The drop speed is locked at the `startLevel`.     |
+| Options |                                                |
+| ------: | :--------------------------------------------- |
+|   Level | The gravity increases when the level advances. |
+|  Locked | The gravity is locked at the `startLevel`.     |
 
 **TV SYSTEM**
 

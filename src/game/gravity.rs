@@ -1,13 +1,13 @@
 use num_traits::FromPrimitive;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
-pub enum DropSpeed {
+pub enum Gravity {
     #[default]
-    Level = 0,
+    Level,
     Locked,
 }
 
-impl DropSpeed {
+impl Gravity {
     pub fn enum_prev(&mut self) -> Option<Self> {
         FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
     }
