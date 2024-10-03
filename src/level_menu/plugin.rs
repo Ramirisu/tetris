@@ -45,14 +45,12 @@ struct LevelButtonEntityMarker {
 #[derive(Resource)]
 pub struct LevelMenuData {
     selected_level: (i32, i32),
-    pub game_config: GameConfig,
 }
 
 impl LevelMenuData {
     pub fn new() -> Self {
         Self {
             selected_level: (0, 0),
-            game_config: GameConfig::default(),
         }
     }
 }
@@ -253,6 +251,7 @@ fn handle_input_system(
     controller_mapping: Res<ControllerMapping>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut play_sound: EventWriter<PlaySoundEvent>,
+    mut game_config: ResMut<GameConfig>,
     mut app_state: ResMut<NextState<AppState>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut player_phase: ResMut<NextState<PlayerPhase>>,
@@ -313,9 +312,9 @@ fn handle_input_system(
         if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
             [level_menu_data.selected_level.0 as usize]
         {
-            level_menu_data.game_config.start_level = level;
+            game_config.start_level = level;
 
-            *player_data = PlayerData::new(level_menu_data.game_config);
+            *player_data = PlayerData::new(*game_config);
             play_sound.send(PlaySoundEvent::StartGame);
             game_state.set(GameState::Running);
             player_phase.set(PlayerPhase::Dropping);

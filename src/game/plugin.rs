@@ -16,17 +16,17 @@ use super::{
     asset::{ColorMaterialAssets, SquareImageAssets},
     board::Board,
     das_counter::DASCounter,
-    game::GameState,
+    game::{GameConfig, GameState},
     palette::SquareImageSize,
     piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
-    tick::duration_to_ticks,
     transform::GameTransform,
 };
 
 pub fn setup(app: &mut App) {
     app.insert_resource(GameTransform::default())
         .init_state::<GameState>()
+        .insert_resource(GameConfig::default())
         .insert_resource(PlayerData::default())
         .init_state::<PlayerPhase>()
         .add_systems(OnEnter(AppState::Game), (load_assets, setup_screen).chain())
@@ -659,6 +659,7 @@ fn update_statistics_system(
         Query<&mut Text, With<GameStopwatchEntityMarker>>,
         Query<(&mut Text, &PieceCountCounterEntityMarker)>,
     )>,
+    game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
 ) {
     if let Ok(mut text) = query.p0().get_single_mut() {
@@ -695,22 +696,24 @@ fn update_statistics_system(
         }
         text.sections[9].value = format!(" ({:02})\n", player_data.board.max_drought());
     }
-    let get_das_color = |tick| -> Color {
-        if tick >= 10 {
-            GREEN.into()
-        } else {
-            RED.into()
-        }
+
+    let das_color = if player_data.das_timer.is_active() {
+        GREEN
+    } else {
+        RED
     };
     if let Ok(mut text) = query.p4().get_single_mut() {
-        let ticks = duration_to_ticks(player_data.das_timer.elapsed());
-        text.sections[1].value = format!("{:02}", ticks);
-        text.sections[1].style.color = get_das_color(ticks);
+        text.sections[1].value = format!(
+            "{:02}",
+            game_config
+                .tv_system
+                .duration_to_ticks(player_data.das_timer.elapsed())
+        );
+        text.sections[1].style.color = das_color.into();
     }
     if player_data.das_counter == DASCounter::Full {
         if let Ok(mut sprite) = query.p5().get_single_mut() {
-            let ticks = duration_to_ticks(player_data.das_timer.elapsed());
-            sprite.color = get_das_color(ticks);
+            sprite.color = das_color.into();
         }
     }
     if let Ok(mut text) = query.p6().get_single_mut() {
@@ -873,6 +876,7 @@ mod state_player_dropping {
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
+        game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
         square_image_assets: Res<SquareImageAssets>,
         game_transform: Res<GameTransform>,
@@ -909,7 +913,7 @@ mod state_player_dropping {
                     .get_curr_piece_squares()
                     .iter()
                     .fold(19, |acc, sqr| acc.min(sqr.1 as u64));
-                player_data.entry_delay_timer = EntryDelayTimer::new(min_y);
+                player_data.entry_delay_timer = EntryDelayTimer::new(min_y, game_config.tv_system);
 
                 player_data.board.lock_curr_piece();
                 query.p1().iter_mut().for_each(|mut transform| {
@@ -941,7 +945,7 @@ mod state_player_dropping {
                 }
                 if lines.len() > 0 {
                     player_data.line_clear_rows = lines;
-                    player_data.line_clear_phase = LineClearPhase::new();
+                    player_data.line_clear_phase = LineClearPhase::new(game_config.tv_system);
                     player_phase.set(PlayerPhase::LineClear);
                 } else {
                     player_phase.set(PlayerPhase::EntryDelay);

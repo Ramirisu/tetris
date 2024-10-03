@@ -12,7 +12,7 @@ pub mod player;
 pub mod plugin;
 mod rand;
 mod score;
-mod tick;
 mod timer;
 pub mod transform;
 pub mod transition;
+pub mod tv_system;

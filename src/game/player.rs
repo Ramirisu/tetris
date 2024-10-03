@@ -6,6 +6,7 @@ use super::{
     game::GameConfig,
     next_piece_hint::NextPieceHint,
     timer::{DelayAutoShiftTimer, EntryDelayTimer, FallTimer, LineClearTimer, PressDownTimer},
+    tv_system::TVSystem,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -40,14 +41,14 @@ impl PlayerData {
             das_counter: config.das_counter,
             board: Board::new(config.start_level, config.transition),
             stopwatch: Stopwatch::new(),
-            fall_timer: FallTimer::new(config.start_level, config.linecap, true),
+            fall_timer: FallTimer::new(config.start_level, config.linecap, config.tv_system, true),
             lock_curr_piece_immediately: false,
             can_press_down: false,
-            press_down_timer: PressDownTimer::default(),
-            das_timer: DelayAutoShiftTimer::default(),
+            press_down_timer: PressDownTimer::new(config.tv_system),
+            das_timer: DelayAutoShiftTimer::new(config.tv_system),
             line_clear_rows: default(),
-            line_clear_phase: LineClearPhase::default(),
-            entry_delay_timer: EntryDelayTimer::new(0),
+            line_clear_phase: LineClearPhase::new(config.tv_system),
+            entry_delay_timer: EntryDelayTimer::new(0, config.tv_system),
         }
     }
 }
@@ -66,14 +67,14 @@ pub struct LineClearPhase {
 }
 
 impl LineClearPhase {
-    pub fn new() -> Self {
+    pub fn new(tv_system: TVSystem) -> Self {
         let cols = Board::BOARD_COLS;
         let phase = (cols + 1) / 2;
         Self {
             cols,
             phase,
             curr: 0,
-            timer: LineClearTimer::new(phase as u32),
+            timer: LineClearTimer::new(phase as u32, tv_system),
         }
     }
 
@@ -86,11 +87,5 @@ impl LineClearPhase {
         } else {
             None
         }
-    }
-}
-
-impl Default for LineClearPhase {
-    fn default() -> Self {
-        Self::new()
     }
 }

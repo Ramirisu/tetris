@@ -50,6 +50,15 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 |   Level | The drop speed increases when the level advances. |
 |  Locked | The drop speed is locked at the `startLevel`.     |
 
+**TV SYSTEM**
+
+| Options |                                                                                                                                                           |
+| ------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|    NTSC | The NTSC version of NES Tetris, which is specified to run at 60 frames per second.                                                                        |
+|     PAL | The PAL version of NES Tetris, which is specified to run at 50 frames per second. The game is rebalanced for the slower frames per second in PAL release. |
+
+> Reference: https://tetris.wiki/Tetris_(NES,_Nintendo)
+
 **NEXT PIECE HINT**
 
 | Options |                       |
