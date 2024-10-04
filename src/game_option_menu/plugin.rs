@@ -4,25 +4,25 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
-    game::{
-        das_counter::DASCounter, game::GameConfig, gravity::Gravity, linecap::Linecap,
-        next_piece_hint::NextPieceHint, transition::Transition, tv_system::TVSystem,
-    },
+    game::game::GameConfig,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     scale::plugin::ScaleFactor,
     utility::despawn_all,
 };
 
-#[cfg(not(target_arch = "wasm32"))]
-use bevy::window::WindowMode;
+use super::transform::GameOptionMenuTransform;
 
-use super::{fps_limiter::FPSLimiter, transform::GameOptionMenuTransform};
+#[cfg(not(target_arch = "wasm32"))]
+use super::{fps_limiter::FPSLimiter, window_mode::WindowMode};
 
 pub fn setup(app: &mut App) {
-    app.add_plugins(bevy_framepace::FramepacePlugin)
-        .add_systems(Startup, init_framepace_settings)
-        .insert_resource(GameOptionMenuTransform::default())
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        app.add_plugins(bevy_framepace::FramepacePlugin)
+            .add_systems(Startup, init_framepace_settings);
+    }
+    app.insert_resource(GameOptionMenuTransform::default())
         .insert_resource(GameOptionMenuData::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
         .add_systems(
@@ -37,6 +37,7 @@ pub fn setup(app: &mut App) {
         );
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn init_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::FramepaceSettings>) {
     *framepace_settins = bevy_framepace::FramepaceSettings {
         limiter: FPSLimiter::default().get_limiter(),
@@ -120,7 +121,7 @@ impl GameOptionMenuData {
             #[cfg(not(target_arch = "wasm32"))]
             fps_limiter: FPSLimiter::default(),
             #[cfg(not(target_arch = "wasm32"))]
-            window_mode: WindowMode::Windowed,
+            window_mode: WindowMode::default(),
         }
     }
 }
@@ -253,137 +254,122 @@ fn update_ui_system(
         };
         let fname_cat = |name| -> String { fname_impl(name, true) };
         let fname_opt = |name| -> String { fname_impl(name, false) };
-        let fopt_impl = |name, left_arrow, right_arrow| -> String {
+        let fopt = |name: String, left_arrow, right_arrow| -> String {
             let l = if left_arrow { "<" } else { "" };
             let r = if right_arrow { ">" } else { "" };
-            format!("{:1} {:12} {:1}", l, name, r)
+            format!("{:1} {:18} {:1}", l, name, r)
         };
-        let fopt_n = |name| -> String { fopt_impl(name, false, false) };
-        let fopt_l = |name| -> String { fopt_impl(name, true, false) };
-        let fopt_m = |name| -> String { fopt_impl(name, true, true) };
-        let fopt_r = |name| -> String { fopt_impl(name, false, true) };
+        let fopt_n = || -> String { fopt("".to_owned(), false, false) };
         match marker.0 {
             GameOptionMenuSelection::Tetris => {
                 text.sections[0].value = fname_opt("TETRIS");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::BlankLine0 => {
                 text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::GameOptionsCategory => {
                 text.sections[0].value = fname_cat("$ GAME OPTIONS");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::BlankLine1 => {
                 text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::Transition => {
                 text.sections[0].value = fname_opt("TRANSITION");
-                match game_config.transition {
-                    Transition::Classic => text.sections[1].value = fopt_r("CLASSIC"),
-                    Transition::Fixed => text.sections[1].value = fopt_m("FIXED"),
-                    Transition::Every10Lines => text.sections[1].value = fopt_m("10 LINES"),
-                    Transition::Every4Lines => text.sections[1].value = fopt_l(" 4 LINES"),
-                };
+                text.sections[1].value = fopt(
+                    game_config.transition.to_string(),
+                    game_config.transition.enum_has_prev(),
+                    game_config.transition.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::Linecap => {
                 text.sections[0].value = fname_opt("LINECAP");
-                match game_config.linecap {
-                    Linecap::None => text.sections[1].value = fopt_r("OFF"),
-                    Linecap::KillScreenX2 => text.sections[1].value = fopt_l("ON"),
-                }
+                text.sections[1].value = fopt(
+                    game_config.linecap.to_string(),
+                    game_config.linecap.enum_has_prev(),
+                    game_config.linecap.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::Gravity => {
                 text.sections[0].value = fname_opt("GRAVITY");
-                match game_config.gravity {
-                    Gravity::Level => text.sections[1].value = fopt_r("LEVEL"),
-                    Gravity::Locked => text.sections[1].value = fopt_l("LOCKED"),
-                };
+                text.sections[1].value = fopt(
+                    game_config.gravity.to_string(),
+                    game_config.gravity.enum_has_prev(),
+                    game_config.gravity.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::TVSystem => {
                 text.sections[0].value = fname_opt("TV SYSTEM");
-                match game_config.tv_system {
-                    TVSystem::NTSC => text.sections[1].value = fopt_r("NTSC"),
-                    TVSystem::PAL => text.sections[1].value = fopt_l("PAL"),
-                }
+                text.sections[1].value = fopt(
+                    game_config.tv_system.to_string(),
+                    game_config.tv_system.enum_has_prev(),
+                    game_config.tv_system.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::NextPieceHint => {
                 text.sections[0].value = fname_opt("NEXT PIECE HINT");
-                match game_config.next_piece_hint {
-                    NextPieceHint::Off => text.sections[1].value = fopt_r("OFF"),
-                    NextPieceHint::Classic => text.sections[1].value = fopt_m("CLASSIC"),
-                    NextPieceHint::Modern => text.sections[1].value = fopt_l("MODERN"),
-                }
+                text.sections[1].value = fopt(
+                    game_config.next_piece_hint.to_string(),
+                    game_config.next_piece_hint.enum_has_prev(),
+                    game_config.next_piece_hint.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::DASCounter => {
                 text.sections[0].value = fname_opt("DAS COUNTER");
-                match game_config.das_counter {
-                    DASCounter::Off => text.sections[1].value = fopt_r("OFF"),
-                    DASCounter::Default => text.sections[1].value = fopt_m("DEFAULT"),
-                    DASCounter::Full => text.sections[1].value = fopt_l("FULL"),
-                }
+                text.sections[1].value = fopt(
+                    game_config.das_counter.to_string(),
+                    game_config.das_counter.enum_has_prev(),
+                    game_config.das_counter.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::ControllerMapping => {
                 text.sections[0].value = fname_opt("CONTROLLER MAPPING");
-                match *controller_mapping {
-                    ControllerMapping::MappingA => text.sections[1].value = fopt_r("MAPPING A"),
-                    ControllerMapping::MappingB => text.sections[1].value = fopt_l("MAPPING B"),
-                };
+                text.sections[1].value = fopt(
+                    controller_mapping.to_string(),
+                    controller_mapping.enum_has_prev(),
+                    controller_mapping.enum_has_next(),
+                );
             }
             GameOptionMenuSelection::BlankLine2 => {
                 text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::VideoOptionsCategory => {
                 text.sections[0].value = fname_cat("$ VIDEO OPTIONS");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::BlankLine3 => {
                 text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n("");
+                text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::ScaleFactor => {
                 text.sections[0].value = fname_opt("SCALE FACTOR");
-                match *scale_factor {
-                    ScaleFactor::S720 => text.sections[1].value = fopt_r("0.66 (720P)"),
-                    ScaleFactor::S1080 => text.sections[1].value = fopt_m("1.00 (1080P)"),
-                    ScaleFactor::S1440 => text.sections[1].value = fopt_m("1.33 (1440P)"),
-                    ScaleFactor::S1800 => text.sections[1].value = fopt_m("1.66 (1800P)"),
-                    ScaleFactor::S2160 => text.sections[1].value = fopt_m("2.00 (2160P)"),
-                    ScaleFactor::S3240 => text.sections[1].value = fopt_m("3.00 (3240P)"),
-                    ScaleFactor::S4320 => text.sections[1].value = fopt_l("4.00 (4320P)"),
-                }
+                text.sections[1].value = fopt(
+                    scale_factor.to_string(),
+                    scale_factor.enum_has_prev(),
+                    scale_factor.enum_has_next(),
+                );
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::FPSLimiter => {
                 text.sections[0].value = fname_opt("FPS LIMITER");
-                match game_option_menu_data.fps_limiter {
-                    FPSLimiter::Auto => text.sections[1].value = fopt_r("AUTO"),
-                    FPSLimiter::Unlimited => text.sections[1].value = fopt_m("UNLIMITED"),
-                    FPSLimiter::F60 => text.sections[1].value = fopt_m("60 FPS"),
-                    FPSLimiter::F144 => text.sections[1].value = fopt_m("144 FPS"),
-                    FPSLimiter::F240 => text.sections[1].value = fopt_m("240 FPS"),
-                    FPSLimiter::F360 => text.sections[1].value = fopt_m("360 FPS"),
-                    FPSLimiter::F480 => text.sections[1].value = fopt_l("480 FPS"),
-                }
+                text.sections[1].value = fopt(
+                    game_option_menu_data.fps_limiter.to_string(),
+                    game_option_menu_data.fps_limiter.enum_has_prev(),
+                    game_option_menu_data.fps_limiter.enum_has_next(),
+                );
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
                 text.sections[0].value = fname_opt("WINDOW MODE");
-                match game_option_menu_data.window_mode {
-                    WindowMode::Windowed => {
-                        text.sections[1].value = fopt_r("WINDOWED");
-                    }
-                    WindowMode::BorderlessFullscreen => {
-                        text.sections[1].value = fopt_m("BORDERLESS");
-                    }
-                    WindowMode::Fullscreen => {
-                        text.sections[1].value = fopt_l("FULLSCREEN");
-                    }
-                    _ => (),
-                };
+                text.sections[1].value = fopt(
+                    game_option_menu_data.window_mode.to_string(),
+                    game_option_menu_data.window_mode.enum_has_prev(),
+                    game_option_menu_data.window_mode.enum_has_next(),
+                );
             }
         }
     });
@@ -461,11 +447,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.transition.enum_next() {
+                if game_config.transition.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.transition.enum_prev() {
+                if game_config.transition.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -480,11 +466,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.linecap.enum_next() {
+                if game_config.linecap.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.linecap.enum_prev() {
+                if game_config.linecap.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -499,11 +485,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.gravity.enum_next() {
+                if game_config.gravity.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.gravity.enum_prev() {
+                if game_config.gravity.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -518,11 +504,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.tv_system.enum_next() {
+                if game_config.tv_system.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.tv_system.enum_prev() {
+                if game_config.tv_system.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -537,11 +523,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.next_piece_hint.enum_next() {
+                if game_config.next_piece_hint.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.next_piece_hint.enum_prev() {
+                if game_config.next_piece_hint.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -556,11 +542,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_config.das_counter.enum_next() {
+                if game_config.das_counter.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_config.das_counter.enum_prev() {
+                if game_config.das_counter.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -575,11 +561,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = controller_mapping.enum_next() {
+                if controller_mapping.enum_next() {
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = controller_mapping.enum_prev() {
+                if controller_mapping.enum_prev() {
                     option_changed = true;
                 }
             }
@@ -604,11 +590,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = scale_factor.enum_next() {
+                if scale_factor.enum_next() {
                     scale_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = scale_factor.enum_prev() {
+                if scale_factor.enum_prev() {
                     scale_changed = true;
                 }
             }
@@ -624,11 +610,11 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if let Some(_) = game_option_menu_data.fps_limiter.enum_next() {
+                if game_option_menu_data.fps_limiter.enum_next() {
                     fps_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(_) = game_option_menu_data.fps_limiter.enum_prev() {
+                if game_option_menu_data.fps_limiter.enum_prev() {
                     fps_changed = true;
                 }
             }
@@ -643,29 +629,14 @@ fn handle_input_system(
                 selection_changed = true;
             }
 
-            match game_option_menu_data.window_mode {
-                WindowMode::Windowed => {
-                    if player_inputs.right.just_pressed {
-                        game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
-                        window_mode_changed = true;
-                    }
+            if player_inputs.right.just_pressed {
+                if game_option_menu_data.window_mode.enum_next() {
+                    window_mode_changed = true;
                 }
-                WindowMode::BorderlessFullscreen => {
-                    if player_inputs.right.just_pressed {
-                        game_option_menu_data.window_mode = WindowMode::Fullscreen;
-                        window_mode_changed = true;
-                    } else if player_inputs.left.just_pressed {
-                        game_option_menu_data.window_mode = WindowMode::Windowed;
-                        window_mode_changed = true;
-                    }
+            } else if player_inputs.left.just_pressed {
+                if game_option_menu_data.window_mode.enum_prev() {
+                    window_mode_changed = true;
                 }
-                WindowMode::Fullscreen => {
-                    if player_inputs.left.just_pressed {
-                        game_option_menu_data.window_mode = WindowMode::BorderlessFullscreen;
-                        window_mode_changed = true;
-                    }
-                }
-                _ => (),
             }
         }
     }
@@ -687,7 +658,7 @@ fn handle_input_system(
     {
         if window_mode_changed {
             let mut window = query.single_mut();
-            window.mode = game_option_menu_data.window_mode;
+            window.mode = game_option_menu_data.window_mode.get_window_mode();
         }
         option_changed |= window_mode_changed;
     }

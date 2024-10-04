@@ -1,18 +1,49 @@
+use std::fmt::Display;
+
 use num_traits::FromPrimitive;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Linecap {
     #[default]
-    None,
-    KillScreenX2,
+    Off,
+    SuperKillScreen,
 }
 
 impl Linecap {
-    pub fn enum_prev(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_prev(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
     }
 
-    pub fn enum_next(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_next(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
+    }
+
+    pub fn enum_prev(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 - 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
+    }
+
+    pub fn enum_next(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 + 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+impl Display for Linecap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Linecap::Off => f.write_str("OFF"),
+            Linecap::SuperKillScreen => f.write_str("SUPER KILL SCREEN"),
+        }
     }
 }

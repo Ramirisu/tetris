@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use num_traits::FromPrimitive;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
@@ -10,12 +12,32 @@ pub enum Transition {
 }
 
 impl Transition {
-    pub fn enum_prev(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_prev(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
     }
 
-    pub fn enum_next(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_next(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
+    }
+
+    pub fn enum_prev(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 - 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
+    }
+
+    pub fn enum_next(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 + 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
     }
 
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
@@ -53,6 +75,17 @@ impl Transition {
 
     fn get_level_every_n_lines(start_level: usize, lines: usize, every: usize) -> usize {
         start_level + lines / every
+    }
+}
+
+impl Display for Transition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Transition::Classic => f.write_str("CLASSIC"),
+            Transition::Fixed => f.write_str("FIXED"),
+            Transition::Every10Lines => f.write_str("EVERY 10 LINES"),
+            Transition::Every4Lines => f.write_str("EVERY 4 LINES"),
+        }
     }
 }
 

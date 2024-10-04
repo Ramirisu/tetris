@@ -74,8 +74,8 @@ impl FallTimer {
                 19..29 => tv_system.ticks_to_duration(2),
                 29..39 => tv_system.ticks_to_duration(1),
                 _ => match linecap {
-                    Linecap::None => tv_system.ticks_to_duration(1),
-                    Linecap::KillScreenX2 => tv_system.subticks_to_duration(500),
+                    Linecap::Off => tv_system.ticks_to_duration(1),
+                    Linecap::SuperKillScreen => tv_system.subticks_to_duration(500),
                 },
             },
             TVSystem::PAL => match level {
@@ -94,8 +94,8 @@ impl FallTimer {
                 16..19 => tv_system.ticks_to_duration(2),
                 19..29 => tv_system.ticks_to_duration(1),
                 _ => match linecap {
-                    Linecap::None => tv_system.ticks_to_duration(1),
-                    Linecap::KillScreenX2 => tv_system.subticks_to_duration(500),
+                    Linecap::Off => tv_system.ticks_to_duration(1),
+                    Linecap::SuperKillScreen => tv_system.subticks_to_duration(500),
                 },
             },
         }

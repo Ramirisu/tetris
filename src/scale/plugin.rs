@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use bevy::prelude::*;
 use num_traits::FromPrimitive;
 
@@ -31,12 +33,32 @@ pub enum ScaleFactor {
 }
 
 impl ScaleFactor {
-    pub fn enum_prev(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 - 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_prev(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
     }
 
-    pub fn enum_next(&mut self) -> Option<Self> {
-        FromPrimitive::from_i8(*self as i8 + 1).map(|n| std::mem::replace(self, n))
+    pub fn enum_has_next(&self) -> bool {
+        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
+    }
+
+    pub fn enum_prev(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 - 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
+    }
+
+    pub fn enum_next(&mut self) -> bool {
+        match FromPrimitive::from_i64(*self as i64 + 1) {
+            Some(n) => {
+                *self = n;
+                true
+            }
+            None => false,
+        }
     }
 
     pub fn mul(&self) -> f32 {
@@ -50,6 +72,20 @@ impl ScaleFactor {
             ScaleFactor::S2160 => 2160.0 / base,
             ScaleFactor::S3240 => 3240.0 / base,
             ScaleFactor::S4320 => 4320.0 / base,
+        }
+    }
+}
+
+impl Display for ScaleFactor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ScaleFactor::S720 => f.write_str("0.66 (720P)"),
+            ScaleFactor::S1080 => f.write_str("1.00 (1080P)"),
+            ScaleFactor::S1440 => f.write_str("1.33 (1440P)"),
+            ScaleFactor::S1800 => f.write_str("1.66 (1800P)"),
+            ScaleFactor::S2160 => f.write_str("2.00 (2160P)"),
+            ScaleFactor::S3240 => f.write_str("3.00 (3240P)"),
+            ScaleFactor::S4320 => f.write_str("4.00 (4320P)"),
         }
     }
 }

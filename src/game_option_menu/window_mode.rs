@@ -1,17 +1,16 @@
 use std::fmt::Display;
 
-use bevy::prelude::*;
 use num_traits::FromPrimitive;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
-pub enum DASCounter {
-    Off,
+#[derive(Default, Clone, Copy, FromPrimitive)]
+pub enum WindowMode {
     #[default]
-    Default,
-    Full,
+    Windowed,
+    BorderlessFullscreen,
+    Fullscreen,
 }
 
-impl DASCounter {
+impl WindowMode {
     pub fn enum_has_prev(&self) -> bool {
         <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
     }
@@ -40,21 +39,21 @@ impl DASCounter {
         }
     }
 
-    pub fn get_counter_visibility(&self) -> Visibility {
+    pub fn get_window_mode(&self) -> bevy::window::WindowMode {
         match self {
-            DASCounter::Off => Visibility::Hidden,
-            DASCounter::Default => Visibility::Inherited,
-            DASCounter::Full => Visibility::Inherited,
+            WindowMode::Windowed => bevy::window::WindowMode::Windowed,
+            WindowMode::BorderlessFullscreen => bevy::window::WindowMode::BorderlessFullscreen,
+            WindowMode::Fullscreen => bevy::window::WindowMode::Fullscreen,
         }
     }
 }
 
-impl Display for DASCounter {
+impl Display for WindowMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DASCounter::Off => f.write_str("OFF"),
-            DASCounter::Default => f.write_str("DEFAULT"),
-            DASCounter::Full => f.write_str("FULL"),
+            WindowMode::Windowed => f.write_str("WINDOWED"),
+            WindowMode::BorderlessFullscreen => f.write_str("BORDERLESS"),
+            WindowMode::Fullscreen => f.write_str("FULLSCREEN"),
         }
     }
 }
