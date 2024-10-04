@@ -38,6 +38,14 @@ impl TVSystem {
         }
     }
 
+    pub fn to_string_abbr(&self) -> String {
+        match self {
+            TVSystem::NTSC => "NTSC",
+            TVSystem::PAL => "PAL",
+        }
+        .into()
+    }
+
     pub const fn ticks_to_duration(&self, ticks: u64) -> Duration {
         self.subticks_to_duration(ticks * 1000)
     }

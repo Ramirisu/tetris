@@ -37,6 +37,14 @@ impl Linecap {
             None => false,
         }
     }
+
+    pub fn to_string_abbr(&self) -> String {
+        match self {
+            Linecap::Off => "OFF",
+            Linecap::SuperKillScreen => "SKS",
+        }
+        .into()
+    }
 }
 
 impl Display for Linecap {

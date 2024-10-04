@@ -40,6 +40,16 @@ impl Transition {
         }
     }
 
+    pub fn to_string_abbr(&self) -> String {
+        match self {
+            Transition::Classic => "CLS",
+            Transition::Fixed => "FIX",
+            Transition::Every10Lines => "10L",
+            Transition::Every4Lines => "4L",
+        }
+        .into()
+    }
+
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
             Transition::Classic => Self::get_level_classic(start_level, lines),

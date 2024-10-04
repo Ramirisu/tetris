@@ -130,6 +130,10 @@ impl GameTransform {
         Vec3::new(self.board_width(), -self.square_height() * 7.0, BOARD_LAYER)
     }
 
+    pub fn game_mode_translation(&self) -> Vec3 {
+        Vec3::new(self.board_width() * 1.4, self.square_height(), BOARD_LAYER)
+    }
+
     pub fn stopwatch_translation(&self) -> Vec3 {
         Vec3::new(self.board_width(), -self.square_height() * 9.0, BOARD_LAYER)
     }
@@ -186,12 +190,12 @@ impl GameTransform {
     }
 
     fn next_piece_translation_offset(&self) -> Vec2 {
-        Vec2::new(self.board_width() * 0.9, 0.0)
+        Vec2::new(self.board_width() * 0.8, 0.0)
     }
 
     fn next_piece_translation_offset_for_index(&self, index: usize) -> Vec2 {
         Vec2::new(
-            -self.square_width() * 5.0 + index as f32 * self.next_piece_square_size(index).x * 5.5,
+            -self.square_width() * 4.0 + index as f32 * self.next_piece_square_size(index).x * 5.5,
             -self.square_height() * 4.0,
         )
     }

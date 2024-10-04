@@ -18,7 +18,6 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
   - [x] Statistics
   - [x] Display Inputs
   - [x] Sound Effects
-  - [ ] Musics
 
 - Platform
   - [x] High FPS Support

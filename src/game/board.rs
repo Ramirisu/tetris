@@ -63,10 +63,6 @@ impl Board {
         board
     }
 
-    pub fn start_level(&self) -> usize {
-        self.start_level
-    }
-
     pub fn level(&self) -> usize {
         self.transition.get_level(self.start_level, self.lines)
     }

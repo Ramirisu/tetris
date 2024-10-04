@@ -102,6 +102,9 @@ struct DASCounterEntityMarker;
 struct DASIndicatorEntityMarker;
 
 #[derive(Component)]
+struct GameModeEntityMarker;
+
+#[derive(Component)]
 struct GameStopwatchEntityMarker;
 
 #[derive(Component)]
@@ -318,11 +321,6 @@ fn setup_screen(
                     color: WHITE.into(),
                     ..default()
                 }),
-                TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_medium(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
             ]),
             transform: Transform::from_translation(game_transform.level_translation()),
             ..default()
@@ -370,6 +368,23 @@ fn setup_screen(
         },
         GameEntityMarker,
         DASCounterEntityMarker,
+    ));
+
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_sections(vec![
+                TextSection::from_style(TextStyle {
+                    font_size: game_transform.fs_medium(),
+                    color: WHITE.into(),
+                    ..default()
+                });
+                10
+            ]),
+            transform: Transform::from_translation(game_transform.game_mode_translation()),
+            ..default()
+        },
+        GameEntityMarker,
+        GameModeEntityMarker,
     ));
     commands.spawn((
         Text2dBundle {
@@ -650,29 +665,31 @@ fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData
 
 fn update_statistics_system(
     mut query: ParamSet<(
-        Query<&mut Text, With<LinesEntityMarker>>,
-        Query<&mut Text, With<ScoreEntityMarker>>,
-        Query<&mut Text, With<LevelEntityMarker>>,
-        Query<&mut Text, With<StatisticsEntityMarker>>,
+        ParamSet<(
+            Query<&mut Text, With<LinesEntityMarker>>,
+            Query<&mut Text, With<ScoreEntityMarker>>,
+            Query<&mut Text, With<LevelEntityMarker>>,
+            Query<&mut Text, With<StatisticsEntityMarker>>,
+            Query<&mut Text, With<GameModeEntityMarker>>,
+            Query<&mut Text, With<GameStopwatchEntityMarker>>,
+            Query<(&mut Text, &PieceCountCounterEntityMarker)>,
+        )>,
         Query<&mut Text, With<DASCounterEntityMarker>>,
         Query<&mut Sprite, With<DASIndicatorEntityMarker>>,
-        Query<&mut Text, With<GameStopwatchEntityMarker>>,
-        Query<(&mut Text, &PieceCountCounterEntityMarker)>,
     )>,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
 ) {
-    if let Ok(mut text) = query.p0().get_single_mut() {
+    if let Ok(mut text) = query.p0().p0().get_single_mut() {
         text.sections[1].value = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(mut text) = query.p1().get_single_mut() {
+    if let Ok(mut text) = query.p0().p1().get_single_mut() {
         text.sections[1].value = format!("{:07}", player_data.board.score());
     }
-    if let Ok(mut text) = query.p2().get_single_mut() {
+    if let Ok(mut text) = query.p0().p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());
-        text.sections[2].value = format!(" ({:02})", player_data.board.start_level());
     }
-    if let Ok(mut text) = query.p3().get_single_mut() {
+    if let Ok(mut text) = query.p0().p3().get_single_mut() {
         text.sections[0].value = format!("BRN {:4}\n", player_data.board.burned_lines());
         text.sections[1].value = format!(" 1X {:4}\n", player_data.board.single());
         text.sections[2].value = format!(" 2X {:4}\n", player_data.board.double());
@@ -696,13 +713,26 @@ fn update_statistics_system(
         }
         text.sections[9].value = format!(" ({:02})\n", player_data.board.max_drought());
     }
+    if let Ok(mut text) = query.p0().p4().get_single_mut() {
+        text.sections[0].value = format!("SLV {:3}\n", game_config.start_level);
+        text.sections[1].value = format!("CAP {:3}\n", game_config.linecap.to_string_abbr());
+        text.sections[2].value = format!("TRS {:3}\n", game_config.transition.to_string_abbr());
+        text.sections[3].value = format!("GRV {:3}\n", game_config.gravity.to_string_abbr());
+        text.sections[4].value = format!("TVS {:3}\n", game_config.tv_system.to_string_abbr());
+    }
+    if let Ok(mut text) = query.p0().p5().get_single_mut() {
+        text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
+    }
+    for (mut text, piece) in query.p0().p6().iter_mut() {
+        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));
+    }
 
     let das_color = if player_data.das_timer.is_active() {
         GREEN
     } else {
         RED
     };
-    if let Ok(mut text) = query.p4().get_single_mut() {
+    if let Ok(mut text) = query.p1().get_single_mut() {
         text.sections[1].value = format!(
             "{:02}",
             game_config
@@ -712,15 +742,9 @@ fn update_statistics_system(
         text.sections[1].style.color = das_color.into();
     }
     if player_data.das_counter == DASCounter::Full {
-        if let Ok(mut sprite) = query.p5().get_single_mut() {
+        if let Ok(mut sprite) = query.p2().get_single_mut() {
             sprite.color = das_color.into();
         }
-    }
-    if let Ok(mut text) = query.p6().get_single_mut() {
-        text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
-    }
-    for (mut text, piece) in query.p7().iter_mut() {
-        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 }
 

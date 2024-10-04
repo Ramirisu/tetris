@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use num_traits::FromPrimitive;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Gravity {
     #[default]
     Level,
@@ -36,6 +36,14 @@ impl Gravity {
             }
             None => false,
         }
+    }
+
+    pub fn to_string_abbr(&self) -> String {
+        match self {
+            Gravity::Level => "LVL",
+            Gravity::Locked => "LCK",
+        }
+        .into()
     }
 }
 
