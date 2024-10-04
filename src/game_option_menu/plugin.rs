@@ -283,7 +283,7 @@ fn update_ui_system(
                 text.sections[0].value = fname_opt("TRANSITION");
                 match game_config.transition {
                     Transition::Classic => text.sections[1].value = fopt_r("CLASSIC"),
-                    Transition::Fxied => text.sections[1].value = fopt_m("FIXED"),
+                    Transition::Fixed => text.sections[1].value = fopt_m("FIXED"),
                     Transition::Every10Lines => text.sections[1].value = fopt_m("10 LINES"),
                     Transition::Every4Lines => text.sections[1].value = fopt_l(" 4 LINES"),
                 };

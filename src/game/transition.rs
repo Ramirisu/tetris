@@ -1,12 +1,10 @@
-use std::fmt::Display;
-
 use num_traits::FromPrimitive;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 pub enum Transition {
     #[default]
     Classic,
-    Fxied,
+    Fixed,
     Every10Lines,
     Every4Lines,
 }
@@ -23,7 +21,7 @@ impl Transition {
     pub fn get_level(&self, start_level: usize, lines: usize) -> usize {
         match self {
             Transition::Classic => Self::get_level_classic(start_level, lines),
-            Transition::Fxied => Self::get_level_fixed(start_level, lines),
+            Transition::Fixed => Self::get_level_fixed(start_level, lines),
             Transition::Every10Lines => Self::get_level_every_n_lines(start_level, lines, 10),
             Transition::Every4Lines => Self::get_level_every_n_lines(start_level, lines, 4),
         }
@@ -55,12 +53,6 @@ impl Transition {
 
     fn get_level_every_n_lines(start_level: usize, lines: usize, every: usize) -> usize {
         start_level + lines / every
-    }
-}
-
-impl Display for Transition {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(&self, f)
     }
 }
 
