@@ -49,6 +49,12 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 |   Level | The gravity increases when the level advances. |
 |  Locked | The gravity is locked at the `startLevel`.     |
 
+**SEED**
+
+| Options |                                         |
+| ------: | :-------------------------------------- |
+|  System | System default random number generator. |
+
 **TV SYSTEM**
 
 | Options |                                                                                                                                                           |
