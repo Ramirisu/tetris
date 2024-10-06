@@ -61,6 +61,7 @@ enum GameOptionMenuSelection {
     Linecap,
     Gravity,
     Seed,
+    Scoring,
     TVSystem,
     NextPieceHint,
     DASCounter,
@@ -78,9 +79,9 @@ enum GameOptionMenuSelection {
 impl GameOptionMenuSelection {
     pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
         #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 18];
+        type ArrayType = [GameOptionMenuSelection; 19];
         #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuSelection; 16];
+        type ArrayType = [GameOptionMenuSelection; 17];
         const STATES: ArrayType = [
             GameOptionMenuSelection::Tetris,
             GameOptionMenuSelection::BlankLine0,
@@ -90,6 +91,7 @@ impl GameOptionMenuSelection {
             GameOptionMenuSelection::Linecap,
             GameOptionMenuSelection::Gravity,
             GameOptionMenuSelection::Seed,
+            GameOptionMenuSelection::Scoring,
             GameOptionMenuSelection::TVSystem,
             GameOptionMenuSelection::NextPieceHint,
             GameOptionMenuSelection::DASCounter,
@@ -311,6 +313,14 @@ fn update_ui_system(
                     game_config.seed.enum_has_next(),
                 );
             }
+            GameOptionMenuSelection::Scoring => {
+                text.sections[0].value = fname_opt("SCORING");
+                text.sections[1].value = fopt(
+                    game_config.scoring.to_string(),
+                    game_config.scoring.enum_has_prev(),
+                    game_config.scoring.enum_has_next(),
+                );
+            }
             GameOptionMenuSelection::TVSystem => {
                 text.sections[0].value = fname_opt("TV SYSTEM");
                 text.sections[1].value = fopt(
@@ -509,7 +519,7 @@ fn handle_input_system(
                 game_option_menu_data.selection = GameOptionMenuSelection::Gravity;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::TVSystem;
+                game_option_menu_data.selection = GameOptionMenuSelection::Scoring;
                 selection_changed = true;
             }
 
@@ -523,9 +533,28 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::TVSystem => {
+        GameOptionMenuSelection::Scoring => {
             if player_inputs.up.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::Seed;
+                selection_changed = true;
+            } else if player_inputs.down.just_pressed {
+                game_option_menu_data.selection = GameOptionMenuSelection::TVSystem;
+                selection_changed = true;
+            }
+
+            if player_inputs.right.just_pressed {
+                if game_config.scoring.enum_next() {
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if game_config.scoring.enum_prev() {
+                    option_changed = true;
+                }
+            }
+        }
+        GameOptionMenuSelection::TVSystem => {
+            if player_inputs.up.just_pressed {
+                game_option_menu_data.selection = GameOptionMenuSelection::Scoring;
                 selection_changed = true;
             } else if player_inputs.down.just_pressed {
                 game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;

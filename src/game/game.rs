@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     das_counter::DASCounter, gravity::Gravity, linecap::Linecap, next_piece_hint::NextPieceHint,
-    seed::Seed, transition::Transition, tv_system::TVSystem,
+    score::Scoring, seed::Seed, transition::Transition, tv_system::TVSystem,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -20,6 +20,7 @@ pub struct GameConfig {
     pub linecap: Linecap,
     pub gravity: Gravity,
     pub seed: Seed,
+    pub scoring: Scoring,
     pub tv_system: TVSystem,
     pub next_piece_hint: NextPieceHint,
     pub das_counter: DASCounter,
@@ -33,6 +34,7 @@ impl Default for GameConfig {
             transition: Transition::default(),
             gravity: Gravity::default(),
             seed: Seed::default(),
+            scoring: Scoring::default(),
             tv_system: TVSystem::default(),
             next_piece_hint: NextPieceHint::default(),
             das_counter: DASCounter::default(),

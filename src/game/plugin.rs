@@ -684,7 +684,7 @@ fn update_statistics_system(
         text.sections[1].value = format!("{:03}", player_data.board.lines());
     }
     if let Ok(mut text) = query.p0().p1().get_single_mut() {
-        text.sections[1].value = format!("{:07}", player_data.board.score());
+        text.sections[1].value = game_config.scoring.format(player_data.board.score());
     }
     if let Ok(mut text) = query.p0().p2().get_single_mut() {
         text.sections[1].value = format!("{:02}", player_data.board.level());

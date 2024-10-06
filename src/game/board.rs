@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use super::{
     piece::{Piece, Square},
-    score::get_score,
     seed::Seed,
     transition::Transition,
 };
@@ -142,7 +141,7 @@ impl Board {
             self.squares.remove(*row);
         });
 
-        self.score += get_score(rows.len(), self.level());
+        self.score += Self::get_score(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
             1 => self.single += 1,
@@ -272,6 +271,18 @@ impl Board {
 
     fn is_inside(x: i32, y: i32) -> bool {
         x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0 && y < Self::INTERNAL_BOARD_ROWS as i32
+    }
+
+    fn get_score(lines: usize, level: usize) -> usize {
+        (level + 1)
+            * match lines {
+                0 => 0,
+                1 => 40,
+                2 => 100,
+                3 => 300,
+                4 => 1200,
+                _ => panic!("can only clear lines between 1-4"),
+            }
     }
 }
 
