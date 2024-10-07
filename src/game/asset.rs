@@ -16,7 +16,7 @@ impl SquareImageAssets {
         Self {
             normal: Piece::iter()
                 .map(|piece| {
-                    image_assets.add(get_square_image(SquareImageSize::Normal, *piece, level))
+                    image_assets.add(get_square_image(SquareImageSize::Standard, *piece, level))
                 })
                 .collect(),
             small: Piece::iter()
@@ -29,7 +29,7 @@ impl SquareImageAssets {
 
     pub fn get_image(&self, size: SquareImageSize, piece: Piece) -> Handle<Image> {
         match size {
-            SquareImageSize::Normal => self.normal[piece.variant_index()].clone(),
+            SquareImageSize::Standard => self.normal[piece.variant_index()].clone(),
             SquareImageSize::Small => self.small[piece.variant_index()].clone(),
         }
     }

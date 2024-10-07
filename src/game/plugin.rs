@@ -213,7 +213,7 @@ fn setup_screen(
                         ..default()
                     },
                     texture: square_image_assets.get_image(
-                        SquareImageSize::Normal,
+                        SquareImageSize::Standard,
                         player_data.board.get_square(x as i32, y as i32),
                     ),
                     ..default()
@@ -470,8 +470,10 @@ fn setup_screen(
                         custom_size: Some(game_transform.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets
-                        .get_image(SquareImageSize::Normal, player_data.board.get_curr_piece()),
+                    texture: square_image_assets.get_image(
+                        SquareImageSize::Standard,
+                        player_data.board.get_curr_piece(),
+                    ),
                     ..default()
                 },
                 GameEntityMarker,
@@ -560,7 +562,8 @@ fn setup_screen(
                                 custom_size: Some(game_transform.next_piece_square_size(index)),
                                 ..default()
                             },
-                            texture: square_image_assets.get_image(SquareImageSize::Normal, *piece),
+                            texture: square_image_assets
+                                .get_image(SquareImageSize::Standard, *piece),
                             visibility: player_data.next_piece_hint.get_visibility(index),
                             ..default()
                         },
@@ -948,7 +951,7 @@ mod state_player_dropping {
 
                 query.p0().iter_mut().for_each(|(mut image, coordinate)| {
                     *image = square_image_assets.get_image(
-                        SquareImageSize::Normal,
+                        SquareImageSize::Standard,
                         player_data
                             .board
                             .get_square(coordinate.0 as i32, coordinate.1 as i32),
@@ -1008,7 +1011,7 @@ mod state_player_line_clear {
                     if (coordinate.0 == left || coordinate.0 == right)
                         && player_data.line_clear_rows.contains(&coordinate.1)
                     {
-                        *image = square_image_assets.get_image(SquareImageSize::Normal, Piece::X);
+                        *image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
@@ -1063,7 +1066,7 @@ mod state_player_entry_delay {
 
             query.p1().iter_mut().for_each(|(mut image, coordinate)| {
                 *image = square_image_assets.get_image(
-                    SquareImageSize::Normal,
+                    SquareImageSize::Standard,
                     player_data
                         .board
                         .get_square(coordinate.0 as i32, coordinate.1 as i32),
@@ -1075,8 +1078,10 @@ mod state_player_entry_delay {
                 player_data.board.get_curr_piece_squares(),
             )
             .for_each(|((mut transform, mut image), sqr)| {
-                *image = square_image_assets
-                    .get_image(SquareImageSize::Normal, player_data.board.get_curr_piece());
+                *image = square_image_assets.get_image(
+                    SquareImageSize::Standard,
+                    player_data.board.get_curr_piece(),
+                );
                 transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
             });
             std::iter::zip(
@@ -1090,7 +1095,7 @@ mod state_player_entry_delay {
             )
             .for_each(|((mut transform, mut image, index), sqr)| {
                 *image = square_image_assets.get_image(
-                    SquareImageSize::Normal,
+                    SquareImageSize::Standard,
                     player_data.board.get_next_pieces()[index.0],
                 );
                 transform.translation =
