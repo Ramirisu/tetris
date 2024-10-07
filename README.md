@@ -16,8 +16,8 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
   - [x] Level 39 Super Kill Screen
   - [x] Piece Distribution
   - [x] Statistics
-  - [x] Display Inputs
-  - [x] Sound Effects
+  - [x] Display Input
+  - [x] Sound Effect
 
 - Platform
   - [x] High FPS Support
@@ -28,21 +28,29 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 **TRANSITION**
 
-|  Options |                                                                                                                                                                                                       |
-| -------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  Classic | When the player line clear `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` lines, whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
-|    Fixed | When the player line clear `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
-| 10 Lines | The level advacnes by 1 for every `10` lines.                                                                                                                                                         |
-|  4 Lines | The level advacnes by 1 for every `4` lines.                                                                                                                                                          |
+The *TRANSITION* option determines how the level advances after lines clear.
+
+|        Options |                                                                                                                                                                                                       |
+| -------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|        Classic | When the player line clear `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` lines, whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
+|          Fixed | When the player line clear `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
+| Every 10 Lines | The level advacnes by 1 for every `10` lines.                                                                                                                                                         |
+|  Every 4 Lines | The level advacnes by 1 for every `4` lines.                                                                                                                                                          |
 
 **LINECAP**
 
-| Options |                                                                                                      |
-| ------: | :--------------------------------------------------------------------------------------------------- |
-|     Off | The gravity is the same as Level 29 for Level 39 and beyond.                                         |
-|      On | The gravity is *200%* of Level 29 starting from Level 39. This is also known as *Super Kill Screen*. |
+The *LINECAP* option enables the *Super Kill Screen* as the end game mechanism for competitive games. Players can keep going under *kill screen* due to the inventation of the *rolling* technique. The gravity will double again after 10 levels clear in the *kill screen* in order to avoid endless game playing.
+
+|           Options |                                                              |
+| ----------------: | :----------------------------------------------------------- |
+|               Off | The gravity is the same as level 29 for level 39 and beyond. |
+| Super Kill Screen | The gravity is *200%* of level 29 starting from level 39.    |
+
+> For TV SYSTEM: PAL, the gravity is *200%* of level 19 starting from level 29.
 
 **GRAVITY**
+
+The *GRAVITY* option determines how the gravity will increase when the level advances.
 
 | Options |                                                |
 | ------: | :--------------------------------------------- |
@@ -51,11 +59,15 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 **SEED**
 
-| Options |                                         |
-| ------: | :-------------------------------------- |
-|  System | System default random number generator. |
+The *SEED* option determines how to generate NEXT pieces. Currently, only default seeding is supported. 1H2R Randomizer is used to choose the pieces.
+
+| Options |                                                                                            |
+| ------: | :----------------------------------------------------------------------------------------- |
+|  System | Implementation-defined pseudo-random number generator and a system-provided seed are used. |
 
 **SCORING**
+
+The *SCORING* option determines how the score is displayed.
 
 | Options |                                                                   |      123 | 1,234,567 | 3,704,567 | 39,504,567 |
 | ------: | :---------------------------------------------------------------- | -------: | --------: | --------: | ---------: |
@@ -65,6 +77,8 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 **TV SYSTEM**
 
+The *TV SYSTEM* option determines which version of NES Tetris releases is used. This affects DAS, gravity and the level of linecap.
+
 | Options |                                                                                                                                                           |
 | ------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 |    NTSC | The NTSC version of NES Tetris, which is specified to run at 60 frames per second.                                                                        |
@@ -73,6 +87,8 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 > Reference: https://tetris.wiki/Tetris_(NES,_Nintendo)
 
 **NEXT PIECE HINT**
+
+The *NEXT PIECE HINT* option determines how many NEXT pieces are displayed. 
 
 | Options |                       |
 | ------: | :-------------------- |
