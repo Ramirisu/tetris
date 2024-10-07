@@ -1,34 +1,44 @@
 use std::time::Duration;
 
-use super::{linecap::Linecap, tv_system::TVSystem};
+use super::{gravity::Gravity, linecap::Linecap, tv_system::TVSystem};
 
 #[derive(Clone, Copy)]
 pub struct FallTimer {
     elapsed: Duration,
     threshold: Duration,
     linecap: Linecap,
+    gravity: Gravity,
     tv_system: TVSystem,
     initial_entry_delay: bool,
 }
 
 impl FallTimer {
     pub fn new(
-        level: usize,
+        start_level: usize,
         linecap: Linecap,
+        gravity: Gravity,
         tv_system: TVSystem,
         initial_entry_delay: bool,
     ) -> Self {
         Self {
             elapsed: Duration::ZERO,
-            threshold: Self::level_to_duration(level, linecap, tv_system),
+            threshold: Self::level_to_duration(start_level, linecap, tv_system),
             linecap,
+            gravity,
             tv_system,
             initial_entry_delay,
         }
     }
 
     pub fn set_level(&mut self, level: usize) {
-        *self = Self::new(level, self.linecap, self.tv_system, false);
+        self.elapsed = Duration::ZERO;
+        match self.gravity {
+            Gravity::Level => {
+                self.threshold = Self::level_to_duration(level, self.linecap, self.tv_system);
+            }
+            Gravity::Locked => (),
+        }
+        self.initial_entry_delay = false;
     }
 
     pub fn tick(&mut self, delta: Duration) -> &mut Self {
