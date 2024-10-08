@@ -4,6 +4,7 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     controller::Controller,
+    enum_iter,
     game::game::GameConfig,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
@@ -50,13 +51,10 @@ struct GameOptionEntityMarker(pub GameOptionMenuSelection);
 #[derive(Component)]
 struct GameOptionMenuEntityMarker;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
 enum GameOptionMenuSelection {
     #[default]
     Tetris,
-    BlankLine0,
-    GameOptionsCategory,
-    BlankLine1,
     Transition,
     Linecap,
     Gravity,
@@ -66,9 +64,6 @@ enum GameOptionMenuSelection {
     NextPieceHint,
     DASCounter,
     ControllerMapping,
-    BlankLine2,
-    VideoOptionsCategory,
-    BlankLine3,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
     FPSLimiter,
@@ -76,36 +71,30 @@ enum GameOptionMenuSelection {
     WindowMode,
 }
 
+enum_iter::enum_iter_derive!(GameOptionMenuSelection);
+
 impl GameOptionMenuSelection {
-    pub fn iter() -> std::slice::Iter<'static, GameOptionMenuSelection> {
-        #[cfg(not(target_arch = "wasm32"))]
-        type ArrayType = [GameOptionMenuSelection; 19];
-        #[cfg(target_arch = "wasm32")]
-        type ArrayType = [GameOptionMenuSelection; 17];
-        const STATES: ArrayType = [
-            GameOptionMenuSelection::Tetris,
-            GameOptionMenuSelection::BlankLine0,
-            GameOptionMenuSelection::GameOptionsCategory,
-            GameOptionMenuSelection::BlankLine1,
-            GameOptionMenuSelection::Transition,
-            GameOptionMenuSelection::Linecap,
-            GameOptionMenuSelection::Gravity,
-            GameOptionMenuSelection::Seed,
-            GameOptionMenuSelection::Scoring,
-            GameOptionMenuSelection::TVSystem,
-            GameOptionMenuSelection::NextPieceHint,
-            GameOptionMenuSelection::DASCounter,
-            GameOptionMenuSelection::ControllerMapping,
-            GameOptionMenuSelection::BlankLine2,
-            GameOptionMenuSelection::VideoOptionsCategory,
-            GameOptionMenuSelection::BlankLine3,
-            GameOptionMenuSelection::ScaleFactor,
-            #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuSelection::FPSLimiter,
-            #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuSelection::WindowMode,
-        ];
-        STATES.iter()
+    pub fn enum_prev_cycle(&self) -> Self {
+        match self.enum_prev() {
+            Some(e) => e,
+            None => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    GameOptionMenuSelection::WindowMode
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    GameOptionMenuSelection::ScaleFactor
+                }
+            }
+        }
+    }
+
+    pub fn enum_next_cycle(&self) -> Self {
+        match self.enum_next() {
+            Some(e) => e,
+            None => GameOptionMenuSelection::Tetris,
+        }
     }
 }
 
@@ -204,7 +193,8 @@ fn setup_screen(
                     ..default()
                 })
                 .with_children(|parent| {
-                    for selection in GameOptionMenuSelection::iter() {
+                    let mut selection = GameOptionMenuSelection::default();
+                    loop {
                         parent.spawn((
                             TextBundle::from_sections(vec![
                                 TextSection::from_style(TextStyle {
@@ -218,8 +208,14 @@ fn setup_screen(
                                     ..default()
                                 }),
                             ]),
-                            GameOptionEntityMarker(*selection),
+                            GameOptionEntityMarker(selection),
                         ));
+
+                        if let Some(e) = selection.enum_next() {
+                            selection = e;
+                        } else {
+                            break;
+                        }
                     }
                 });
         });
@@ -243,20 +239,14 @@ fn update_ui_system(
     }
 
     query.iter_mut().for_each(|(mut text, marker)| {
-        let fname_impl = |name, category| -> String {
-            if category {
-                format!("{:25} ", name)
+        let fname = |name| -> String {
+            let s = if marker.0 == game_option_menu_data.selection {
+                ">>"
             } else {
-                let s = if marker.0 == game_option_menu_data.selection {
-                    ">>"
-                } else {
-                    ""
-                };
-                format!("{:>4} {:20} ", s, name)
-            }
+                ""
+            };
+            format!("{:>2} {:20} ", s, name)
         };
-        let fname_cat = |name| -> String { fname_impl(name, true) };
-        let fname_opt = |name| -> String { fname_impl(name, false) };
         let fopt = |name: String, left_arrow, right_arrow| -> String {
             let l = if left_arrow { "<" } else { "" };
             let r = if right_arrow { ">" } else { "" };
@@ -265,23 +255,11 @@ fn update_ui_system(
         let fopt_n = || -> String { fopt("".to_owned(), false, false) };
         match marker.0 {
             GameOptionMenuSelection::Tetris => {
-                text.sections[0].value = fname_opt("TETRIS");
-                text.sections[1].value = fopt_n();
-            }
-            GameOptionMenuSelection::BlankLine0 => {
-                text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n();
-            }
-            GameOptionMenuSelection::GameOptionsCategory => {
-                text.sections[0].value = fname_cat("$ GAME OPTIONS");
-                text.sections[1].value = fopt_n();
-            }
-            GameOptionMenuSelection::BlankLine1 => {
-                text.sections[0].value = fname_cat("");
+                text.sections[0].value = fname("TETRIS");
                 text.sections[1].value = fopt_n();
             }
             GameOptionMenuSelection::Transition => {
-                text.sections[0].value = fname_opt("TRANSITION");
+                text.sections[0].value = fname("TRANSITION");
                 text.sections[1].value = fopt(
                     game_config.transition.to_string(),
                     game_config.transition.enum_prev().is_some(),
@@ -289,7 +267,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::Linecap => {
-                text.sections[0].value = fname_opt("LINECAP");
+                text.sections[0].value = fname("LINECAP");
                 text.sections[1].value = fopt(
                     game_config.linecap.to_string(),
                     game_config.linecap.enum_prev().is_some(),
@@ -297,7 +275,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::Gravity => {
-                text.sections[0].value = fname_opt("GRAVITY");
+                text.sections[0].value = fname("GRAVITY");
                 text.sections[1].value = fopt(
                     game_config.gravity.to_string(),
                     game_config.gravity.enum_prev().is_some(),
@@ -305,7 +283,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::Seed => {
-                text.sections[0].value = fname_opt("SEED");
+                text.sections[0].value = fname("SEED");
                 text.sections[1].value = fopt(
                     game_config.seed.to_string(),
                     game_config.seed.enum_prev().is_some(),
@@ -313,7 +291,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::Scoring => {
-                text.sections[0].value = fname_opt("SCORING");
+                text.sections[0].value = fname("SCORING");
                 text.sections[1].value = fopt(
                     game_config.scoring.to_string(),
                     game_config.scoring.enum_prev().is_some(),
@@ -321,7 +299,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::TVSystem => {
-                text.sections[0].value = fname_opt("TV SYSTEM");
+                text.sections[0].value = fname("TV SYSTEM");
                 text.sections[1].value = fopt(
                     game_config.tv_system.to_string(),
                     game_config.tv_system.enum_prev().is_some(),
@@ -329,7 +307,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::NextPieceHint => {
-                text.sections[0].value = fname_opt("NEXT PIECE HINT");
+                text.sections[0].value = fname("NEXT PIECE HINT");
                 text.sections[1].value = fopt(
                     game_config.next_piece_hint.to_string(),
                     game_config.next_piece_hint.enum_prev().is_some(),
@@ -337,7 +315,7 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::DASCounter => {
-                text.sections[0].value = fname_opt("DAS COUNTER");
+                text.sections[0].value = fname("DAS COUNTER");
                 text.sections[1].value = fopt(
                     game_config.das_counter.to_string(),
                     game_config.das_counter.enum_prev().is_some(),
@@ -345,27 +323,15 @@ fn update_ui_system(
                 );
             }
             GameOptionMenuSelection::ControllerMapping => {
-                text.sections[0].value = fname_opt("CONTROLLER MAPPING");
+                text.sections[0].value = fname("CONTROLLER MAPPING");
                 text.sections[1].value = fopt(
                     controller_mapping.to_string(),
                     controller_mapping.enum_prev().is_some(),
                     controller_mapping.enum_next().is_some(),
                 );
             }
-            GameOptionMenuSelection::BlankLine2 => {
-                text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n();
-            }
-            GameOptionMenuSelection::VideoOptionsCategory => {
-                text.sections[0].value = fname_cat("$ VIDEO OPTIONS");
-                text.sections[1].value = fopt_n();
-            }
-            GameOptionMenuSelection::BlankLine3 => {
-                text.sections[0].value = fname_cat("");
-                text.sections[1].value = fopt_n();
-            }
             GameOptionMenuSelection::ScaleFactor => {
-                text.sections[0].value = fname_opt("SCALE FACTOR");
+                text.sections[0].value = fname("SCALE FACTOR");
                 text.sections[1].value = fopt(
                     scale_factor.to_string(),
                     scale_factor.enum_prev().is_some(),
@@ -374,7 +340,7 @@ fn update_ui_system(
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::FPSLimiter => {
-                text.sections[0].value = fname_opt("FPS LIMITER");
+                text.sections[0].value = fname("FPS LIMITER");
                 text.sections[1].value = fopt(
                     game_option_menu_data.fps_limiter.to_string(),
                     game_option_menu_data.fps_limiter.enum_prev().is_some(),
@@ -383,7 +349,7 @@ fn update_ui_system(
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
-                text.sections[0].value = fname_opt("WINDOW MODE");
+                text.sections[0].value = fname("WINDOW MODE");
                 text.sections[1].value = fopt(
                     game_option_menu_data.window_mode.to_string(),
                     game_option_menu_data.window_mode.enum_prev().is_some(),
@@ -424,7 +390,23 @@ fn handle_input_system(
         return;
     }
 
-    let mut selection_changed = false;
+    match (
+        player_inputs.up.just_pressed,
+        player_inputs.down.just_pressed,
+    ) {
+        (true, false) => {
+            game_option_menu_data.selection = game_option_menu_data.selection.enum_prev_cycle();
+            play_sound.send(PlaySoundEvent::MoveCursor);
+            return;
+        }
+        (false, true) => {
+            game_option_menu_data.selection = game_option_menu_data.selection.enum_next_cycle();
+            play_sound.send(PlaySoundEvent::MoveCursor);
+            return;
+        }
+        _ => (),
+    }
+
     let mut option_changed = false;
     let mut scale_changed = false;
     #[cfg(not(target_arch = "wasm32"))]
@@ -434,37 +416,12 @@ fn handle_input_system(
 
     match game_option_menu_data.selection {
         GameOptionMenuSelection::Tetris => {
-            if player_inputs.up.just_pressed {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
-                }
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Transition;
-                selection_changed = true;
-            }
             if player_inputs.start.just_pressed {
                 play_sound.send(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
         }
-        GameOptionMenuSelection::BlankLine0 => (),
-        GameOptionMenuSelection::GameOptionsCategory => (),
-        GameOptionMenuSelection::BlankLine1 => (),
         GameOptionMenuSelection::Transition => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.transition.enum_next() {
                     game_config.transition = e;
@@ -478,14 +435,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::Linecap => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Transition;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Gravity;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.linecap.enum_next() {
                     game_config.linecap = e;
@@ -499,14 +448,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::Gravity => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Linecap;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Seed;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.gravity.enum_next() {
                     game_config.gravity = e;
@@ -520,14 +461,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::Seed => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Gravity;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Scoring;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.seed.enum_next() {
                     game_config.seed = e;
@@ -541,14 +474,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::Scoring => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Seed;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::TVSystem;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.scoring.enum_next() {
                     game_config.scoring = e;
@@ -562,14 +487,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::TVSystem => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Scoring;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.tv_system.enum_next() {
                     game_config.tv_system = e;
@@ -583,14 +500,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::NextPieceHint => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::TVSystem;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DASCounter;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.next_piece_hint.enum_next() {
                     game_config.next_piece_hint = e;
@@ -604,14 +513,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::DASCounter => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::NextPieceHint;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.das_counter.enum_next() {
                     game_config.das_counter = e;
@@ -625,14 +526,6 @@ fn handle_input_system(
             }
         }
         GameOptionMenuSelection::ControllerMapping => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::DASCounter;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = controller_mapping.enum_next() {
                     *controller_mapping = e;
@@ -645,25 +538,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::BlankLine2 => (),
-        GameOptionMenuSelection::VideoOptionsCategory => (),
-        GameOptionMenuSelection::BlankLine3 => (),
         GameOptionMenuSelection::ScaleFactor => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::ControllerMapping;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
-                }
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = scale_factor.enum_next() {
                     *scale_factor = e;
@@ -678,14 +553,6 @@ fn handle_input_system(
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuSelection::FPSLimiter => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::ScaleFactor;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::WindowMode;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_option_menu_data.fps_limiter.enum_next() {
                     game_option_menu_data.fps_limiter = e;
@@ -700,14 +567,6 @@ fn handle_input_system(
         }
         #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuSelection::WindowMode => {
-            if player_inputs.up.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::FPSLimiter;
-                selection_changed = true;
-            } else if player_inputs.down.just_pressed {
-                game_option_menu_data.selection = GameOptionMenuSelection::Tetris;
-                selection_changed = true;
-            }
-
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_option_menu_data.window_mode.enum_next() {
                     game_option_menu_data.window_mode = e;
@@ -743,7 +602,7 @@ fn handle_input_system(
         }
         option_changed |= window_mode_changed;
     }
-    if selection_changed || option_changed {
+    if option_changed {
         play_sound.send(PlaySoundEvent::MoveCursor);
     }
 }
