@@ -1,7 +1,8 @@
 use std::{fmt::Display, time::Duration};
 
 use bevy::prelude::*;
-use num_traits::FromPrimitive;
+
+use crate::enum_iter;
 
 #[derive(Default, Clone, Copy, FromPrimitive, Resource)]
 pub enum FPSLimiter {
@@ -12,35 +13,9 @@ pub enum FPSLimiter {
     F960,
 }
 
+enum_iter::enum_iter_derive!(FPSLimiter);
+
 impl FPSLimiter {
-    pub fn enum_has_prev(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
-    }
-
-    pub fn enum_has_next(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
-    }
-
-    pub fn enum_prev(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 - 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
-    pub fn enum_next(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 + 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
     pub fn get_limiter(&self) -> bevy_framepace::Limiter {
         let ft = |fps| Duration::from_secs_f32(1.0 / fps as f32);
         match self {

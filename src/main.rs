@@ -11,6 +11,7 @@ extern crate num_traits;
 mod app_state;
 mod audio;
 mod controller;
+mod enum_iter;
 mod game;
 mod game_option_menu;
 mod init;

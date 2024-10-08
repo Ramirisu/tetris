@@ -1,7 +1,8 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use num_traits::FromPrimitive;
 use rand::Rng;
+
+use crate::enum_iter;
 
 use super::piece::Piece;
 
@@ -11,35 +12,9 @@ pub enum Seed {
     System,
 }
 
+enum_iter::enum_iter_derive!(Seed);
+
 impl Seed {
-    pub fn enum_has_prev(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
-    }
-
-    pub fn enum_has_next(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
-    }
-
-    pub fn enum_prev(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 - 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
-    pub fn enum_next(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 + 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
     pub fn to_string_abbr(&self) -> String {
         match self {
             Seed::System => "SYS",

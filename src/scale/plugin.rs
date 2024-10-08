@@ -1,10 +1,9 @@
 use std::fmt::Display;
 
 use bevy::prelude::*;
-use num_traits::FromPrimitive;
 
 use crate::{
-    app_state::AppState, game::transform::GameTransform,
+    app_state::AppState, enum_iter, game::transform::GameTransform,
     game_option_menu::transform::GameOptionMenuTransform,
     level_menu::transform::LevelMenuTransform, splash::transform::SplashTransform,
 };
@@ -33,35 +32,9 @@ pub enum ScaleFactor {
     S4320,
 }
 
+enum_iter::enum_iter_derive!(ScaleFactor);
+
 impl ScaleFactor {
-    pub fn enum_has_prev(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
-    }
-
-    pub fn enum_has_next(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
-    }
-
-    pub fn enum_prev(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 - 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
-    pub fn enum_next(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 + 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
     pub fn mul(&self) -> f32 {
         let base = 1080.0;
 

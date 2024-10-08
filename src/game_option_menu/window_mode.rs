@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use num_traits::FromPrimitive;
+use crate::enum_iter;
 
 #[derive(Default, Clone, Copy, FromPrimitive)]
 pub enum WindowMode {
@@ -10,35 +10,9 @@ pub enum WindowMode {
     Fullscreen,
 }
 
+enum_iter::enum_iter_derive!(WindowMode);
+
 impl WindowMode {
-    pub fn enum_has_prev(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 - 1).is_some()
-    }
-
-    pub fn enum_has_next(&self) -> bool {
-        <Self as FromPrimitive>::from_i64(*self as i64 + 1).is_some()
-    }
-
-    pub fn enum_prev(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 - 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
-    pub fn enum_next(&mut self) -> bool {
-        match FromPrimitive::from_i64(*self as i64 + 1) {
-            Some(n) => {
-                *self = n;
-                true
-            }
-            None => false,
-        }
-    }
-
     pub fn get_window_mode(&self) -> bevy::window::WindowMode {
         match self {
             WindowMode::Windowed => bevy::window::WindowMode::Windowed,

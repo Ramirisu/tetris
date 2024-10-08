@@ -284,72 +284,72 @@ fn update_ui_system(
                 text.sections[0].value = fname_opt("TRANSITION");
                 text.sections[1].value = fopt(
                     game_config.transition.to_string(),
-                    game_config.transition.enum_has_prev(),
-                    game_config.transition.enum_has_next(),
+                    game_config.transition.enum_prev().is_some(),
+                    game_config.transition.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Linecap => {
                 text.sections[0].value = fname_opt("LINECAP");
                 text.sections[1].value = fopt(
                     game_config.linecap.to_string(),
-                    game_config.linecap.enum_has_prev(),
-                    game_config.linecap.enum_has_next(),
+                    game_config.linecap.enum_prev().is_some(),
+                    game_config.linecap.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Gravity => {
                 text.sections[0].value = fname_opt("GRAVITY");
                 text.sections[1].value = fopt(
                     game_config.gravity.to_string(),
-                    game_config.gravity.enum_has_prev(),
-                    game_config.gravity.enum_has_next(),
+                    game_config.gravity.enum_prev().is_some(),
+                    game_config.gravity.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Seed => {
                 text.sections[0].value = fname_opt("SEED");
                 text.sections[1].value = fopt(
                     game_config.seed.to_string(),
-                    game_config.seed.enum_has_prev(),
-                    game_config.seed.enum_has_next(),
+                    game_config.seed.enum_prev().is_some(),
+                    game_config.seed.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Scoring => {
                 text.sections[0].value = fname_opt("SCORING");
                 text.sections[1].value = fopt(
                     game_config.scoring.to_string(),
-                    game_config.scoring.enum_has_prev(),
-                    game_config.scoring.enum_has_next(),
+                    game_config.scoring.enum_prev().is_some(),
+                    game_config.scoring.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::TVSystem => {
                 text.sections[0].value = fname_opt("TV SYSTEM");
                 text.sections[1].value = fopt(
                     game_config.tv_system.to_string(),
-                    game_config.tv_system.enum_has_prev(),
-                    game_config.tv_system.enum_has_next(),
+                    game_config.tv_system.enum_prev().is_some(),
+                    game_config.tv_system.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::NextPieceHint => {
                 text.sections[0].value = fname_opt("NEXT PIECE HINT");
                 text.sections[1].value = fopt(
                     game_config.next_piece_hint.to_string(),
-                    game_config.next_piece_hint.enum_has_prev(),
-                    game_config.next_piece_hint.enum_has_next(),
+                    game_config.next_piece_hint.enum_prev().is_some(),
+                    game_config.next_piece_hint.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::DASCounter => {
                 text.sections[0].value = fname_opt("DAS COUNTER");
                 text.sections[1].value = fopt(
                     game_config.das_counter.to_string(),
-                    game_config.das_counter.enum_has_prev(),
-                    game_config.das_counter.enum_has_next(),
+                    game_config.das_counter.enum_prev().is_some(),
+                    game_config.das_counter.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::ControllerMapping => {
                 text.sections[0].value = fname_opt("CONTROLLER MAPPING");
                 text.sections[1].value = fopt(
                     controller_mapping.to_string(),
-                    controller_mapping.enum_has_prev(),
-                    controller_mapping.enum_has_next(),
+                    controller_mapping.enum_prev().is_some(),
+                    controller_mapping.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::BlankLine2 => {
@@ -368,8 +368,8 @@ fn update_ui_system(
                 text.sections[0].value = fname_opt("SCALE FACTOR");
                 text.sections[1].value = fopt(
                     scale_factor.to_string(),
-                    scale_factor.enum_has_prev(),
-                    scale_factor.enum_has_next(),
+                    scale_factor.enum_prev().is_some(),
+                    scale_factor.enum_next().is_some(),
                 );
             }
             #[cfg(not(target_arch = "wasm32"))]
@@ -377,8 +377,8 @@ fn update_ui_system(
                 text.sections[0].value = fname_opt("FPS LIMITER");
                 text.sections[1].value = fopt(
                     game_option_menu_data.fps_limiter.to_string(),
-                    game_option_menu_data.fps_limiter.enum_has_prev(),
-                    game_option_menu_data.fps_limiter.enum_has_next(),
+                    game_option_menu_data.fps_limiter.enum_prev().is_some(),
+                    game_option_menu_data.fps_limiter.enum_next().is_some(),
                 );
             }
             #[cfg(not(target_arch = "wasm32"))]
@@ -386,8 +386,8 @@ fn update_ui_system(
                 text.sections[0].value = fname_opt("WINDOW MODE");
                 text.sections[1].value = fopt(
                     game_option_menu_data.window_mode.to_string(),
-                    game_option_menu_data.window_mode.enum_has_prev(),
-                    game_option_menu_data.window_mode.enum_has_next(),
+                    game_option_menu_data.window_mode.enum_prev().is_some(),
+                    game_option_menu_data.window_mode.enum_next().is_some(),
                 );
             }
         }
@@ -466,11 +466,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.transition.enum_next() {
+                if let Some(e) = game_config.transition.enum_next() {
+                    game_config.transition = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.transition.enum_prev() {
+                if let Some(e) = game_config.transition.enum_prev() {
+                    game_config.transition = e;
                     option_changed = true;
                 }
             }
@@ -485,11 +487,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.linecap.enum_next() {
+                if let Some(e) = game_config.linecap.enum_next() {
+                    game_config.linecap = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.linecap.enum_prev() {
+                if let Some(e) = game_config.linecap.enum_prev() {
+                    game_config.linecap = e;
                     option_changed = true;
                 }
             }
@@ -504,11 +508,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.gravity.enum_next() {
+                if let Some(e) = game_config.gravity.enum_next() {
+                    game_config.gravity = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.gravity.enum_prev() {
+                if let Some(e) = game_config.gravity.enum_prev() {
+                    game_config.gravity = e;
                     option_changed = true;
                 }
             }
@@ -523,11 +529,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.seed.enum_next() {
+                if let Some(e) = game_config.seed.enum_next() {
+                    game_config.seed = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.seed.enum_prev() {
+                if let Some(e) = game_config.seed.enum_prev() {
+                    game_config.seed = e;
                     option_changed = true;
                 }
             }
@@ -542,11 +550,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.scoring.enum_next() {
+                if let Some(e) = game_config.scoring.enum_next() {
+                    game_config.scoring = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.scoring.enum_prev() {
+                if let Some(e) = game_config.scoring.enum_prev() {
+                    game_config.scoring = e;
                     option_changed = true;
                 }
             }
@@ -561,11 +571,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.tv_system.enum_next() {
+                if let Some(e) = game_config.tv_system.enum_next() {
+                    game_config.tv_system = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.tv_system.enum_prev() {
+                if let Some(e) = game_config.tv_system.enum_prev() {
+                    game_config.tv_system = e;
                     option_changed = true;
                 }
             }
@@ -580,11 +592,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.next_piece_hint.enum_next() {
+                if let Some(e) = game_config.next_piece_hint.enum_next() {
+                    game_config.next_piece_hint = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.next_piece_hint.enum_prev() {
+                if let Some(e) = game_config.next_piece_hint.enum_prev() {
+                    game_config.next_piece_hint = e;
                     option_changed = true;
                 }
             }
@@ -599,11 +613,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_config.das_counter.enum_next() {
+                if let Some(e) = game_config.das_counter.enum_next() {
+                    game_config.das_counter = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_config.das_counter.enum_prev() {
+                if let Some(e) = game_config.das_counter.enum_prev() {
+                    game_config.das_counter = e;
                     option_changed = true;
                 }
             }
@@ -618,11 +634,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if controller_mapping.enum_next() {
+                if let Some(e) = controller_mapping.enum_next() {
+                    *controller_mapping = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if controller_mapping.enum_prev() {
+                if let Some(e) = controller_mapping.enum_prev() {
+                    *controller_mapping = e;
                     option_changed = true;
                 }
             }
@@ -647,11 +665,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if scale_factor.enum_next() {
+                if let Some(e) = scale_factor.enum_next() {
+                    *scale_factor = e;
                     scale_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if scale_factor.enum_prev() {
+                if let Some(e) = scale_factor.enum_prev() {
+                    *scale_factor = e;
                     scale_changed = true;
                 }
             }
@@ -667,11 +687,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_option_menu_data.fps_limiter.enum_next() {
+                if let Some(e) = game_option_menu_data.fps_limiter.enum_next() {
+                    game_option_menu_data.fps_limiter = e;
                     fps_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_option_menu_data.fps_limiter.enum_prev() {
+                if let Some(e) = game_option_menu_data.fps_limiter.enum_prev() {
+                    game_option_menu_data.fps_limiter = e;
                     fps_changed = true;
                 }
             }
@@ -687,11 +709,13 @@ fn handle_input_system(
             }
 
             if player_inputs.right.just_pressed {
-                if game_option_menu_data.window_mode.enum_next() {
+                if let Some(e) = game_option_menu_data.window_mode.enum_next() {
+                    game_option_menu_data.window_mode = e;
                     window_mode_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if game_option_menu_data.window_mode.enum_prev() {
+                if let Some(e) = game_option_menu_data.window_mode.enum_prev() {
+                    game_option_menu_data.window_mode = e;
                     window_mode_changed = true;
                 }
             }
