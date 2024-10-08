@@ -28,6 +28,7 @@ pub enum ScaleFactor {
     S1440,
     S1800,
     S2160,
+    S2880,
     S3240,
     S4320,
 }
@@ -70,6 +71,7 @@ impl ScaleFactor {
             ScaleFactor::S1440 => 1440.0 / base,
             ScaleFactor::S1800 => 1800.0 / base,
             ScaleFactor::S2160 => 2160.0 / base,
+            ScaleFactor::S2880 => 2880.0 / base,
             ScaleFactor::S3240 => 3240.0 / base,
             ScaleFactor::S4320 => 4320.0 / base,
         }
@@ -84,6 +86,7 @@ impl Display for ScaleFactor {
             ScaleFactor::S1440 => f.write_str("1.33 (1440P)"),
             ScaleFactor::S1800 => f.write_str("1.66 (1800P)"),
             ScaleFactor::S2160 => f.write_str("2.00 (2160P)"),
+            ScaleFactor::S2880 => f.write_str("2.66 (2880P)"),
             ScaleFactor::S3240 => f.write_str("3.00 (3240P)"),
             ScaleFactor::S4320 => f.write_str("4.00 (4320P)"),
         }
