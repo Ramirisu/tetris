@@ -45,6 +45,7 @@ fn main() {
                             visible: false,
                             ..default()
                         },
+                        fit_canvas_to_parent: true,
                         title: "TETRIS".into(),
                         ..default()
                     }),
