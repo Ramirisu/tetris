@@ -7,14 +7,14 @@ use super::{
 
 #[derive(Resource)]
 pub struct SquareImageAssets {
-    normal: Vec<Handle<Image>>,
+    standard: Vec<Handle<Image>>,
     small: Vec<Handle<Image>>,
 }
 
 impl SquareImageAssets {
     pub fn new(image_assets: &mut Assets<Image>, level: usize) -> Self {
         Self {
-            normal: Piece::iter()
+            standard: Piece::iter()
                 .map(|piece| {
                     image_assets.add(get_square_image(SquareImageSize::Standard, *piece, level))
                 })
@@ -29,7 +29,7 @@ impl SquareImageAssets {
 
     pub fn get_image(&self, size: SquareImageSize, piece: Piece) -> Handle<Image> {
         match size {
-            SquareImageSize::Standard => self.normal[piece.variant_index()].clone(),
+            SquareImageSize::Standard => self.standard[piece.variant_index()].clone(),
             SquareImageSize::Small => self.small[piece.variant_index()].clone(),
         }
     }

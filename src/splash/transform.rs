@@ -10,8 +10,12 @@ impl SplashTransform {
         Self { scale }
     }
 
-    pub fn scale(&self) -> f32 {
-        self.scale
+    pub fn fs_medium(&self) -> f32 {
+        self.scale * 36.0
+    }
+
+    pub fn fs_large(&self) -> f32 {
+        self.scale * 48.0
     }
 }
 

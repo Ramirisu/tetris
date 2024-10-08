@@ -26,10 +26,9 @@ struct SplashEntityMarker;
 fn setup_screen(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
-    splash_transform: Res<SplashTransform>,
+    transform: Res<SplashTransform>,
 ) {
     let logo_images = load_logo_images(&mut image_assets);
-    let scale = splash_transform.scale();
 
     commands
         .spawn((
@@ -53,25 +52,25 @@ fn setup_screen(
                     style: Style {
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(scale * 40.0)),
+                        margin: UiRect::all(Val::Px(transform.fs_medium())),
                         ..default()
                     },
                     ..default()
                 })
                 .with_children(|parent| {
                     TETRIS_BITMAP.iter().for_each(|rows| {
-                        rows.iter().for_each(|square| {
+                        rows.iter().for_each(|sqr| {
                             parent.spawn((
                                 NodeBundle {
                                     style: Style {
-                                        width: Val::Px(scale * 36.0),
-                                        height: Val::Px(scale * 36.0),
+                                        width: Val::Px(transform.fs_medium()),
+                                        height: Val::Px(transform.fs_medium()),
                                         ..default()
                                     },
                                     ..default()
                                 },
                                 UiImage {
-                                    texture: logo_images[(*square) as usize].clone(),
+                                    texture: logo_images[(*sqr) as usize].clone(),
                                     ..default()
                                 },
                             ));
@@ -82,13 +81,13 @@ fn setup_screen(
                 TextBundle::from_section(
                     "PRESS START",
                     TextStyle {
-                        font_size: scale * 36.0,
+                        font_size: transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                 )
                 .with_style(Style {
-                    margin: UiRect::all(Val::Px(scale * 60.0)),
+                    margin: UiRect::all(Val::Px(transform.fs_large())),
                     ..default()
                 }),
             );

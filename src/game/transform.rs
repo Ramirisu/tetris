@@ -2,12 +2,12 @@ use bevy::prelude::*;
 
 use super::board::Board;
 
-const FLASH_LAYER: f32 = 0.0;
-const BOARD_BACKGROUND_LAYER: f32 = 1.0;
-const BOARD_LAYER: f32 = 2.0;
-const SQUARE_LAYER: f32 = 3.0;
-const CURR_PIECE_LAYER: f32 = 4.0;
-const COVER_LAYER: f32 = 5.0;
+const FLASH_Z_INDEX: f32 = 0.0;
+const BOARD_BACKGROUND_Z_INDEX: f32 = 1.0;
+const BOARD_Z_INDEX: f32 = 2.0;
+const SQUARE_Z_INDEX: f32 = 3.0;
+const CURR_PIECE_Z_INDEX: f32 = 4.0;
+const COVER_Z_INDEX: f32 = 5.0;
 
 #[derive(Clone, Copy, Resource)]
 pub struct GameTransform {
@@ -51,16 +51,18 @@ impl GameTransform {
         Vec2::splat(self.border_width())
     }
 
+    // center
+
     pub fn flash_size(&self) -> Vec2 {
         Vec2::new(self.board_width() * 4.0, self.board_height() * 2.0)
     }
 
     pub fn flash_translation(&self) -> Vec3 {
-        Vec3::new(0.0, 0.0, FLASH_LAYER)
+        Vec3::new(0.0, 0.0, FLASH_Z_INDEX)
     }
 
     pub fn board_translation(&self) -> Vec3 {
-        Vec3::new(0.0, 0.0, BOARD_LAYER)
+        Vec3::new(0.0, 0.0, BOARD_Z_INDEX)
     }
 
     fn board_width(&self) -> f32 {
@@ -83,7 +85,7 @@ impl GameTransform {
     }
 
     pub fn board_background_translation(&self) -> Vec3 {
-        Vec3::new(0.0, -self.border_width(), BOARD_BACKGROUND_LAYER)
+        Vec3::new(0.0, -self.border_width(), BOARD_BACKGROUND_Z_INDEX)
     }
 
     pub fn board_cover_size(&self) -> Vec2 {
@@ -91,7 +93,7 @@ impl GameTransform {
     }
 
     pub fn board_cover_translation(&self) -> Vec3 {
-        Vec3::new(0.0, 0.0, COVER_LAYER)
+        Vec3::new(0.0, 0.0, COVER_Z_INDEX)
     }
 
     pub fn board_square_translation(&self, x: i32, y: i32) -> Vec3 {
@@ -99,7 +101,7 @@ impl GameTransform {
             (x as f32 + 0.5) * self.square_width(),
             (y as f32 + 0.5) * self.square_height(),
         ) + (self.board_size() / -2.0))
-            .extend(SQUARE_LAYER)
+            .extend(SQUARE_Z_INDEX)
     }
 
     pub fn curr_piece_translation(&self, x: i32, y: i32) -> Vec3 {
@@ -107,35 +109,88 @@ impl GameTransform {
             (x as f32 + 0.5) * self.square_width(),
             (y as f32 + 0.5) * self.square_height(),
         ) + (self.board_size() / -2.0))
-            .extend(CURR_PIECE_LAYER)
+            .extend(CURR_PIECE_Z_INDEX)
     }
 
     pub fn das_translation(&self) -> Vec3 {
         Vec3::new(
             0.0,
             -self.board_height() / 2.0 - self.square_height(),
-            BOARD_LAYER,
+            BOARD_Z_INDEX,
         )
     }
 
+    // left
+
     pub fn lines_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
+        Vec3::new(
+            -self.board_width(),
+            self.square_height() * 9.0,
+            BOARD_Z_INDEX,
+        )
     }
 
+    pub fn statistics_translation(&self) -> Vec3 {
+        Vec3::new(
+            -self.board_width(),
+            self.square_height() * 3.0,
+            BOARD_Z_INDEX,
+        )
+    }
+
+    pub fn piece_count_square_size(&self) -> Vec2 {
+        Vec2::new(self.square_width() * 0.5, self.square_height() * 0.5)
+    }
+
+    pub fn piece_count_translation(&self, index: usize, x: f32, y: f32) -> Vec3 {
+        (Vec2::new(x + 0.5, y) * self.piece_count_square_size()
+            + Vec2::new(
+                -self.board_width() - self.square_width() * 2.0,
+                -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
+            ))
+        .extend(BOARD_Z_INDEX)
+    }
+
+    pub fn piece_count_counter_translation(&self, index: usize) -> Vec3 {
+        Vec3::new(
+            -self.board_width() + self.square_width(),
+            -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
+            BOARD_Z_INDEX,
+        )
+    }
+
+    // right
+
     pub fn score_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), self.square_height() * 9.0, BOARD_LAYER)
+        Vec3::new(
+            self.board_width(),
+            self.square_height() * 9.0,
+            BOARD_Z_INDEX,
+        )
     }
 
     pub fn level_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.square_height() * 7.0, BOARD_LAYER)
+        Vec3::new(
+            self.board_width(),
+            -self.square_height() * 7.0,
+            BOARD_Z_INDEX,
+        )
     }
 
     pub fn game_mode_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width() * 1.4, self.square_height(), BOARD_LAYER)
+        Vec3::new(
+            self.board_width() * 1.4,
+            self.square_height(),
+            BOARD_Z_INDEX,
+        )
     }
 
     pub fn stopwatch_translation(&self) -> Vec3 {
-        Vec3::new(self.board_width(), -self.square_height() * 9.0, BOARD_LAYER)
+        Vec3::new(
+            self.board_width(),
+            -self.square_height() * 9.0,
+            BOARD_Z_INDEX,
+        )
     }
 
     pub fn inputs_rect_size(&self) -> Vec2 {
@@ -150,7 +205,7 @@ impl GameTransform {
         Vec3::new(
             self.board_width(),
             -self.square_height() * 11.0,
-            BOARD_LAYER,
+            BOARD_Z_INDEX,
         )
     }
 
@@ -212,7 +267,7 @@ impl GameTransform {
                     + self.next_piece_translation_offset_for_index(index)
             }
         }
-        .extend(CURR_PIECE_LAYER)
+        .extend(CURR_PIECE_Z_INDEX)
     }
 
     pub fn next_piece_slot_translation(&self, index: usize) -> Vec3 {
@@ -223,12 +278,12 @@ impl GameTransform {
                     + self.next_piece_translation_offset_for_index(index)
             }
         }
-        .extend(BOARD_LAYER)
+        .extend(BOARD_Z_INDEX)
     }
 
     pub fn next_piece_label_translation(&self) -> Vec3 {
         (self.next_piece_translation_offset() + Vec2::new(0.0, self.square_height() * 3.5))
-            .extend(BOARD_LAYER)
+            .extend(BOARD_Z_INDEX)
     }
 
     pub fn next_piece_slot_size(&self, index: usize) -> Vec2 {
@@ -243,36 +298,11 @@ impl GameTransform {
                     + self.next_piece_translation_offset_for_index(index)
             }
         }
-        .extend(BOARD_BACKGROUND_LAYER)
+        .extend(BOARD_BACKGROUND_Z_INDEX)
     }
 
     pub fn next_piece_slot_background_size(&self, index: usize) -> Vec2 {
         self.next_piece_slot_size(index) + self.border_size() * 2.0
-    }
-
-    pub fn statistics_translation(&self) -> Vec3 {
-        Vec3::new(-self.board_width(), self.square_height() * 3.0, BOARD_LAYER)
-    }
-
-    pub fn piece_count_square_size(&self) -> Vec2 {
-        Vec2::new(self.square_width() * 0.5, self.square_height() * 0.5)
-    }
-
-    pub fn piece_count_translation(&self, index: usize, x: f32, y: f32) -> Vec3 {
-        (Vec2::new(x + 0.5, y) * self.piece_count_square_size()
-            + Vec2::new(
-                -self.board_width() - self.square_width() * 2.0,
-                -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
-            ))
-        .extend(BOARD_LAYER)
-    }
-
-    pub fn piece_count_counter_translation(&self, index: usize) -> Vec3 {
-        Vec3::new(
-            -self.board_width() + self.square_width(),
-            -self.square_height() * 2.0 - self.square_height() * 1.5 * index as f32,
-            BOARD_LAYER,
-        )
     }
 }
 

@@ -64,10 +64,9 @@ impl Default for LevelMenuData {
 fn setup_screen(
     mut commands: Commands,
     mut image_assets: ResMut<Assets<Image>>,
-    level_menu_transform: Res<LevelMenuTransform>,
+    transform: Res<LevelMenuTransform>,
 ) {
     let logo_images = load_logo_images(&mut image_assets);
-    let scale = level_menu_transform.scale();
 
     commands
         .spawn((
@@ -91,25 +90,25 @@ fn setup_screen(
                     style: Style {
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(scale * 40.0)),
+                        margin: UiRect::all(Val::Px(transform.fs_medium())),
                         ..default()
                     },
                     ..default()
                 })
                 .with_children(|parent| {
                     TETRIS_BITMAP.iter().for_each(|rows| {
-                        rows.iter().for_each(|square| {
+                        rows.iter().for_each(|sqr| {
                             parent.spawn((
                                 NodeBundle {
                                     style: Style {
-                                        width: Val::Px(scale * 24.0),
-                                        height: Val::Px(scale * 24.0),
+                                        width: Val::Px(transform.fs_small()),
+                                        height: Val::Px(transform.fs_small()),
                                         ..default()
                                     },
                                     ..default()
                                 },
                                 UiImage {
-                                    texture: logo_images[(*square) as usize].clone(),
+                                    texture: logo_images[(*sqr) as usize].clone(),
                                     ..default()
                                 },
                             ));
@@ -122,13 +121,13 @@ fn setup_screen(
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(scale * 10.0)),
-                        padding: UiRect::all(Val::Px(scale * 10.0)),
-                        border: UiRect::all(Val::Px(scale * 5.0)),
+                        margin: UiRect::all(Val::Px(transform.scale() * 10.0)),
+                        padding: UiRect::all(Val::Px(transform.scale() * 10.0)),
+                        border: UiRect::all(Val::Px(transform.scale() * 5.0)),
                         ..default()
                     },
                     border_color: BLUE.into(),
-                    border_radius: BorderRadius::all(Val::Px(scale * 5.0)),
+                    border_radius: BorderRadius::all(Val::Px(transform.scale() * 5.0)),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -136,13 +135,13 @@ fn setup_screen(
                         TextBundle::from_section(
                             "LEVEL",
                             TextStyle {
-                                font_size: scale * 36.0,
+                                font_size: transform.fs_medium(),
                                 color: WHITE.into(),
                                 ..default()
                             },
                         )
                         .with_style(Style {
-                            margin: UiRect::all(Val::Px(scale * 20.0)),
+                            margin: UiRect::all(Val::Px(transform.fs_small())),
                             ..default()
                         }),
                     );
@@ -152,9 +151,9 @@ fn setup_screen(
                             style: Style {
                                 display: Display::Grid,
                                 grid_template_columns: vec![GridTrack::auto(); 5],
-                                row_gap: Val::Px(scale * 5.0),
-                                column_gap: Val::Px(scale * 5.0),
-                                border: UiRect::all(Val::Px(scale * 5.0)),
+                                row_gap: Val::Px(transform.scale() * 5.0),
+                                column_gap: Val::Px(transform.scale() * 5.0),
+                                border: UiRect::all(Val::Px(transform.scale() * 5.0)),
                                 ..default()
                             },
                             background_color: GREEN.into(),
@@ -169,8 +168,8 @@ fn setup_screen(
                                             .spawn((
                                                 NodeBundle {
                                                     style: Style {
-                                                        width: Val::Px(scale * 60.0),
-                                                        height: Val::Px(scale * 60.0),
+                                                        width: Val::Px(transform.fs_large()),
+                                                        height: Val::Px(transform.fs_large()),
                                                         align_items: AlignItems::Center,
                                                         justify_content: JustifyContent::Center,
                                                         ..default()
@@ -186,7 +185,7 @@ fn setup_screen(
                                                 parent.spawn(TextBundle::from_section(
                                                     format!("{}", level),
                                                     TextStyle {
-                                                        font_size: scale * 40.0,
+                                                        font_size: transform.fs_medium(),
                                                         color: CRIMSON.into(),
                                                         ..default()
                                                     },
@@ -195,8 +194,8 @@ fn setup_screen(
                                     } else {
                                         parent.spawn(NodeBundle {
                                             style: Style {
-                                                width: Val::Px(scale * 60.0),
-                                                height: Val::Px(scale * 60.0),
+                                                width: Val::Px(transform.fs_large()),
+                                                height: Val::Px(transform.fs_large()),
                                                 align_items: AlignItems::Center,
                                                 justify_content: JustifyContent::Center,
                                                 ..default()

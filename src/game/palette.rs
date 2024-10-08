@@ -157,10 +157,10 @@ impl SquareImagePattern {
         pattern: &[[u8; W]; H],
         colors: &[Srgba; 4],
     ) -> Rgb32FImage {
-        let mut image = Rgb32FImage::new(W as u32, H as u32);
+        let mut img = Rgb32FImage::new(W as u32, H as u32);
         for y in 0..H {
             for x in 0..W {
-                image.put_pixel(
+                img.put_pixel(
                     x as u32,
                     y as u32,
                     image::Rgb(colors[pattern[y][x] as usize].to_f32_array_no_alpha()),
@@ -168,7 +168,7 @@ impl SquareImagePattern {
             }
         }
 
-        image
+        img
     }
 
     const STANDARD_X: &'static [[u8; 18]; 18] = &[

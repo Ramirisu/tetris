@@ -157,16 +157,16 @@ fn setup_screen(
     mut commands: Commands,
     player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
-    game_transform: Res<GameTransform>,
+    transform: Res<GameTransform>,
     mut meshes: ResMut<Assets<Mesh>>,
     color_materials: Res<ColorMaterialAssets>,
 ) {
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(game_transform.flash_translation()),
+            transform: Transform::from_translation(transform.flash_translation()),
             sprite: Sprite {
                 color: WHITE.into(),
-                custom_size: Some(game_transform.flash_size()),
+                custom_size: Some(transform.flash_size()),
                 ..default()
             },
             visibility: Visibility::Hidden,
@@ -177,10 +177,10 @@ fn setup_screen(
     ));
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(game_transform.board_background_translation()),
+            transform: Transform::from_translation(transform.board_background_translation()),
             sprite: Sprite {
                 color: WHITE.into(),
-                custom_size: Some(game_transform.board_background_size()),
+                custom_size: Some(transform.board_background_size()),
                 ..default()
             },
             ..default()
@@ -190,10 +190,10 @@ fn setup_screen(
     ));
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(game_transform.board_translation()),
+            transform: Transform::from_translation(transform.board_translation()),
             sprite: Sprite {
                 color: BLACK.into(),
-                custom_size: Some(game_transform.board_size()),
+                custom_size: Some(transform.board_size()),
                 ..default()
             },
             ..default()
@@ -206,10 +206,10 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        game_transform.board_square_translation(x as i32, y as i32),
+                        transform.board_square_translation(x as i32, y as i32),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(game_transform.square_size()),
+                        custom_size: Some(transform.square_size()),
                         ..default()
                     },
                     texture: square_image_assets.get_image(
@@ -227,10 +227,10 @@ fn setup_screen(
     commands
         .spawn((
             SpriteBundle {
-                transform: Transform::from_translation(game_transform.board_cover_translation()),
+                transform: Transform::from_translation(transform.board_cover_translation()),
                 sprite: Sprite {
                     color: RED.into(),
-                    custom_size: Some(game_transform.board_cover_size()),
+                    custom_size: Some(transform.board_cover_size()),
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -244,12 +244,12 @@ fn setup_screen(
                 text: Text::from_section(
                     "PRESS START\nTO CONTINUE",
                     TextStyle {
-                        font_size: game_transform.fs_medium(),
+                        font_size: transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                 ),
-                transform: Transform::from_translation(game_transform.board_cover_translation()),
+                transform: Transform::from_translation(transform.board_cover_translation()),
                 ..default()
             });
         });
@@ -260,20 +260,20 @@ fn setup_screen(
                 TextSection {
                     value: "LINES\n".into(),
                     style: TextStyle {
-                        font_size: game_transform.fs_large(),
+                        font_size: transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_xlarge(),
+                    font_size: transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ])
             .with_justify(JustifyText::Center),
-            transform: Transform::from_translation(game_transform.lines_translation()),
+            transform: Transform::from_translation(transform.lines_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -285,20 +285,20 @@ fn setup_screen(
                 TextSection {
                     value: "SCORE\n".into(),
                     style: TextStyle {
-                        font_size: game_transform.fs_large(),
+                        font_size: transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_xlarge(),
+                    font_size: transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ])
             .with_justify(JustifyText::Center),
-            transform: Transform::from_translation(game_transform.score_translation()),
+            transform: Transform::from_translation(transform.score_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -310,19 +310,19 @@ fn setup_screen(
                 TextSection {
                     value: "LEVEL ".into(),
                     style: TextStyle {
-                        font_size: game_transform.fs_large(),
+                        font_size: transform.fs_large(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_xlarge(),
+                    font_size: transform.fs_xlarge(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform::from_translation(game_transform.level_translation()),
+            transform: Transform::from_translation(transform.level_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -332,13 +332,13 @@ fn setup_screen(
         Text2dBundle {
             text: Text::from_sections(vec![
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_medium(),
+                    font_size: transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 });
                 10
             ]),
-            transform: Transform::from_translation(game_transform.statistics_translation()),
+            transform: Transform::from_translation(transform.statistics_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -350,19 +350,19 @@ fn setup_screen(
                 TextSection {
                     value: "DAS ".into(),
                     style: TextStyle {
-                        font_size: game_transform.fs_medium(),
+                        font_size: transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_large(),
+                    font_size: transform.fs_large(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform::from_translation(game_transform.das_translation()),
+            transform: Transform::from_translation(transform.das_translation()),
             visibility: player_data.das_counter.get_counter_visibility(),
             ..default()
         },
@@ -374,13 +374,13 @@ fn setup_screen(
         Text2dBundle {
             text: Text::from_sections(vec![
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_medium(),
+                    font_size: transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 });
                 12
             ]),
-            transform: Transform::from_translation(game_transform.game_mode_translation()),
+            transform: Transform::from_translation(transform.game_mode_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -392,19 +392,19 @@ fn setup_screen(
                 TextSection {
                     value: "TIME ".into(),
                     style: TextStyle {
-                        font_size: game_transform.fs_medium(),
+                        font_size: transform.fs_medium(),
                         color: WHITE.into(),
                         ..default()
                     },
                     ..default()
                 },
                 TextSection::from_style(TextStyle {
-                    font_size: game_transform.fs_medium(),
+                    font_size: transform.fs_medium(),
                     color: WHITE.into(),
                     ..default()
                 }),
             ]),
-            transform: Transform::from_translation(game_transform.stopwatch_translation()),
+            transform: Transform::from_translation(transform.stopwatch_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -417,18 +417,18 @@ fn setup_screen(
             piece
                 .get_squares_with_piece_center_align()
                 .iter()
-                .for_each(|square| {
+                .for_each(|sqr| {
                     commands.spawn((
                         SpriteBundle {
                             transform: Transform::from_translation(
-                                game_transform.piece_count_translation(
+                                transform.piece_count_translation(
                                     piece.variant_index(),
-                                    square.0,
-                                    square.1,
+                                    sqr.0,
+                                    sqr.1,
                                 ),
                             ),
                             sprite: Sprite {
-                                custom_size: Some(game_transform.piece_count_square_size()),
+                                custom_size: Some(transform.piece_count_square_size()),
                                 ..default()
                             },
                             texture: square_image_assets.get_image(SquareImageSize::Small, *piece),
@@ -440,13 +440,12 @@ fn setup_screen(
                     commands.spawn((
                         Text2dBundle {
                             text: Text::from_sections([TextSection::from_style(TextStyle {
-                                font_size: game_transform.fs_medium(),
+                                font_size: transform.fs_medium(),
                                 color: WHITE.into(),
                                 ..default()
                             })]),
                             transform: Transform::from_translation(
-                                game_transform
-                                    .piece_count_counter_translation(piece.variant_index()),
+                                transform.piece_count_counter_translation(piece.variant_index()),
                             ),
                             ..default()
                         },
@@ -464,10 +463,10 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        game_transform.curr_piece_translation(sqr.0, sqr.1),
+                        transform.curr_piece_translation(sqr.0, sqr.1),
                     ),
                     sprite: Sprite {
-                        custom_size: Some(game_transform.square_size()),
+                        custom_size: Some(transform.square_size()),
                         ..default()
                     },
                     texture: square_image_assets.get_image(
@@ -486,12 +485,12 @@ fn setup_screen(
             text: Text::from_section(
                 "NEXT",
                 TextStyle {
-                    font_size: game_transform.fs_large(),
+                    font_size: transform.fs_large(),
                     color: WHITE.into(),
                     ..default()
                 },
             ),
-            transform: Transform::from_translation(game_transform.next_piece_label_translation()),
+            transform: Transform::from_translation(transform.next_piece_label_translation()),
             ..default()
         },
         GameEntityMarker,
@@ -506,11 +505,11 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        game_transform.next_piece_slot_background_translation(index),
+                        transform.next_piece_slot_background_translation(index),
                     ),
                     sprite: Sprite {
                         color: WHITE.into(),
-                        custom_size: Some(game_transform.next_piece_slot_background_size(index)),
+                        custom_size: Some(transform.next_piece_slot_background_size(index)),
                         ..default()
                     },
                     visibility: player_data.next_piece_hint.get_visibility(index),
@@ -529,11 +528,11 @@ fn setup_screen(
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_translation(
-                        game_transform.next_piece_slot_translation(index),
+                        transform.next_piece_slot_translation(index),
                     ),
                     sprite: Sprite {
                         color: BLACK.into(),
-                        custom_size: Some(game_transform.next_piece_slot_size(index)),
+                        custom_size: Some(transform.next_piece_slot_size(index)),
                         ..default()
                     },
                     visibility: player_data.next_piece_hint.get_visibility(index),
@@ -556,10 +555,10 @@ fn setup_screen(
                     commands.spawn((
                         SpriteBundle {
                             transform: Transform::from_translation(
-                                game_transform.next_piece_translation(sqr.0, sqr.1, index),
+                                transform.next_piece_translation(sqr.0, sqr.1, index),
                             ),
                             sprite: Sprite {
-                                custom_size: Some(game_transform.next_piece_square_size(index)),
+                                custom_size: Some(transform.next_piece_square_size(index)),
                                 ..default()
                             },
                             texture: square_image_assets
@@ -576,11 +575,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .add(Rectangle::from_size(transform.inputs_rect_size()))
                 .into(),
-            transform: Transform::from_translation(
-                game_transform.inputs_button_center_translation(),
-            ),
+            transform: Transform::from_translation(transform.inputs_button_center_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -589,9 +586,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .add(Rectangle::from_size(transform.inputs_rect_size()))
                 .into(),
-            transform: Transform::from_translation(game_transform.inputs_button_left_translation()),
+            transform: Transform::from_translation(transform.inputs_button_left_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -601,11 +598,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .add(Rectangle::from_size(transform.inputs_rect_size()))
                 .into(),
-            transform: Transform::from_translation(
-                game_transform.inputs_button_right_translation(),
-            ),
+            transform: Transform::from_translation(transform.inputs_button_right_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -615,9 +610,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .add(Rectangle::from_size(transform.inputs_rect_size()))
                 .into(),
-            transform: Transform::from_translation(game_transform.inputs_button_up_translation()),
+            transform: Transform::from_translation(transform.inputs_button_up_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -627,9 +622,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Rectangle::from_size(game_transform.inputs_rect_size()))
+                .add(Rectangle::from_size(transform.inputs_rect_size()))
                 .into(),
-            transform: Transform::from_translation(game_transform.inputs_button_down_translation()),
+            transform: Transform::from_translation(transform.inputs_button_down_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -639,9 +634,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Circle::new(game_transform.inputs_circle_scale()))
+                .add(Circle::new(transform.inputs_circle_scale()))
                 .into(),
-            transform: Transform::from_translation(game_transform.inputs_button_a_translation()),
+            transform: Transform::from_translation(transform.inputs_button_a_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -651,9 +646,9 @@ fn setup_screen(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes
-                .add(Circle::new(game_transform.inputs_circle_scale()))
+                .add(Circle::new(transform.inputs_circle_scale()))
                 .into(),
-            transform: Transform::from_translation(game_transform.inputs_button_b_translation()),
+            transform: Transform::from_translation(transform.inputs_button_b_translation()),
             material: color_materials.white.clone(),
             ..default()
         },
@@ -694,10 +689,10 @@ fn update_statistics_system(
     }
     if let Ok(mut text) = query.p0().p3().get_single_mut() {
         text.sections[0].value = format!("BRN {:4}\n", player_data.board.burned_lines());
-        text.sections[1].value = format!(" 1X {:4}\n", player_data.board.single());
-        text.sections[2].value = format!(" 2X {:4}\n", player_data.board.double());
-        text.sections[3].value = format!(" 3X {:4}\n", player_data.board.triple());
-        text.sections[4].value = format!("TRT {:4}\n", player_data.board.tetris());
+        text.sections[1].value = format!(" 1X {:4}\n", player_data.board.single_clear());
+        text.sections[2].value = format!(" 2X {:4}\n", player_data.board.double_clear());
+        text.sections[3].value = format!(" 3X {:4}\n", player_data.board.triple_clear());
+        text.sections[4].value = format!("TRT {:4}\n", player_data.board.tetris_clear());
         text.sections[5].value = format!("TRT ");
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
         text.sections[6].value = format!("{:3}%\n", rate);
@@ -776,7 +771,7 @@ mod state_player_dropping {
         mut player_data: ResMut<PlayerData>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
-        game_transform: Res<GameTransform>,
+        transform: Res<GameTransform>,
         color_materials: Res<ColorMaterialAssets>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -816,8 +811,8 @@ mod state_player_dropping {
                 query.p0().iter_mut(),
                 player_data.board.get_curr_piece_squares(),
             )
-            .for_each(|(mut transform, sqr)| {
-                transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
+            .for_each(|(mut tf, sqr)| {
+                tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
             });
         }
         if lr_moved {
@@ -907,7 +902,7 @@ mod state_player_dropping {
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
         square_image_assets: Res<SquareImageAssets>,
-        game_transform: Res<GameTransform>,
+        transform: Res<GameTransform>,
     ) {
         let lock = {
             if std::mem::replace(&mut player_data.lock_curr_piece_immediately, false) {
@@ -926,8 +921,8 @@ mod state_player_dropping {
                     query.p1().iter_mut(),
                     player_data.board.get_curr_piece_squares(),
                 )
-                .for_each(|(mut transform, sqr)| {
-                    transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
+                .for_each(|(mut tf, sqr)| {
+                    tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
                 play_sound.send(PlaySoundEvent::GameOver);
@@ -944,17 +939,15 @@ mod state_player_dropping {
                 player_data.entry_delay_timer = EntryDelayTimer::new(min_y, game_config.tv_system);
 
                 player_data.board.lock_curr_piece();
-                query.p1().iter_mut().for_each(|mut transform| {
+                query.p1().iter_mut().for_each(|mut tf| {
                     // make invisible
-                    transform.translation.z = game_transform.board_translation().z - 1.0;
+                    tf.translation.z = transform.board_translation().z - 1.0;
                 });
 
-                query.p0().iter_mut().for_each(|(mut image, coordinate)| {
-                    *image = square_image_assets.get_image(
+                query.p0().iter_mut().for_each(|(mut img, coord)| {
+                    *img = square_image_assets.get_image(
                         SquareImageSize::Standard,
-                        player_data
-                            .board
-                            .get_square(coordinate.0 as i32, coordinate.1 as i32),
+                        player_data.board.get_square(coord.0 as i32, coord.1 as i32),
                     );
                 });
 
@@ -1007,18 +1000,18 @@ mod state_player_line_clear {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
-                for (mut image, coordinate) in query.p0().iter_mut() {
-                    if (coordinate.0 == left || coordinate.0 == right)
-                        && player_data.line_clear_rows.contains(&coordinate.1)
+                for (mut img, coord) in query.p0().iter_mut() {
+                    if (coord.0 == left || coord.0 == right)
+                        && player_data.line_clear_rows.contains(&coord.1)
                     {
-                        *image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
+                        *img = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
-                    if let Ok(mut visibility) = query.p1().get_single_mut() {
-                        match *visibility {
-                            Visibility::Hidden => *visibility = Visibility::Inherited,
-                            Visibility::Inherited => *visibility = Visibility::Hidden,
+                    if let Ok(mut vis) = query.p1().get_single_mut() {
+                        match *vis {
+                            Visibility::Hidden => *vis = Visibility::Inherited,
+                            Visibility::Inherited => *vis = Visibility::Hidden,
                             _ => (),
                         }
                     }
@@ -1055,21 +1048,19 @@ mod state_player_entry_delay {
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         square_image_assets: Res<SquareImageAssets>,
-        game_transform: Res<GameTransform>,
+        transform: Res<GameTransform>,
     ) {
         if player_data.entry_delay_timer.tick(time.delta()).consume() {
             player_data.board.switch_to_next_piece();
 
-            if let Ok(mut visibility) = query.p0().get_single_mut() {
-                *visibility = Visibility::Hidden;
+            if let Ok(mut vis) = query.p0().get_single_mut() {
+                *vis = Visibility::Hidden;
             }
 
-            query.p1().iter_mut().for_each(|(mut image, coordinate)| {
-                *image = square_image_assets.get_image(
+            query.p1().iter_mut().for_each(|(mut img, coord)| {
+                *img = square_image_assets.get_image(
                     SquareImageSize::Standard,
-                    player_data
-                        .board
-                        .get_square(coordinate.0 as i32, coordinate.1 as i32),
+                    player_data.board.get_square(coord.0 as i32, coord.1 as i32),
                 );
             });
 
@@ -1077,12 +1068,12 @@ mod state_player_entry_delay {
                 query.p2().iter_mut(),
                 player_data.board.get_curr_piece_squares(),
             )
-            .for_each(|((mut transform, mut image), sqr)| {
-                *image = square_image_assets.get_image(
+            .for_each(|((mut tf, mut img), sqr)| {
+                *img = square_image_assets.get_image(
                     SquareImageSize::Standard,
                     player_data.board.get_curr_piece(),
                 );
-                transform.translation = game_transform.curr_piece_translation(sqr.0, sqr.1);
+                tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
             });
             std::iter::zip(
                 query.p3().iter_mut(),
@@ -1093,16 +1084,15 @@ mod state_player_entry_delay {
                     .flat_map(|piece| piece.get_squares_with_piece_center_align())
                     .collect::<Vec<_>>(),
             )
-            .for_each(|((mut transform, mut image, index), sqr)| {
-                *image = square_image_assets.get_image(
+            .for_each(|((mut tf, mut img, index), sqr)| {
+                *img = square_image_assets.get_image(
                     SquareImageSize::Standard,
                     player_data.board.get_next_pieces()[index.0],
                 );
-                transform.translation =
-                    game_transform.next_piece_translation(sqr.0, sqr.1, index.0);
+                tf.translation = transform.next_piece_translation(sqr.0, sqr.1, index.0);
             });
-            query.p4().iter_mut().for_each(|(mut image, piece)| {
-                *image = square_image_assets.get_image(SquareImageSize::Small, piece.0);
+            query.p4().iter_mut().for_each(|(mut img, piece)| {
+                *img = square_image_assets.get_image(SquareImageSize::Small, piece.0);
             });
 
             player_phase.set(PlayerPhase::Dropping);

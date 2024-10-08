@@ -16,10 +16,7 @@ pub struct Board {
     next_pieces: VecDeque<Piece>,
     lines: usize,
     score: usize,
-    single: usize,
-    double: usize,
-    triple: usize,
-    tetris: usize,
+    lines_clear: [usize; 4],
     drought: usize,
     max_drought: usize,
     piece_count: [usize; Piece::variant_len()],
@@ -48,10 +45,7 @@ impl Board {
             next_pieces,
             lines: 0,
             score: 0,
-            single: 0,
-            double: 0,
-            triple: 0,
-            tetris: 0,
+            lines_clear: [0; 4],
             drought: 0,
             max_drought: 0,
             piece_count: [0; Piece::variant_len()],
@@ -75,30 +69,30 @@ impl Board {
     }
 
     pub fn burned_lines(&self) -> usize {
-        self.lines - self.tetris * 4
+        self.lines - self.tetris_clear() * 4
     }
 
-    pub fn single(&self) -> usize {
-        self.single
+    pub fn single_clear(&self) -> usize {
+        self.lines_clear[0]
     }
 
-    pub fn double(&self) -> usize {
-        self.double
+    pub fn double_clear(&self) -> usize {
+        self.lines_clear[1]
     }
 
-    pub fn triple(&self) -> usize {
-        self.triple
+    pub fn triple_clear(&self) -> usize {
+        self.lines_clear[2]
     }
 
-    pub fn tetris(&self) -> usize {
-        self.tetris
+    pub fn tetris_clear(&self) -> usize {
+        self.lines_clear[3]
     }
 
     pub fn tetris_rate(&self) -> f32 {
         if self.lines == 0 {
             0.0
         } else {
-            self.tetris as f32 * 4.0 / self.lines as f32
+            self.tetris_clear() as f32 * 4.0 / self.lines as f32
         }
     }
 
@@ -144,10 +138,7 @@ impl Board {
         self.score += Self::get_score(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
-            1 => self.single += 1,
-            2 => self.double += 1,
-            3 => self.triple += 1,
-            4 => self.tetris += 1,
+            1..=4 => self.lines_clear[rows.len() - 1] += 1,
             _ => (),
         }
         self.squares
@@ -276,7 +267,6 @@ impl Board {
     fn get_score(lines: usize, level: usize) -> usize {
         (level + 1)
             * match lines {
-                0 => 0,
                 1 => 40,
                 2 => 100,
                 3 => 300,
