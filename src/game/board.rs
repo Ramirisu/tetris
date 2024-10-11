@@ -57,7 +57,8 @@ impl Board {
     }
 
     pub fn level(&self) -> usize {
-        self.transition.get_level(self.start_level, self.lines)
+        self.transition
+            .transform_level(self.start_level, self.lines)
     }
 
     pub fn lines(&self) -> usize {
@@ -124,7 +125,7 @@ impl Board {
     }
 
     pub fn lock_curr_piece(&mut self) {
-        for sqr in self.get_curr_piece_squares() {
+        for sqr in self.curr_piece_to_squares_with_pos() {
             self.squares[sqr.1 as usize][sqr.0 as usize] = self.curr_piece;
         }
     }
@@ -135,7 +136,7 @@ impl Board {
             self.squares.remove(*row);
         });
 
-        self.score += Self::get_score(rows.len(), self.level());
+        self.score += Self::transform_score(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
             1..=4 => self.lines_clear[rows.len() - 1] += 1,
@@ -161,22 +162,22 @@ impl Board {
         }
     }
 
-    pub fn get_curr_piece(&self) -> Piece {
-        self.curr_piece
+    pub fn curr_piece(&self) -> &Piece {
+        &self.curr_piece
     }
 
-    pub fn get_curr_piece_squares(&self) -> [Square; 4] {
+    pub fn curr_piece_to_squares_with_pos(&self) -> [Square; 4] {
         self.curr_piece
-            .get_squares()
+            .to_squares()
             .map(|sqr| Square(sqr.0 + self.curr_pos.0, sqr.1 + self.curr_pos.1))
     }
 
-    pub fn get_next_pieces(&self) -> &VecDeque<Piece> {
+    pub fn next_pieces(&self) -> &VecDeque<Piece> {
         &self.next_pieces
     }
 
     pub fn is_left_movable(&self) -> bool {
-        self.get_curr_piece_squares().iter().all(|sqr| {
+        self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(-1, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
@@ -184,7 +185,7 @@ impl Board {
     }
 
     pub fn is_right_movable(&self) -> bool {
-        self.get_curr_piece_squares().iter().all(|sqr| {
+        self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(1, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
@@ -192,7 +193,7 @@ impl Board {
     }
 
     pub fn is_curr_position_valid(&self) -> bool {
-        self.get_curr_piece_squares().iter().all(|sqr| {
+        self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && y < Self::BOARD_ROWS as i32
@@ -201,7 +202,7 @@ impl Board {
     }
 
     pub fn move_piece_down(&mut self) -> bool {
-        let movable = self.get_curr_piece_squares().iter().all(|sqr| {
+        let movable = self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(0, -1);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
@@ -234,7 +235,7 @@ impl Board {
 
     pub fn rotate_piece_clockwise(&mut self) -> bool {
         self.curr_piece.rotate_clockwise();
-        let rotatable = self.get_curr_piece_squares().iter().all(|sqr| {
+        let rotatable = self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
@@ -248,7 +249,7 @@ impl Board {
 
     pub fn rotate_piece_counter_clockwise(&mut self) -> bool {
         self.curr_piece.rotate_counterclockwise();
-        let rotatable = self.get_curr_piece_squares().iter().all(|sqr| {
+        let rotatable = self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
             let (x, y) = sqr.to_coordinate(0, 0);
             Self::is_inside(x, y)
                 && (y >= Self::BOARD_ROWS as i32 || self.get_square(x, y).is_placeholder())
@@ -264,7 +265,7 @@ impl Board {
         x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0 && y < Self::INTERNAL_BOARD_ROWS as i32
     }
 
-    fn get_score(lines: usize, level: usize) -> usize {
+    fn transform_score(lines: usize, level: usize) -> usize {
         (level + 1)
             * match lines {
                 1 => 40,

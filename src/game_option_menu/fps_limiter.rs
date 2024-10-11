@@ -15,8 +15,8 @@ pub enum FPSLimiter {
 
 enum_iter::enum_iter_derive!(FPSLimiter);
 
-impl FPSLimiter {
-    pub fn get_limiter(&self) -> bevy_framepace::Limiter {
+impl Into<bevy_framepace::Limiter> for FPSLimiter {
+    fn into(self) -> bevy_framepace::Limiter {
         let ft = |fps| Duration::from_secs_f32(1.0 / fps as f32);
         match self {
             FPSLimiter::Unlimited => bevy_framepace::Limiter::Off,

@@ -12,8 +12,8 @@ pub enum WindowMode {
 
 enum_iter::enum_iter_derive!(WindowMode);
 
-impl WindowMode {
-    pub fn get_window_mode(&self) -> bevy::window::WindowMode {
+impl Into<bevy::window::WindowMode> for WindowMode {
+    fn into(self) -> bevy::window::WindowMode {
         match self {
             WindowMode::Windowed => bevy::window::WindowMode::Windowed,
             WindowMode::BorderlessFullscreen => bevy::window::WindowMode::BorderlessFullscreen,

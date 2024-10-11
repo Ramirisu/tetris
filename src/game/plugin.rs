@@ -363,7 +363,7 @@ fn setup_screen(
                 }),
             ]),
             transform: Transform::from_translation(transform.das_translation()),
-            visibility: player_data.das_counter.get_counter_visibility(),
+            visibility: player_data.das_counter.into(),
             ..default()
         },
         GameEntityMarker,
@@ -415,7 +415,7 @@ fn setup_screen(
         .filter(|piece| **piece != Piece::X)
         .for_each(|piece| {
             piece
-                .get_squares_with_piece_center_align()
+                .to_squares_with_piece_center_align()
                 .iter()
                 .for_each(|sqr| {
                     commands.spawn((
@@ -457,7 +457,7 @@ fn setup_screen(
 
     player_data
         .board
-        .get_curr_piece_squares()
+        .curr_piece_to_squares_with_pos()
         .iter()
         .for_each(|sqr| {
             commands.spawn((
@@ -469,10 +469,8 @@ fn setup_screen(
                         custom_size: Some(transform.square_size()),
                         ..default()
                     },
-                    texture: square_image_assets.get_image(
-                        SquareImageSize::Standard,
-                        player_data.board.get_curr_piece(),
-                    ),
+                    texture: square_image_assets
+                        .get_image(SquareImageSize::Standard, *player_data.board.curr_piece()),
                     ..default()
                 },
                 GameEntityMarker,
@@ -498,7 +496,7 @@ fn setup_screen(
 
     player_data
         .board
-        .get_next_pieces()
+        .next_pieces()
         .iter()
         .enumerate()
         .for_each(|(index, _)| {
@@ -512,7 +510,7 @@ fn setup_screen(
                         custom_size: Some(transform.next_piece_slot_background_size(index)),
                         ..default()
                     },
-                    visibility: player_data.next_piece_hint.get_visibility(index),
+                    visibility: player_data.next_piece_hint.as_visibility(index),
                     ..default()
                 },
                 GameEntityMarker,
@@ -521,7 +519,7 @@ fn setup_screen(
 
     player_data
         .board
-        .get_next_pieces()
+        .next_pieces()
         .iter()
         .enumerate()
         .for_each(|(index, _)| {
@@ -535,7 +533,7 @@ fn setup_screen(
                         custom_size: Some(transform.next_piece_slot_size(index)),
                         ..default()
                     },
-                    visibility: player_data.next_piece_hint.get_visibility(index),
+                    visibility: player_data.next_piece_hint.as_visibility(index),
                     ..default()
                 },
                 GameEntityMarker,
@@ -544,12 +542,12 @@ fn setup_screen(
 
     player_data
         .board
-        .get_next_pieces()
+        .next_pieces()
         .iter()
         .enumerate()
         .for_each(|(index, piece)| {
             piece
-                .get_squares_with_piece_center_align()
+                .to_squares_with_piece_center_align()
                 .iter()
                 .for_each(|sqr| {
                     commands.spawn((
@@ -563,7 +561,7 @@ fn setup_screen(
                             },
                             texture: square_image_assets
                                 .get_image(SquareImageSize::Standard, *piece),
-                            visibility: player_data.next_piece_hint.get_visibility(index),
+                            visibility: player_data.next_piece_hint.as_visibility(index),
                             ..default()
                         },
                         GameEntityMarker,
@@ -809,7 +807,7 @@ mod state_player_dropping {
         if moved {
             std::iter::zip(
                 query.p0().iter_mut(),
-                player_data.board.get_curr_piece_squares(),
+                player_data.board.curr_piece_to_squares_with_pos(),
             )
             .for_each(|(mut tf, sqr)| {
                 tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
@@ -919,7 +917,7 @@ mod state_player_dropping {
             if player_data.board.move_piece_down() {
                 std::iter::zip(
                     query.p1().iter_mut(),
-                    player_data.board.get_curr_piece_squares(),
+                    player_data.board.curr_piece_to_squares_with_pos(),
                 )
                 .for_each(|(mut tf, sqr)| {
                     tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
@@ -933,7 +931,7 @@ mod state_player_dropping {
 
                 let min_y = player_data
                     .board
-                    .get_curr_piece_squares()
+                    .curr_piece_to_squares_with_pos()
                     .iter()
                     .fold(19, |acc, sqr| acc.min(sqr.1 as u64));
                 player_data.entry_delay_timer = EntryDelayTimer::new(min_y, game_config.tv_system);
@@ -1066,28 +1064,26 @@ mod state_player_entry_delay {
 
             std::iter::zip(
                 query.p2().iter_mut(),
-                player_data.board.get_curr_piece_squares(),
+                player_data.board.curr_piece_to_squares_with_pos(),
             )
             .for_each(|((mut tf, mut img), sqr)| {
-                *img = square_image_assets.get_image(
-                    SquareImageSize::Standard,
-                    player_data.board.get_curr_piece(),
-                );
+                *img = square_image_assets
+                    .get_image(SquareImageSize::Standard, *player_data.board.curr_piece());
                 tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
             });
             std::iter::zip(
                 query.p3().iter_mut(),
                 player_data
                     .board
-                    .get_next_pieces()
+                    .next_pieces()
                     .iter()
-                    .flat_map(|piece| piece.get_squares_with_piece_center_align())
+                    .flat_map(|piece| piece.to_squares_with_piece_center_align())
                     .collect::<Vec<_>>(),
             )
             .for_each(|((mut tf, mut img, index), sqr)| {
                 *img = square_image_assets.get_image(
                     SquareImageSize::Standard,
-                    player_data.board.get_next_pieces()[index.0],
+                    player_data.board.next_pieces()[index.0],
                 );
                 tf.translation = transform.next_piece_translation(sqr.0, sqr.1, index.0);
             });

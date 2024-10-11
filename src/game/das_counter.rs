@@ -14,8 +14,8 @@ pub enum DASCounter {
 
 enum_iter::enum_iter_derive!(DASCounter);
 
-impl DASCounter {
-    pub fn get_counter_visibility(&self) -> Visibility {
+impl Into<Visibility> for DASCounter {
+    fn into(self) -> Visibility {
         match self {
             DASCounter::Off => Visibility::Hidden,
             DASCounter::Default => Visibility::Inherited,

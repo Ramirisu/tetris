@@ -41,7 +41,7 @@ pub fn setup(app: &mut App) {
 #[cfg(not(target_arch = "wasm32"))]
 fn init_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::FramepaceSettings>) {
     *framepace_settins = bevy_framepace::FramepaceSettings {
-        limiter: FPSLimiter::default().get_limiter(),
+        limiter: FPSLimiter::default().into(),
     };
 }
 
@@ -589,7 +589,7 @@ fn handle_input_system(
     {
         if fps_changed {
             *framepace_settins = bevy_framepace::FramepaceSettings {
-                limiter: game_option_menu_data.fps_limiter.get_limiter(),
+                limiter: game_option_menu_data.fps_limiter.into(),
             };
         }
         option_changed |= fps_changed;
@@ -598,7 +598,7 @@ fn handle_input_system(
     {
         if window_mode_changed {
             let mut window = query.single_mut();
-            window.mode = game_option_menu_data.window_mode.get_window_mode();
+            window.mode = game_option_menu_data.window_mode.into();
         }
         option_changed |= window_mode_changed;
     }

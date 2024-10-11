@@ -15,7 +15,7 @@ pub enum NextPieceHint {
 enum_iter::enum_iter_derive!(NextPieceHint);
 
 impl NextPieceHint {
-    pub fn get_visibility(&self, index: usize) -> Visibility {
+    pub fn as_visibility(&self, index: usize) -> Visibility {
         let visible = match self {
             NextPieceHint::Off => 0,
             NextPieceHint::Classic => 1,
