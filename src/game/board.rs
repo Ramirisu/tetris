@@ -2,14 +2,14 @@ use std::collections::VecDeque;
 
 use super::{
     piece::{Piece, Square},
-    seed::Seed,
+    rng::RandomNumberGenerator,
     transition::Transition,
 };
 
 pub struct Board {
     start_level: usize,
     transition: Transition,
-    seed: Seed,
+    rng: RandomNumberGenerator,
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_pos: (i32, i32),
@@ -30,15 +30,15 @@ impl Board {
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
     pub fn new(start_level: usize, transition: Transition) -> Self {
-        let seed = Seed::System;
+        let rng = RandomNumberGenerator::System;
         let next_pieces = (0..5).fold(VecDeque::new(), |mut accu, _| {
-            accu.push_back(seed.gen_1h2r(&accu));
+            accu.push_back(rng.gen_1h2r(&accu));
             accu
         });
         let mut board = Self {
             start_level,
             transition,
-            seed,
+            rng,
             squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
             curr_piece: Piece::X,
             curr_pos: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
@@ -148,7 +148,7 @@ impl Board {
 
     pub fn switch_to_next_piece(&mut self) {
         self.next_pieces
-            .push_back(self.seed.gen_1h2r(&self.next_pieces));
+            .push_back(self.rng.gen_1h2r(&self.next_pieces));
         self.curr_piece = self.next_pieces.pop_front().unwrap();
 
         self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);

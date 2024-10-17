@@ -58,7 +58,7 @@ enum GameOptionMenuSelection {
     Transition,
     Linecap,
     Gravity,
-    Seed,
+    RandomNumberGenerator,
     Scoring,
     TVSystem,
     NextPieceHint,
@@ -283,12 +283,12 @@ fn update_ui_system(
                     game_config.gravity.enum_next().is_some(),
                 );
             }
-            GameOptionMenuSelection::Seed => {
-                text.sections[0].value = fname("SEED");
+            GameOptionMenuSelection::RandomNumberGenerator => {
+                text.sections[0].value = fname("RNG");
                 text.sections[1].value = fopt(
-                    game_config.seed.to_string(),
-                    game_config.seed.enum_prev().is_some(),
-                    game_config.seed.enum_next().is_some(),
+                    game_config.rng.to_string(),
+                    game_config.rng.enum_prev().is_some(),
+                    game_config.rng.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Scoring => {
@@ -469,15 +469,15 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Seed => {
+        GameOptionMenuSelection::RandomNumberGenerator => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.seed.enum_next() {
-                    game_config.seed = e;
+                if let Some(e) = game_config.rng.enum_next() {
+                    game_config.rng = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.seed.enum_prev() {
-                    game_config.seed = e;
+                if let Some(e) = game_config.rng.enum_prev() {
+                    game_config.rng = e;
                     option_changed = true;
                 }
             }

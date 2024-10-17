@@ -715,7 +715,7 @@ fn update_statistics_system(
         text.sections[1].value = format!("CAP {:3}\n", game_config.linecap.to_string_abbr());
         text.sections[2].value = format!("TRS {:3}\n", game_config.transition.to_string_abbr());
         text.sections[3].value = format!("GRV {:3}\n", game_config.gravity.to_string_abbr());
-        text.sections[4].value = format!(" SD {:3}\n", game_config.seed.to_string_abbr());
+        text.sections[4].value = format!("RNG {:3}\n", game_config.rng.to_string_abbr());
         text.sections[5].value = format!("TVS {:3}\n", game_config.tv_system.to_string_abbr());
         text.sections[6].value = format!("INV {:3}\n", game_config.invisible.to_string_abbr());
     }

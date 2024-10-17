@@ -57,9 +57,9 @@ The *GRAVITY* option determines how the gravity will increase when the level adv
 |   Level | The gravity increases when the level advances. |
 |  Locked | The gravity is locked at the `startLevel`.     |
 
-**SEED**
+**RNG**
 
-The *SEED* option determines how to generate NEXT pieces. Currently, only default seeding is supported. 1H2R Randomizer is used to choose the pieces.
+The *RNG* option determines how to generate NEXT pieces. Currently, only default seeding is currently supported. 1H2R Randomizer is used to choose the pieces.
 
 | Options |                                                                                            |
 | ------: | :----------------------------------------------------------------------------------------- |
