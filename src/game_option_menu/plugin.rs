@@ -62,6 +62,7 @@ enum GameOptionMenuSelection {
     Scoring,
     TVSystem,
     NextPieceHint,
+    Invisible,
     DASCounter,
     ControllerMapping,
     ScaleFactor,
@@ -314,6 +315,14 @@ fn update_ui_system(
                     game_config.next_piece_hint.enum_next().is_some(),
                 );
             }
+            GameOptionMenuSelection::Invisible => {
+                text.sections[0].value = fname("INVISIBLE");
+                text.sections[1].value = fopt(
+                    game_config.invisible.to_string(),
+                    game_config.invisible.enum_prev().is_some(),
+                    game_config.invisible.enum_next().is_some(),
+                );
+            }
             GameOptionMenuSelection::DASCounter => {
                 text.sections[0].value = fname("DAS COUNTER");
                 text.sections[1].value = fopt(
@@ -508,6 +517,19 @@ fn handle_input_system(
             } else if player_inputs.left.just_pressed {
                 if let Some(e) = game_config.next_piece_hint.enum_prev() {
                     game_config.next_piece_hint = e;
+                    option_changed = true;
+                }
+            }
+        }
+        GameOptionMenuSelection::Invisible => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_config.invisible.enum_next() {
+                    game_config.invisible = e;
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_config.invisible.enum_prev() {
+                    game_config.invisible = e;
                     option_changed = true;
                 }
             }

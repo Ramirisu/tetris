@@ -379,7 +379,7 @@ fn setup_screen(
                     color: WHITE.into(),
                     ..default()
                 });
-                12
+                14
             ]),
             transform: Transform::from_translation(transform.game_mode_translation()),
             ..default()
@@ -717,6 +717,7 @@ fn update_statistics_system(
         text.sections[3].value = format!("GRV {:3}\n", game_config.gravity.to_string_abbr());
         text.sections[4].value = format!(" SD {:3}\n", game_config.seed.to_string_abbr());
         text.sections[5].value = format!("TVS {:3}\n", game_config.tv_system.to_string_abbr());
+        text.sections[6].value = format!("INV {:3}\n", game_config.invisible.to_string_abbr());
     }
     if let Ok(mut text) = query.p0().p5().get_single_mut() {
         text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
@@ -892,7 +893,11 @@ mod state_player_dropping {
 
     pub(super) fn curr_piece_fall_system(
         mut query: ParamSet<(
-            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
+            Query<(
+                &mut Handle<Image>,
+                &mut Visibility,
+                &BoardSquareEntityMarker,
+            )>,
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
@@ -924,6 +929,11 @@ mod state_player_dropping {
                     tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
                 });
             } else if !player_data.board.is_curr_position_valid() {
+                query.p0().iter_mut().for_each(|(_, mut vis, _)| {
+                    // `Invisible` option: make all pieces visible when game ends.
+                    *vis = Visibility::Inherited;
+                });
+
                 play_sound.send(PlaySoundEvent::GameOver);
                 game_state.set(GameState::Over);
                 player_phase.set(PlayerPhase::Over);
@@ -943,14 +953,19 @@ mod state_player_dropping {
                     tf.translation.z = transform.board_translation().z - 1.0;
                 });
 
-                query.p0().iter_mut().for_each(|(mut img, coord)| {
+                let lines = player_data.board.get_line_clear_rows();
+
+                query.p0().iter_mut().for_each(|(mut img, mut vis, coord)| {
                     *img = square_image_assets.get_image(
                         SquareImageSize::Standard,
                         player_data.board.get_square(coord.0 as i32, coord.1 as i32),
                     );
+                    if lines.contains(&coord.1) {
+                        // `Invisible` option: make squares visible when line clear.
+                        *vis = Visibility::Inherited;
+                    }
                 });
 
-                let lines = player_data.board.get_line_clear_rows();
                 match lines.len() {
                     0 => {
                         play_sound.send(PlaySoundEvent::LockCurrPiece);
@@ -1039,11 +1054,16 @@ mod state_player_entry_delay {
         time: Res<Time>,
         mut query: ParamSet<(
             Query<&mut Visibility, With<FlashEntityMarker>>,
-            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
+            Query<(
+                &mut Handle<Image>,
+                &mut Visibility,
+                &BoardSquareEntityMarker,
+            )>,
             Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
             Query<(&mut Transform, &mut Handle<Image>, &NextPieceEntityMarker)>,
             Query<(&mut Handle<Image>, &PieceCountEntityMarker)>,
         )>,
+        game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         square_image_assets: Res<SquareImageAssets>,
@@ -1056,11 +1076,13 @@ mod state_player_entry_delay {
                 *vis = Visibility::Hidden;
             }
 
-            query.p1().iter_mut().for_each(|(mut img, coord)| {
+            query.p1().iter_mut().for_each(|(mut img, mut vis, coord)| {
                 *img = square_image_assets.get_image(
                     SquareImageSize::Standard,
                     player_data.board.get_square(coord.0 as i32, coord.1 as i32),
                 );
+                // `Invisible` option: make all squares follow the visibility option
+                *vis = game_config.invisible.into();
             });
 
             std::iter::zip(

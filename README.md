@@ -96,6 +96,15 @@ The *NEXT PIECE HINT* option determines how many NEXT pieces are displayed.
 | Classic | Show next piece only. |
 |  Modern | Show next `5` pieces. |
 
+**INVISIBLE**
+
+The *INVISIBLE* option determines the visibility of the locked squres. 
+
+| Options |                               |
+| ------: | :---------------------------- |
+|     Off | All squares are visible.      |
+|      On | Squares locked are invisible. |
+
 
 ## Keybindings
 

@@ -3,6 +3,7 @@ mod board;
 pub mod das_counter;
 pub mod game;
 pub mod gravity;
+pub mod invisible;
 mod level;
 pub mod linecap;
 pub mod next_piece_hint;
