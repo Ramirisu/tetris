@@ -155,6 +155,7 @@ fn unload_assets(mut commands: Commands) {
 
 fn setup_screen(
     mut commands: Commands,
+    game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
     transform: Res<GameTransform>,
@@ -363,7 +364,7 @@ fn setup_screen(
                 }),
             ]),
             transform: Transform::from_translation(transform.das_translation()),
-            visibility: player_data.das_counter.into(),
+            visibility: game_config.das_counter.into(),
             ..default()
         },
         GameEntityMarker,
@@ -510,7 +511,7 @@ fn setup_screen(
                         custom_size: Some(transform.next_piece_slot_background_size(index)),
                         ..default()
                     },
-                    visibility: player_data.next_piece_hint.as_visibility(index),
+                    visibility: game_config.next_piece_hint.as_visibility(index),
                     ..default()
                 },
                 GameEntityMarker,
@@ -533,7 +534,7 @@ fn setup_screen(
                         custom_size: Some(transform.next_piece_slot_size(index)),
                         ..default()
                     },
-                    visibility: player_data.next_piece_hint.as_visibility(index),
+                    visibility: game_config.next_piece_hint.as_visibility(index),
                     ..default()
                 },
                 GameEntityMarker,
@@ -561,7 +562,7 @@ fn setup_screen(
                             },
                             texture: square_image_assets
                                 .get_image(SquareImageSize::Standard, *piece),
-                            visibility: player_data.next_piece_hint.as_visibility(index),
+                            visibility: game_config.next_piece_hint.as_visibility(index),
                             ..default()
                         },
                         GameEntityMarker,
@@ -738,7 +739,7 @@ fn update_statistics_system(
         );
         text.sections[1].style.color = das_color.into();
     }
-    if player_data.das_counter == DASCounter::Full {
+    if game_config.das_counter == DASCounter::Full {
         if let Ok(mut sprite) = query.p2().get_single_mut() {
             sprite.color = das_color.into();
         }

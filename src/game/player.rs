@@ -2,9 +2,7 @@ use bevy::{prelude::*, time::Stopwatch};
 
 use super::{
     board::Board,
-    das_counter::DASCounter,
     game::GameConfig,
-    next_piece_hint::NextPieceHint,
     timer::{DelayAutoShiftTimer, EntryDelayTimer, FallTimer, LineClearTimer, PressDownTimer},
     tv_system::TVSystem,
 };
@@ -20,8 +18,6 @@ pub enum PlayerPhase {
 
 #[derive(Resource)]
 pub struct PlayerData {
-    pub next_piece_hint: NextPieceHint,
-    pub das_counter: DASCounter,
     pub board: Board,
     pub stopwatch: Stopwatch,
     pub fall_timer: FallTimer,
@@ -37,8 +33,6 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
         Self {
-            next_piece_hint: config.next_piece_hint,
-            das_counter: config.das_counter,
             board: Board::new(config.start_level, config.transition),
             stopwatch: Stopwatch::new(),
             fall_timer: FallTimer::new(
