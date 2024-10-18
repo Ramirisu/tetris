@@ -7,24 +7,24 @@ use crate::enum_iter;
 use super::piece::Piece;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
-pub enum RandomNumberGenerator {
+pub enum Seeding {
     #[default]
     System,
 }
 
-enum_iter::enum_iter_derive!(RandomNumberGenerator);
+enum_iter::enum_iter_derive!(Seeding);
 
-impl RandomNumberGenerator {
+impl Seeding {
     pub fn to_string_abbr(&self) -> String {
         match self {
-            RandomNumberGenerator::System => "SYS",
+            Seeding::System => "SYS",
         }
         .into()
     }
 
     pub fn gen(&self) -> Piece {
         match self {
-            RandomNumberGenerator::System => rand::thread_rng()
+            Seeding::System => rand::thread_rng()
                 .gen_range(0..(Piece::variant_len() - 1))
                 .into(),
         }
@@ -32,7 +32,7 @@ impl RandomNumberGenerator {
 
     pub fn gen_1h2r(&self, history: &VecDeque<Piece>) -> Piece {
         match self {
-            RandomNumberGenerator::System => match history.back() {
+            Seeding::System => match history.back() {
                 Some(piece) => {
                     let index = rand::thread_rng().gen_range(0..Piece::variant_len());
                     if index + 1 != Piece::variant_len() && index != piece.variant_index() {
@@ -47,10 +47,10 @@ impl RandomNumberGenerator {
     }
 }
 
-impl Display for RandomNumberGenerator {
+impl Display for Seeding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RandomNumberGenerator::System => f.write_str("SYSTEM"),
+            Seeding::System => f.write_str("SYSTEM"),
         }
     }
 }
