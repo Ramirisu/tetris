@@ -33,7 +33,12 @@ pub struct PlayerData {
 impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
         Self {
-            board: Board::new(config.start_level, config.transition),
+            board: Board::new(
+                config.start_level,
+                config.transition,
+                config.seeding,
+                config.seed,
+            ),
             stopwatch: Stopwatch::new(),
             fall_timer: FallTimer::new(
                 config.start_level,

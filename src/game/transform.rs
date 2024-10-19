@@ -180,7 +180,7 @@ impl GameTransform {
     pub fn game_mode_translation(&self) -> Vec3 {
         Vec3::new(
             self.board_width() * 1.4,
-            self.square_height(),
+            self.square_height() * 2.0,
             BOARD_Z_INDEX,
         )
     }

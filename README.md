@@ -59,11 +59,20 @@ The *GRAVITY* option determines how the gravity will increase when the level adv
 
 **SEEDING**
 
-The *SEEDING* option determines how to generate NEXT pieces. Currently, only default seeding is currently supported. 1H2R Randomizer is used to choose the pieces.
+The *SEEDING* option determines how to generate NEXT pieces. 1H2R Randomizer is used to choose the pieces.
 
-| Options |                                                                                            |
-| ------: | :----------------------------------------------------------------------------------------- |
-|  System | Implementation-defined pseudo-random number generator and a system-provided seed are used. |
+| Options |                                                                                                    |
+| ------: | :------------------------------------------------------------------------------------------------- |
+|  System | System-provided seeds are used and result different sequences for each game.                       |
+|  Custom | User-provided seed is used, generates constant sequence. This mode is built for competitive match. |
+
+**SEED**
+
+The *SEED* option determines the seed for the random number generator. It is only available when **SEEDING** is `CUSTOM`.
+
+- Press `Start` to enter/leave seed configuration.
+- Press `Up` and `Down` to adjust the hex value.
+- Press `Select` to generate random seed.
 
 **SCORING**
 

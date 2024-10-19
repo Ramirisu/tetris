@@ -5,7 +5,11 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     controller::Controller,
     enum_iter,
-    game::game::GameConfig,
+    game::{
+        game::GameConfig,
+        seed::{Seed, SEED_BYTES_USED},
+        seeding::Seeding,
+    },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     scale::plugin::ScaleFactor,
@@ -59,6 +63,7 @@ enum GameOptionMenuSelection {
     Linecap,
     Gravity,
     Seeding,
+    Seed,
     Scoring,
     TVSystem,
     NextPieceHint,
@@ -99,9 +104,20 @@ impl GameOptionMenuSelection {
     }
 }
 
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+enum GameOptionMenuSeedSelection {
+    #[default]
+    None,
+    Index(usize),
+}
+
+const GAME_OPTION_MENU_SEED_FIRST: usize = 0;
+const GAME_OPTION_MENU_SEED_LAST: usize = SEED_BYTES_USED * 2 - 1;
+
 #[derive(Resource)]
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
+    seed_selection: GameOptionMenuSeedSelection,
     #[cfg(not(target_arch = "wasm32"))]
     fps_limiter: FPSLimiter,
     #[cfg(not(target_arch = "wasm32"))]
@@ -112,6 +128,7 @@ impl GameOptionMenuData {
     pub fn new() -> Self {
         Self {
             selection: GameOptionMenuSelection::default(),
+            seed_selection: GameOptionMenuSeedSelection::default(),
             #[cfg(not(target_arch = "wasm32"))]
             fps_limiter: FPSLimiter::default(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -291,6 +308,13 @@ fn update_ui_system(
                     game_config.seeding.enum_next().is_some(),
                 );
             }
+            GameOptionMenuSelection::Seed => {
+                text.sections[0].value = fname("SEED");
+                text.sections[1].value = match game_config.seeding {
+                    Seeding::System => fopt_n(),
+                    Seeding::Custom => fopt(game_config.seed.to_string(), false, false),
+                };
+            }
             GameOptionMenuSelection::Scoring => {
                 text.sections[0].value = fname("SCORING");
                 text.sections[1].value = fopt(
@@ -399,21 +423,27 @@ fn handle_input_system(
         return;
     }
 
-    match (
-        player_inputs.up.just_pressed,
-        player_inputs.down.just_pressed,
-    ) {
-        (true, false) => {
-            game_option_menu_data.selection = game_option_menu_data.selection.enum_prev_cycle();
-            play_sound.send(PlaySoundEvent::MoveCursor);
-            return;
+    if game_option_menu_data.selection != GameOptionMenuSelection::Seed
+        || game_config.seeding == Seeding::System
+        || game_option_menu_data.seed_selection == GameOptionMenuSeedSelection::None
+    {
+        match (
+            player_inputs.up.just_pressed,
+            player_inputs.down.just_pressed,
+        ) {
+            (true, false) => {
+                game_option_menu_data.selection = game_option_menu_data.selection.enum_prev_cycle();
+                play_sound.send(PlaySoundEvent::MoveCursor);
+
+                return;
+            }
+            (false, true) => {
+                game_option_menu_data.selection = game_option_menu_data.selection.enum_next_cycle();
+                play_sound.send(PlaySoundEvent::MoveCursor);
+                return;
+            }
+            _ => (),
         }
-        (false, true) => {
-            game_option_menu_data.selection = game_option_menu_data.selection.enum_next_cycle();
-            play_sound.send(PlaySoundEvent::MoveCursor);
-            return;
-        }
-        _ => (),
     }
 
     let mut option_changed = false;
@@ -480,6 +510,52 @@ fn handle_input_system(
                     game_config.seeding = e;
                     option_changed = true;
                 }
+            }
+        }
+        GameOptionMenuSelection::Seed => {
+            if player_inputs.start.just_pressed {
+                match game_option_menu_data.seed_selection {
+                    GameOptionMenuSeedSelection::None => {
+                        game_option_menu_data.seed_selection =
+                            GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_LAST);
+                    }
+                    GameOptionMenuSeedSelection::Index(_) => {
+                        game_option_menu_data.seed_selection = GameOptionMenuSeedSelection::None;
+                    }
+                }
+                option_changed = true;
+            } else if player_inputs.right.just_pressed {
+                match game_option_menu_data.seed_selection {
+                    GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_FIRST) => (),
+                    GameOptionMenuSeedSelection::Index(index) => {
+                        game_option_menu_data.seed_selection =
+                            GameOptionMenuSeedSelection::Index(index - 1);
+                        option_changed = true;
+                    }
+                    GameOptionMenuSeedSelection::None => (),
+                }
+            } else if player_inputs.left.just_pressed {
+                match game_option_menu_data.seed_selection {
+                    GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_LAST) => (),
+                    GameOptionMenuSeedSelection::Index(index) => {
+                        game_option_menu_data.seed_selection =
+                            GameOptionMenuSeedSelection::Index(index + 1);
+                        option_changed = true;
+                    }
+                    GameOptionMenuSeedSelection::None => (),
+                }
+            } else if player_inputs.up.just_pressed {
+                match game_option_menu_data.seed_selection {
+                    GameOptionMenuSeedSelection::Index(index) => game_config.seed.increment(index),
+                    GameOptionMenuSeedSelection::None => (),
+                }
+            } else if player_inputs.down.just_pressed {
+                match game_option_menu_data.seed_selection {
+                    GameOptionMenuSeedSelection::Index(index) => game_config.seed.decrement(index),
+                    GameOptionMenuSeedSelection::None => (),
+                }
+            } else if player_inputs.select.just_pressed {
+                game_config.seed = Seed::new();
             }
         }
         GameOptionMenuSelection::Scoring => {
