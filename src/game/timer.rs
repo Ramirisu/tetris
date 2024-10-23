@@ -160,16 +160,14 @@ impl PressDownTimer {
 
 pub struct DelayAutoShiftTimer {
     elapsed: Duration,
-    threshold: Duration,
-    consumption: Duration,
+    tv_system: TVSystem,
 }
 
 impl DelayAutoShiftTimer {
     pub fn new(tv_system: TVSystem) -> Self {
         Self {
             elapsed: Duration::ZERO,
-            threshold: Self::get_threshold(tv_system),
-            consumption: Self::get_consumption(tv_system),
+            tv_system,
         }
     }
 
@@ -183,8 +181,8 @@ impl DelayAutoShiftTimer {
     }
 
     pub fn consume(&mut self) -> bool {
-        if self.elapsed >= self.threshold {
-            self.elapsed -= self.consumption;
+        if self.elapsed >= self.get_threshold() {
+            self.elapsed = self.get_active_threshold();
             true
         } else {
             false
@@ -196,24 +194,24 @@ impl DelayAutoShiftTimer {
     }
 
     pub fn charge(&mut self) {
-        self.elapsed = self.threshold;
+        self.elapsed = self.get_threshold();
     }
 
     pub fn is_active(&self) -> bool {
-        self.elapsed >= (self.threshold - self.consumption)
+        self.elapsed >= self.get_active_threshold()
     }
 
-    fn get_threshold(tv_system: TVSystem) -> Duration {
-        match tv_system {
-            TVSystem::NTSC => tv_system.ticks_to_duration(16),
-            TVSystem::PAL => tv_system.ticks_to_duration(12),
+    fn get_threshold(&self) -> Duration {
+        match self.tv_system {
+            TVSystem::NTSC => self.tv_system.ticks_to_duration(16),
+            TVSystem::PAL => self.tv_system.ticks_to_duration(12),
         }
     }
 
-    fn get_consumption(tv_system: TVSystem) -> Duration {
-        match tv_system {
-            TVSystem::NTSC => tv_system.ticks_to_duration(6),
-            TVSystem::PAL => tv_system.ticks_to_duration(4),
+    fn get_active_threshold(&self) -> Duration {
+        match self.tv_system {
+            TVSystem::NTSC => self.tv_system.ticks_to_duration(10),
+            TVSystem::PAL => self.tv_system.ticks_to_duration(8),
         }
     }
 }
