@@ -63,9 +63,6 @@ fn play_sound_system(
             PlaySoundEvent::LevelUp => audio_assets.level_up.clone(),
             PlaySoundEvent::GameOver => audio_assets.game_over.clone(),
         };
-        commands.spawn(AudioBundle {
-            source: audio,
-            settings: PlaybackSettings::DESPAWN,
-        });
+        commands.spawn((AudioPlayer(audio), PlaybackSettings::DESPAWN));
     }
 }

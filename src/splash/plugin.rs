@@ -2,7 +2,6 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 
 use crate::{
     app_state::AppState,
-    controller::Controller,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{load_logo_images, TETRIS_BITMAP},
     utility::despawn_all,
@@ -32,77 +31,63 @@ fn setup_screen(
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..default()
             },
             SplashEntityMarker,
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(transform.fs_medium())),
-                        ..default()
-                    },
+                .spawn(Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
+                    margin: UiRect::all(Val::Px(transform.fs_medium())),
                     ..default()
                 })
                 .with_children(|parent| {
                     TETRIS_BITMAP.iter().for_each(|rows| {
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
-                                NodeBundle {
-                                    style: Style {
-                                        width: Val::Px(transform.fs_medium()),
-                                        height: Val::Px(transform.fs_medium()),
-                                        ..default()
-                                    },
+                                Node {
+                                    width: Val::Px(transform.fs_medium()),
+                                    height: Val::Px(transform.fs_medium()),
                                     ..default()
                                 },
-                                UiImage {
-                                    texture: logo_images[(*sqr) as usize].clone(),
-                                    ..default()
-                                },
+                                ImageNode::new(logo_images[(*sqr) as usize].clone()),
                             ));
                         })
                     });
                 });
-            parent.spawn(
-                TextBundle::from_section(
-                    "PRESS START",
-                    TextStyle {
-                        font_size: transform.fs_medium(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                )
-                .with_style(Style {
+
+            parent
+                .spawn(Node {
                     margin: UiRect::all(Val::Px(transform.fs_large())),
                     ..default()
-                }),
-            );
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text::new("PRESS START"),
+                        TextFont::from_font_size(transform.fs_medium()),
+                        TextColor::from(WHITE),
+                    ));
+                });
         });
 }
 
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+        | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.start.just_pressed {
         app_state.set(AppState::GameModeMenu);

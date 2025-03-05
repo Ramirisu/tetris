@@ -3,7 +3,6 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    controller::Controller,
     enum_iter,
     game::{
         game::GameConfig,
@@ -152,82 +151,64 @@ fn setup_screen(
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..default()
             },
             GameOptionMenuEntityMarker,
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(transform.fs_medium())),
-                        ..default()
-                    },
+                .spawn(Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
+                    margin: UiRect::all(Val::Px(transform.fs_medium())),
                     ..default()
                 })
                 .with_children(|parent| {
                     TETRIS_BITMAP.iter().for_each(|rows| {
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
-                                NodeBundle {
-                                    style: Style {
-                                        width: Val::Px(transform.fs_small()),
-                                        height: Val::Px(transform.fs_small()),
-                                        ..default()
-                                    },
+                                Node {
+                                    width: Val::Px(transform.fs_small()),
+                                    height: Val::Px(transform.fs_small()),
                                     ..default()
                                 },
-                                UiImage {
-                                    texture: logo_images[(*sqr) as usize].clone(),
-                                    ..default()
-                                },
+                                ImageNode::new(logo_images[(*sqr) as usize].clone()),
                             ));
                         })
                     });
                 });
 
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        margin: UiRect::all(Val::Px(transform.fs_medium())),
-                        ..default()
-                    },
+                .spawn(Node {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    margin: UiRect::all(Val::Px(transform.fs_medium())),
                     ..default()
                 })
                 .with_children(|parent| {
                     let mut selection = GameOptionMenuSelection::default();
                     loop {
-                        parent.spawn((
-                            TextBundle::from_sections(vec![
-                                TextSection::from_style(TextStyle {
-                                    font_size: transform.fs_medium(),
-                                    color: WHITE.into(),
-                                    ..default()
-                                }),
-                                TextSection::from_style(TextStyle {
-                                    font_size: transform.fs_medium(),
-                                    color: WHITE.into(),
-                                    ..default()
-                                }),
-                            ]),
-                            GameOptionEntityMarker(selection),
-                        ));
+                        parent
+                            .spawn((
+                                Text::default(),
+                                TextFont::from_font_size(transform.fs_medium()),
+                                TextColor::from(WHITE),
+                                GameOptionEntityMarker(selection),
+                            ))
+                            .with_child((
+                                TextSpan::default(),
+                                TextFont::from_font_size(transform.fs_medium()),
+                                TextColor::from(WHITE),
+                            ));
 
                         if let Some(e) = selection.enum_next() {
                             selection = e;
@@ -240,7 +221,8 @@ fn setup_screen(
 }
 
 fn update_ui_system(
-    mut query: Query<(&mut Text, &GameOptionEntityMarker)>,
+    mut query: Query<(Entity, &GameOptionEntityMarker)>,
+    mut tw: TextUiWriter,
     game_option_menu_data: Res<GameOptionMenuData>,
     game_config: Res<GameConfig>,
     controller_mapping: Res<ControllerMapping>,
@@ -256,7 +238,7 @@ fn update_ui_system(
         return;
     }
 
-    query.iter_mut().for_each(|(mut text, marker)| {
+    query.iter_mut().for_each(|(entity, marker)| {
         let fname = |name| -> String {
             let s = if marker.0 == game_option_menu_data.selection {
                 ">>"
@@ -273,99 +255,99 @@ fn update_ui_system(
         let fopt_n = || -> String { fopt("".to_owned(), false, false) };
         match marker.0 {
             GameOptionMenuSelection::Tetris => {
-                text.sections[0].value = fname("TETRIS");
-                text.sections[1].value = fopt_n();
+                *tw.text(entity, 0) = fname("TETRIS");
+                *tw.text(entity, 1) = fopt_n();
             }
             GameOptionMenuSelection::Transition => {
-                text.sections[0].value = fname("TRANSITION");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("TRANSITION");
+                *tw.text(entity, 1) = fopt(
                     game_config.transition.to_string(),
                     game_config.transition.enum_prev().is_some(),
                     game_config.transition.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Linecap => {
-                text.sections[0].value = fname("LINECAP");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("LINECAP");
+                *tw.text(entity, 1) = fopt(
                     game_config.linecap.to_string(),
                     game_config.linecap.enum_prev().is_some(),
                     game_config.linecap.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Gravity => {
-                text.sections[0].value = fname("GRAVITY");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("GRAVITY");
+                *tw.text(entity, 1) = fopt(
                     game_config.gravity.to_string(),
                     game_config.gravity.enum_prev().is_some(),
                     game_config.gravity.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Seeding => {
-                text.sections[0].value = fname("SEEDING");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("SEEDING");
+                *tw.text(entity, 1) = fopt(
                     game_config.seeding.to_string(),
                     game_config.seeding.enum_prev().is_some(),
                     game_config.seeding.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Seed => {
-                text.sections[0].value = fname("SEED");
-                text.sections[1].value = match game_config.seeding {
+                *tw.text(entity, 0) = fname("SEED");
+                *tw.text(entity, 1) = match game_config.seeding {
                     Seeding::System => fopt_n(),
                     Seeding::Custom => fopt(game_config.seed.to_string(), false, false),
                 };
             }
             GameOptionMenuSelection::Scoring => {
-                text.sections[0].value = fname("SCORING");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("SCORING");
+                *tw.text(entity, 1) = fopt(
                     game_config.scoring.to_string(),
                     game_config.scoring.enum_prev().is_some(),
                     game_config.scoring.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::TVSystem => {
-                text.sections[0].value = fname("TV SYSTEM");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("TV SYSTEM");
+                *tw.text(entity, 1) = fopt(
                     game_config.tv_system.to_string(),
                     game_config.tv_system.enum_prev().is_some(),
                     game_config.tv_system.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::NextPieceHint => {
-                text.sections[0].value = fname("NEXT PIECE HINT");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("NEXT PIECE HINT");
+                *tw.text(entity, 1) = fopt(
                     game_config.next_piece_hint.to_string(),
                     game_config.next_piece_hint.enum_prev().is_some(),
                     game_config.next_piece_hint.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::Invisible => {
-                text.sections[0].value = fname("INVISIBLE");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("INVISIBLE");
+                *tw.text(entity, 1) = fopt(
                     game_config.invisible.to_string(),
                     game_config.invisible.enum_prev().is_some(),
                     game_config.invisible.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::DASCounter => {
-                text.sections[0].value = fname("DAS COUNTER");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("DAS COUNTER");
+                *tw.text(entity, 1) = fopt(
                     game_config.das_counter.to_string(),
                     game_config.das_counter.enum_prev().is_some(),
                     game_config.das_counter.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::ControllerMapping => {
-                text.sections[0].value = fname("CONTROLLER MAPPING");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("CONTROLLER MAPPING");
+                *tw.text(entity, 1) = fopt(
                     controller_mapping.to_string(),
                     controller_mapping.enum_prev().is_some(),
                     controller_mapping.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::ScaleFactor => {
-                text.sections[0].value = fname("SCALE FACTOR");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("SCALE FACTOR");
+                *tw.text(entity, 1) = fopt(
                     scale_factor.to_string(),
                     scale_factor.enum_prev().is_some(),
                     scale_factor.enum_next().is_some(),
@@ -373,8 +355,8 @@ fn update_ui_system(
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::FPSLimiter => {
-                text.sections[0].value = fname("FPS LIMITER");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("FPS LIMITER");
+                *tw.text(entity, 1) = fopt(
                     game_option_menu_data.fps_limiter.to_string(),
                     game_option_menu_data.fps_limiter.enum_prev().is_some(),
                     game_option_menu_data.fps_limiter.enum_next().is_some(),
@@ -382,8 +364,8 @@ fn update_ui_system(
             }
             #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
-                text.sections[0].value = fname("WINDOW MODE");
-                text.sections[1].value = fopt(
+                *tw.text(entity, 0) = fname("WINDOW MODE");
+                *tw.text(entity, 1) = fopt(
                     game_option_menu_data.window_mode.to_string(),
                     game_option_menu_data.window_mode.enum_prev().is_some(),
                     game_option_menu_data.window_mode.enum_next().is_some(),
@@ -395,8 +377,7 @@ fn update_ui_system(
 
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    gamepads: Query<&Gamepad>,
     mut controller_mapping: ResMut<ControllerMapping>,
     mut game_option_menu_data: ResMut<GameOptionMenuData>,
     mut game_config: ResMut<GameConfig>,
@@ -409,7 +390,7 @@ fn handle_input_system(
     #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+        | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
         play_sound.send(PlaySoundEvent::StartGame);

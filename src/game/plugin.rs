@@ -1,13 +1,11 @@
 use bevy::{
     color::palettes::css::{BLACK, GREEN, RED, WHITE, YELLOW},
     prelude::*,
-    sprite::MaterialMesh2dBundle,
 };
 
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    controller::Controller,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     utility::{despawn_all, format_hhmmss},
 };
@@ -163,62 +161,48 @@ fn setup_screen(
     color_materials: Res<ColorMaterialAssets>,
 ) {
     commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(transform.flash_translation()),
-            sprite: Sprite {
-                color: WHITE.into(),
-                custom_size: Some(transform.flash_size()),
-                ..default()
-            },
-            visibility: Visibility::Hidden,
+        Sprite {
+            color: WHITE.into(),
+            custom_size: Some(transform.flash_size()),
             ..default()
         },
+        Transform::from_translation(transform.flash_translation()),
+        Visibility::Hidden,
         GameEntityMarker,
         FlashEntityMarker,
     ));
     commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(transform.board_background_translation()),
-            sprite: Sprite {
-                color: WHITE.into(),
-                custom_size: Some(transform.board_background_size()),
-                ..default()
-            },
+        Sprite {
+            color: WHITE.into(),
+            custom_size: Some(transform.board_background_size()),
             ..default()
         },
+        Transform::from_translation(transform.board_background_translation()),
         GameEntityMarker,
         DASIndicatorEntityMarker,
     ));
     commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(transform.board_translation()),
-            sprite: Sprite {
-                color: BLACK.into(),
-                custom_size: Some(transform.board_size()),
-                ..default()
-            },
+        Sprite {
+            color: BLACK.into(),
+            custom_size: Some(transform.board_size()),
             ..default()
         },
+        Transform::from_translation(transform.board_translation()),
         GameEntityMarker,
     ));
 
     for y in 0..Board::BOARD_ROWS {
         for x in 0..Board::BOARD_COLS {
             commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(
-                        transform.board_square_translation(x as i32, y as i32),
-                    ),
-                    sprite: Sprite {
-                        custom_size: Some(transform.square_size()),
-                        ..default()
-                    },
-                    texture: square_image_assets.get_image(
+                Sprite {
+                    image: square_image_assets.get_image(
                         SquareImageSize::Standard,
                         player_data.board.get_square(x as i32, y as i32),
                     ),
+                    custom_size: Some(transform.square_size()),
                     ..default()
                 },
+                Transform::from_translation(transform.board_square_translation(x as i32, y as i32)),
                 GameEntityMarker,
                 BoardSquareEntityMarker(x, y),
             ));
@@ -227,187 +211,126 @@ fn setup_screen(
 
     commands
         .spawn((
-            SpriteBundle {
-                transform: Transform::from_translation(transform.board_cover_translation()),
-                sprite: Sprite {
-                    color: RED.into(),
-                    custom_size: Some(transform.board_cover_size()),
-                    ..default()
-                },
-                visibility: Visibility::Hidden,
+            Sprite {
+                color: RED.into(),
+                custom_size: Some(transform.board_cover_size()),
                 ..default()
             },
+            Transform::from_translation(transform.board_cover_translation()),
+            Visibility::Hidden,
             GameEntityMarker,
             BoardCoverEntityMarker,
         ))
         .with_children(|parent| {
-            parent.spawn(Text2dBundle {
-                text: Text::from_section(
-                    "PRESS START\nTO CONTINUE",
-                    TextStyle {
-                        font_size: transform.fs_medium(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                ),
-                transform: Transform::from_translation(transform.board_cover_translation()),
-                ..default()
-            });
+            parent.spawn((
+                Text2d::new("PRESS START\nTO CONTINUE"),
+                TextFont::from_font_size(transform.fs_medium()),
+                TextColor::from(WHITE),
+                Transform::from_translation(transform.board_cover_translation()),
+            ));
         });
 
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "LINES\n".into(),
-                    style: TextStyle {
-                        font_size: transform.fs_large(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_xlarge(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-            ])
-            .with_justify(JustifyText::Center),
-            transform: Transform::from_translation(transform.lines_translation()),
-            ..default()
-        },
-        GameEntityMarker,
-        LinesEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "SCORE\n".into(),
-                    style: TextStyle {
-                        font_size: transform.fs_large(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_xlarge(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-            ])
-            .with_justify(JustifyText::Center),
-            transform: Transform::from_translation(transform.score_translation()),
-            ..default()
-        },
-        GameEntityMarker,
-        ScoreEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "LEVEL ".into(),
-                    style: TextStyle {
-                        font_size: transform.fs_large(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_xlarge(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-            ]),
-            transform: Transform::from_translation(transform.level_translation()),
-            ..default()
-        },
-        GameEntityMarker,
-        LevelEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections(vec![
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_medium(),
-                    color: WHITE.into(),
-                    ..default()
-                });
-                10
-            ]),
-            transform: Transform::from_translation(transform.statistics_translation()),
-            ..default()
-        },
-        GameEntityMarker,
-        StatisticsEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "DAS ".into(),
-                    style: TextStyle {
-                        font_size: transform.fs_medium(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_large(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-            ]),
-            transform: Transform::from_translation(transform.das_translation()),
-            visibility: game_config.das_counter.into(),
-            ..default()
-        },
-        GameEntityMarker,
-        DASCounterEntityMarker,
-    ));
+    commands
+        .spawn((
+            Text2d::new("LINES\n"),
+            TextFont::from_font_size(transform.fs_large()),
+            TextColor::from(WHITE),
+            TextLayout::new_with_justify(JustifyText::Center),
+            Transform::from_translation(transform.lines_translation()),
+            GameEntityMarker,
+            LinesEntityMarker,
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont::from_font_size(transform.fs_xlarge()),
+            TextColor::from(WHITE),
+        ));
+    commands
+        .spawn((
+            Text2d::new("SCORE\n"),
+            TextFont::from_font_size(transform.fs_large()),
+            TextColor::from(WHITE),
+            TextLayout::new_with_justify(JustifyText::Center),
+            Transform::from_translation(transform.score_translation()),
+            GameEntityMarker,
+            ScoreEntityMarker,
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont::from_font_size(transform.fs_xlarge()),
+            TextColor::from(WHITE),
+        ));
+    commands
+        .spawn((
+            Text2d::new("LEVEL  "),
+            TextFont::from_font_size(transform.fs_large()),
+            TextColor::from(WHITE),
+            Transform::from_translation(transform.level_translation()),
+            GameEntityMarker,
+            LevelEntityMarker,
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont::from_font_size(transform.fs_xlarge()),
+            TextColor::from(WHITE),
+        ));
+    commands
+        .spawn((
+            Text2d::default(),
+            TextFont::from_font_size(transform.fs_medium()),
+            TextColor::from(WHITE),
+            Transform::from_translation(transform.statistics_translation()),
+            GameEntityMarker,
+            StatisticsEntityMarker,
+        ))
+        .with_children(|parent| {
+            for _ in 0..9 {
+                parent.spawn((
+                    TextSpan::default(),
+                    TextFont::from_font_size(transform.fs_medium()),
+                    TextColor::from(WHITE),
+                ));
+            }
+        });
+    commands
+        .spawn((
+            Text2d::new("DAS "),
+            TextFont::from_font_size(transform.fs_medium()),
+            TextColor::from(WHITE),
+            Transform::from_translation(transform.das_translation()),
+            Visibility::from(game_config.das_counter.into()),
+            GameEntityMarker,
+            DASCounterEntityMarker,
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont::from_font_size(transform.fs_large()),
+            TextColor::from(WHITE),
+        ));
 
+    commands
+        .spawn((
+            Text2d::default(),
+            TextFont::from_font_size(transform.fs_medium()),
+            TextColor::from(WHITE),
+            Transform::from_translation(transform.game_mode_translation()),
+            GameEntityMarker,
+            GameModeEntityMarker,
+        ))
+        .with_children(|parent| {
+            for _ in 0..7 {
+                parent.spawn((
+                    TextSpan::default(),
+                    TextFont::from_font_size(transform.fs_medium()),
+                    TextColor::from(WHITE),
+                ));
+            }
+        });
     commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections(vec![
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_medium(),
-                    color: WHITE.into(),
-                    ..default()
-                });
-                8
-            ]),
-            transform: Transform::from_translation(transform.game_mode_translation()),
-            ..default()
-        },
-        GameEntityMarker,
-        GameModeEntityMarker,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: "TIME ".into(),
-                    style: TextStyle {
-                        font_size: transform.fs_medium(),
-                        color: WHITE.into(),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextSection::from_style(TextStyle {
-                    font_size: transform.fs_medium(),
-                    color: WHITE.into(),
-                    ..default()
-                }),
-            ]),
-            transform: Transform::from_translation(transform.stopwatch_translation()),
-            ..default()
-        },
+        Text2d::default(),
+        TextFont::from_font_size(transform.fs_medium()),
+        TextColor::from(WHITE),
+        Transform::from_translation(transform.stopwatch_translation()),
         GameEntityMarker,
         GameStopwatchEntityMarker,
     ));
@@ -420,36 +343,26 @@ fn setup_screen(
                 .iter()
                 .for_each(|sqr| {
                     commands.spawn((
-                        SpriteBundle {
-                            transform: Transform::from_translation(
-                                transform.piece_count_translation(
-                                    piece.variant_index(),
-                                    sqr.0,
-                                    sqr.1,
-                                ),
-                            ),
-                            sprite: Sprite {
-                                custom_size: Some(transform.piece_count_square_size()),
-                                ..default()
-                            },
-                            texture: square_image_assets.get_image(SquareImageSize::Small, *piece),
+                        Sprite {
+                            image: square_image_assets.get_image(SquareImageSize::Small, *piece),
+                            custom_size: Some(transform.piece_count_square_size()),
                             ..default()
                         },
+                        Transform::from_translation(transform.piece_count_translation(
+                            piece.variant_index(),
+                            sqr.0,
+                            sqr.1,
+                        )),
                         GameEntityMarker,
                         PieceCountEntityMarker(*piece),
                     ));
                     commands.spawn((
-                        Text2dBundle {
-                            text: Text::from_sections([TextSection::from_style(TextStyle {
-                                font_size: transform.fs_medium(),
-                                color: WHITE.into(),
-                                ..default()
-                            })]),
-                            transform: Transform::from_translation(
-                                transform.piece_count_counter_translation(piece.variant_index()),
-                            ),
-                            ..default()
-                        },
+                        Text2d::default(),
+                        TextFont::from_font_size(transform.fs_medium()),
+                        TextColor::from(WHITE),
+                        Transform::from_translation(
+                            transform.piece_count_counter_translation(piece.variant_index()),
+                        ),
                         GameEntityMarker,
                         PieceCountCounterEntityMarker(*piece),
                     ));
@@ -462,36 +375,23 @@ fn setup_screen(
         .iter()
         .for_each(|sqr| {
             commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(
-                        transform.curr_piece_translation(sqr.0, sqr.1),
-                    ),
-                    sprite: Sprite {
-                        custom_size: Some(transform.square_size()),
-                        ..default()
-                    },
-                    texture: square_image_assets
+                Sprite {
+                    image: square_image_assets
                         .get_image(SquareImageSize::Standard, *player_data.board.curr_piece()),
+                    custom_size: Some(transform.square_size()),
                     ..default()
                 },
+                Transform::from_translation(transform.curr_piece_translation(sqr.0, sqr.1)),
                 GameEntityMarker,
                 CurrPieceEntityMarker,
             ));
         });
 
     commands.spawn((
-        Text2dBundle {
-            text: Text::from_section(
-                "NEXT",
-                TextStyle {
-                    font_size: transform.fs_large(),
-                    color: WHITE.into(),
-                    ..default()
-                },
-            ),
-            transform: Transform::from_translation(transform.next_piece_label_translation()),
-            ..default()
-        },
+        Text2d::new("NEXT"),
+        TextFont::from_font_size(transform.fs_large()),
+        TextColor::from(WHITE),
+        Transform::from_translation(transform.next_piece_label_translation()),
         GameEntityMarker,
     ));
 
@@ -502,18 +402,15 @@ fn setup_screen(
         .enumerate()
         .for_each(|(index, _)| {
             commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(
-                        transform.next_piece_slot_background_translation(index),
-                    ),
-                    sprite: Sprite {
-                        color: WHITE.into(),
-                        custom_size: Some(transform.next_piece_slot_background_size(index)),
-                        ..default()
-                    },
-                    visibility: game_config.next_piece_hint.as_visibility(index),
+                Sprite {
+                    color: WHITE.into(),
+                    custom_size: Some(transform.next_piece_slot_background_size(index)),
                     ..default()
                 },
+                Transform::from_translation(
+                    transform.next_piece_slot_background_translation(index),
+                ),
+                Visibility::from(game_config.next_piece_hint.as_visibility(index)),
                 GameEntityMarker,
             ));
         });
@@ -525,18 +422,13 @@ fn setup_screen(
         .enumerate()
         .for_each(|(index, _)| {
             commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(
-                        transform.next_piece_slot_translation(index),
-                    ),
-                    sprite: Sprite {
-                        color: BLACK.into(),
-                        custom_size: Some(transform.next_piece_slot_size(index)),
-                        ..default()
-                    },
-                    visibility: game_config.next_piece_hint.as_visibility(index),
+                Sprite {
+                    color: BLACK.into(),
+                    custom_size: Some(transform.next_piece_slot_size(index)),
                     ..default()
                 },
+                Transform::from_translation(transform.next_piece_slot_translation(index)),
+                Visibility::from(game_config.next_piece_hint.as_visibility(index)),
                 GameEntityMarker,
             ));
         });
@@ -552,19 +444,15 @@ fn setup_screen(
                 .iter()
                 .for_each(|sqr| {
                     commands.spawn((
-                        SpriteBundle {
-                            transform: Transform::from_translation(
-                                transform.next_piece_translation(sqr.0, sqr.1, index),
-                            ),
-                            sprite: Sprite {
-                                custom_size: Some(transform.next_piece_square_size(index)),
-                                ..default()
-                            },
-                            texture: square_image_assets
-                                .get_image(SquareImageSize::Standard, *piece),
-                            visibility: game_config.next_piece_hint.as_visibility(index),
+                        Sprite {
+                            image: square_image_assets.get_image(SquareImageSize::Standard, *piece),
+                            custom_size: Some(transform.next_piece_square_size(index)),
                             ..default()
                         },
+                        Transform::from_translation(
+                            transform.next_piece_translation(sqr.0, sqr.1, index),
+                        ),
+                        Visibility::from(game_config.next_piece_hint.as_visibility(index)),
                         GameEntityMarker,
                         NextPieceEntityMarker(index),
                     ));
@@ -572,85 +460,50 @@ fn setup_screen(
         });
 
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Rectangle::from_size(transform.inputs_rect_size()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_center_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::from_size(transform.inputs_rect_size()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_center_translation()),
         GameEntityMarker,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Rectangle::from_size(transform.inputs_rect_size()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_left_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::from_size(transform.inputs_rect_size()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_left_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::Left,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Rectangle::from_size(transform.inputs_rect_size()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_right_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::from_size(transform.inputs_rect_size()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_right_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::Right,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Rectangle::from_size(transform.inputs_rect_size()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_up_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::from_size(transform.inputs_rect_size()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_up_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::Up,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Rectangle::from_size(transform.inputs_rect_size()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_down_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::from_size(transform.inputs_rect_size()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_down_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::Down,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Circle::new(transform.inputs_circle_scale()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_a_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Circle::new(transform.inputs_circle_scale()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_a_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::A,
     ));
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes
-                .add(Circle::new(transform.inputs_circle_scale()))
-                .into(),
-            transform: Transform::from_translation(transform.inputs_button_b_translation()),
-            material: color_materials.white.clone(),
-            ..default()
-        },
+        Mesh2d(meshes.add(Circle::new(transform.inputs_circle_scale()))),
+        MeshMaterial2d(color_materials.white.clone()),
+        Transform::from_translation(transform.inputs_button_b_translation()),
         GameEntityMarker,
         PlayerInputsDisplayEntityMarker::B,
     ));
@@ -663,68 +516,69 @@ fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData
 fn update_statistics_system(
     mut query: ParamSet<(
         ParamSet<(
-            Query<&mut Text, With<LinesEntityMarker>>,
-            Query<&mut Text, With<ScoreEntityMarker>>,
-            Query<&mut Text, With<LevelEntityMarker>>,
-            Query<&mut Text, With<StatisticsEntityMarker>>,
-            Query<&mut Text, With<GameModeEntityMarker>>,
-            Query<&mut Text, With<GameStopwatchEntityMarker>>,
-            Query<(&mut Text, &PieceCountCounterEntityMarker)>,
+            Query<Entity, With<LinesEntityMarker>>,
+            Query<Entity, With<ScoreEntityMarker>>,
+            Query<Entity, With<LevelEntityMarker>>,
+            Query<Entity, With<StatisticsEntityMarker>>,
+            Query<Entity, With<GameModeEntityMarker>>,
+            Query<Entity, With<GameStopwatchEntityMarker>>,
+            Query<(Entity, &PieceCountCounterEntityMarker)>,
+            Query<Entity, With<DASCounterEntityMarker>>,
         )>,
-        Query<&mut Text, With<DASCounterEntityMarker>>,
         Query<&mut Sprite, With<DASIndicatorEntityMarker>>,
     )>,
+    mut tw: Text2dWriter,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
 ) {
-    if let Ok(mut text) = query.p0().p0().get_single_mut() {
-        text.sections[1].value = format!("{:03}", player_data.board.lines());
+    if let Ok(entity) = query.p0().p0().get_single_mut() {
+        *tw.text(entity, 1) = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(mut text) = query.p0().p1().get_single_mut() {
-        text.sections[1].value = game_config.scoring.format(player_data.board.score());
+    if let Ok(entity) = query.p0().p1().get_single_mut() {
+        *tw.text(entity, 1) = game_config.scoring.format(player_data.board.score());
     }
-    if let Ok(mut text) = query.p0().p2().get_single_mut() {
-        text.sections[1].value = format!("{:02}", player_data.board.level());
+    if let Ok(entity) = query.p0().p2().get_single_mut() {
+        *tw.text(entity, 1) = format!("{:02}", player_data.board.level());
     }
-    if let Ok(mut text) = query.p0().p3().get_single_mut() {
-        text.sections[0].value = format!("BRN {:4}\n", player_data.board.burned_lines());
-        text.sections[1].value = format!(" 1X {:4}\n", player_data.board.single_clear());
-        text.sections[2].value = format!(" 2X {:4}\n", player_data.board.double_clear());
-        text.sections[3].value = format!(" 3X {:4}\n", player_data.board.triple_clear());
-        text.sections[4].value = format!("TRT {:4}\n", player_data.board.tetris_clear());
-        text.sections[5].value = format!("TRT ");
+    if let Ok(entity) = query.p0().p3().get_single_mut() {
+        *tw.text(entity, 0) = format!("BRN {:4}\n", player_data.board.burned_lines());
+        *tw.text(entity, 1) = format!(" 1X {:4}\n", player_data.board.single_clear());
+        *tw.text(entity, 2) = format!(" 2X {:4}\n", player_data.board.double_clear());
+        *tw.text(entity, 3) = format!(" 3X {:4}\n", player_data.board.triple_clear());
+        *tw.text(entity, 4) = format!("TRT {:4}\n", player_data.board.tetris_clear());
+        *tw.text(entity, 5) = format!("TRT ");
         let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
-        text.sections[6].value = format!("{:3}%\n", rate);
+        *tw.text(entity, 6) = format!("{:3}%\n", rate);
         match rate {
-            0..50 => text.sections[6].style.color = RED.into(),
-            50..80 => text.sections[6].style.color = YELLOW.into(),
-            _ => text.sections[6].style.color = GREEN.into(),
+            0..50 => *tw.color(entity, 6) = RED.into(),
+            50..80 => *tw.color(entity, 6) = YELLOW.into(),
+            _ => *tw.color(entity, 6) = GREEN.into(),
         }
-        text.sections[7].value = format!("DRT ");
+        *tw.text(entity, 7) = format!("DRT ");
         let drought = player_data.board.drought();
-        text.sections[8].value = format!("{:02}", drought);
+        *tw.text(entity, 8) = format!("{:02}", drought);
         match drought {
-            0..7 => text.sections[8].style.color = WHITE.into(),
-            7..14 => text.sections[8].style.color = YELLOW.into(),
-            _ => text.sections[8].style.color = RED.into(),
+            0..7 => *tw.color(entity, 8) = WHITE.into(),
+            7..14 => *tw.color(entity, 8) = YELLOW.into(),
+            _ => *tw.color(entity, 8) = RED.into(),
         }
-        text.sections[9].value = format!(" ({:02})\n", player_data.board.max_drought());
+        *tw.text(entity, 9) = format!(" ({:02})\n", player_data.board.max_drought());
     }
-    if let Ok(mut text) = query.p0().p4().get_single_mut() {
-        text.sections[0].value = format!("SLV {:3}\n", game_config.start_level);
-        text.sections[1].value = format!("CAP {:3}\n", game_config.linecap.to_string_abbr());
-        text.sections[2].value = format!("TRS {:3}\n", game_config.transition.to_string_abbr());
-        text.sections[3].value = format!("GRV {:3}\n", game_config.gravity.to_string_abbr());
-        text.sections[4].value = format!("TVS {:3}\n", game_config.tv_system.to_string_abbr());
-        text.sections[5].value = format!("INV {:3}\n", game_config.invisible.to_string_abbr());
-        text.sections[6].value = format!("SDG {:3}\n", game_config.seeding.to_string_abbr());
-        text.sections[7].value = format!("{}\n", player_data.board.seed());
+    if let Ok(entity) = query.p0().p4().get_single_mut() {
+        *tw.text(entity, 0) = format!("SLV {:3}\n", game_config.start_level);
+        *tw.text(entity, 1) = format!("CAP {:3}\n", game_config.linecap.to_string_abbr());
+        *tw.text(entity, 2) = format!("TRS {:3}\n", game_config.transition.to_string_abbr());
+        *tw.text(entity, 3) = format!("GRV {:3}\n", game_config.gravity.to_string_abbr());
+        *tw.text(entity, 4) = format!("TVS {:3}\n", game_config.tv_system.to_string_abbr());
+        *tw.text(entity, 5) = format!("INV {:3}\n", game_config.invisible.to_string_abbr());
+        *tw.text(entity, 6) = format!("SDG {:3}\n", game_config.seeding.to_string_abbr());
+        *tw.text(entity, 7) = format!("{}\n", player_data.board.seed());
     }
-    if let Ok(mut text) = query.p0().p5().get_single_mut() {
-        text.sections[1].value = format_hhmmss(player_data.stopwatch.elapsed());
+    if let Ok(entity) = query.p0().p5().get_single_mut() {
+        *tw.text(entity, 0) = format!("TIME: {}", format_hhmmss(player_data.stopwatch.elapsed()));
     }
-    for (mut text, piece) in query.p0().p6().iter_mut() {
-        text.sections[0].value = format!("{:03}", player_data.board.get_piece_count(piece.0));
+    for (entity, piece) in query.p0().p6().iter_mut() {
+        *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 
     let das_color = if player_data.das_timer.is_active() {
@@ -732,17 +586,17 @@ fn update_statistics_system(
     } else {
         RED
     };
-    if let Ok(mut text) = query.p1().get_single_mut() {
-        text.sections[1].value = format!(
+    if let Ok(entity) = query.p0().p7().get_single_mut() {
+        *tw.text(entity, 1) = format!(
             "{:02}",
             game_config
                 .tv_system
                 .duration_to_ticks(player_data.das_timer.elapsed())
         );
-        text.sections[1].style.color = das_color.into();
+        *tw.color(entity, 1) = das_color.into();
     }
     if game_config.das_counter == DASCounter::Full {
-        if let Ok(mut sprite) = query.p2().get_single_mut() {
+        if let Ok(mut sprite) = query.p1().get_single_mut() {
             sprite.color = das_color.into();
         }
     }
@@ -760,13 +614,15 @@ mod state_player_dropping {
     pub(super) fn handle_input_system(
         time: Res<Time>,
         keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
         mut query: ParamSet<(
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
             Query<&mut Visibility, With<BoardCoverEntityMarker>>,
-            Query<(&mut Handle<ColorMaterial>, &PlayerInputsDisplayEntityMarker)>,
+            Query<(
+                &mut MeshMaterial2d<ColorMaterial>,
+                &PlayerInputsDisplayEntityMarker,
+            )>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
@@ -776,7 +632,7 @@ mod state_player_dropping {
         color_materials: Res<ColorMaterialAssets>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+            | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
             play_sound.send(PlaySoundEvent::StartGame);
@@ -800,9 +656,9 @@ mod state_player_dropping {
                 PlayerInputsDisplayEntityMarker::B => player_inputs.b.pressed,
             };
             if pressed {
-                *color = color_materials.red.clone();
+                color.0 = color_materials.red.clone();
             } else {
-                *color = color_materials.white.clone();
+                color.0 = color_materials.white.clone();
             }
         });
 
@@ -894,11 +750,7 @@ mod state_player_dropping {
 
     pub(super) fn curr_piece_fall_system(
         mut query: ParamSet<(
-            Query<(
-                &mut Handle<Image>,
-                &mut Visibility,
-                &BoardSquareEntityMarker,
-            )>,
+            Query<(&mut Sprite, &mut Visibility, &BoardSquareEntityMarker)>,
             Query<&mut Transform, With<CurrPieceEntityMarker>>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
@@ -956,16 +808,19 @@ mod state_player_dropping {
 
                 let lines = player_data.board.get_line_clear_rows();
 
-                query.p0().iter_mut().for_each(|(mut img, mut vis, coord)| {
-                    *img = square_image_assets.get_image(
-                        SquareImageSize::Standard,
-                        player_data.board.get_square(coord.0 as i32, coord.1 as i32),
-                    );
-                    if lines.contains(&coord.1) {
-                        // `Invisible` option: make squares visible when line clear.
-                        *vis = Visibility::Inherited;
-                    }
-                });
+                query
+                    .p0()
+                    .iter_mut()
+                    .for_each(|(mut sprite, mut vis, coord)| {
+                        sprite.image = square_image_assets.get_image(
+                            SquareImageSize::Standard,
+                            player_data.board.get_square(coord.0 as i32, coord.1 as i32),
+                        );
+                        if lines.contains(&coord.1) {
+                            // `Invisible` option: make squares visible when line clear.
+                            *vis = Visibility::Inherited;
+                        }
+                    });
 
                 match lines.len() {
                     0 => {
@@ -997,7 +852,7 @@ mod state_player_line_clear {
     pub(super) fn tick_system(
         time: Res<Time>,
         mut query: ParamSet<(
-            Query<(&mut Handle<Image>, &BoardSquareEntityMarker)>,
+            Query<(&mut Sprite, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<FlashEntityMarker>>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
@@ -1015,11 +870,12 @@ mod state_player_line_clear {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
-                for (mut img, coord) in query.p0().iter_mut() {
+                for (mut sprite, coord) in query.p0().iter_mut() {
                     if (coord.0 == left || coord.0 == right)
                         && player_data.line_clear_rows.contains(&coord.1)
                     {
-                        *img = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
+                        sprite.image =
+                            square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
@@ -1055,14 +911,10 @@ mod state_player_entry_delay {
         time: Res<Time>,
         mut query: ParamSet<(
             Query<&mut Visibility, With<FlashEntityMarker>>,
-            Query<(
-                &mut Handle<Image>,
-                &mut Visibility,
-                &BoardSquareEntityMarker,
-            )>,
-            Query<(&mut Transform, &mut Handle<Image>), With<CurrPieceEntityMarker>>,
-            Query<(&mut Transform, &mut Handle<Image>, &NextPieceEntityMarker)>,
-            Query<(&mut Handle<Image>, &PieceCountEntityMarker)>,
+            Query<(&mut Sprite, &mut Visibility, &BoardSquareEntityMarker)>,
+            Query<(&mut Transform, &mut Sprite), With<CurrPieceEntityMarker>>,
+            Query<(&mut Transform, &mut Sprite, &NextPieceEntityMarker)>,
+            Query<(&mut Sprite, &PieceCountEntityMarker)>,
         )>,
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
@@ -1077,21 +929,24 @@ mod state_player_entry_delay {
                 *vis = Visibility::Hidden;
             }
 
-            query.p1().iter_mut().for_each(|(mut img, mut vis, coord)| {
-                *img = square_image_assets.get_image(
-                    SquareImageSize::Standard,
-                    player_data.board.get_square(coord.0 as i32, coord.1 as i32),
-                );
-                // `Invisible` option: make all squares follow the visibility option
-                *vis = game_config.invisible.into();
-            });
+            query
+                .p1()
+                .iter_mut()
+                .for_each(|(mut sprite, mut vis, coord)| {
+                    sprite.image = square_image_assets.get_image(
+                        SquareImageSize::Standard,
+                        player_data.board.get_square(coord.0 as i32, coord.1 as i32),
+                    );
+                    // `Invisible` option: make all squares follow the visibility option
+                    *vis = game_config.invisible.into();
+                });
 
             std::iter::zip(
                 query.p2().iter_mut(),
                 player_data.board.curr_piece_to_squares_with_pos(),
             )
-            .for_each(|((mut tf, mut img), sqr)| {
-                *img = square_image_assets
+            .for_each(|((mut tf, mut sprite), sqr)| {
+                sprite.image = square_image_assets
                     .get_image(SquareImageSize::Standard, *player_data.board.curr_piece());
                 tf.translation = transform.curr_piece_translation(sqr.0, sqr.1);
             });
@@ -1104,15 +959,15 @@ mod state_player_entry_delay {
                     .flat_map(|piece| piece.to_squares_with_piece_center_align())
                     .collect::<Vec<_>>(),
             )
-            .for_each(|((mut tf, mut img, index), sqr)| {
-                *img = square_image_assets.get_image(
+            .for_each(|((mut tf, mut sprite, index), sqr)| {
+                sprite.image = square_image_assets.get_image(
                     SquareImageSize::Standard,
                     player_data.board.next_pieces()[index.0],
                 );
                 tf.translation = transform.next_piece_translation(sqr.0, sqr.1, index.0);
             });
-            query.p4().iter_mut().for_each(|(mut img, piece)| {
-                *img = square_image_assets.get_image(SquareImageSize::Small, piece.0);
+            query.p4().iter_mut().for_each(|(mut sprite, piece)| {
+                sprite.image = square_image_assets.get_image(SquareImageSize::Small, piece.0);
             });
 
             player_phase.set(PlayerPhase::Dropping);
@@ -1125,8 +980,7 @@ mod state_game_pause {
 
     pub(super) fn handle_input_system(
         keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
         mut query: Query<&mut Visibility, With<BoardCoverEntityMarker>>,
         mut play_sound: EventWriter<PlaySoundEvent>,
@@ -1134,7 +988,7 @@ mod state_game_pause {
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+            | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
             play_sound.send(PlaySoundEvent::StartGame);
@@ -1154,14 +1008,13 @@ mod state_game_over {
 
     pub(super) fn handle_input_system(
         keys: Res<ButtonInput<KeyCode>>,
-        buttons: Res<ButtonInput<GamepadButton>>,
-        controller: Res<Controller>,
+        gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
-            | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+            | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
             play_sound.send(PlaySoundEvent::StartGame);

@@ -1,7 +1,7 @@
 use bevy::{
     color::palettes::css::GREEN,
     prelude::*,
-    window::{Cursor, PresentMode, WindowResolution},
+    window::{CursorOptions, PresentMode, WindowResolution},
 };
 
 #[macro_use]
@@ -10,7 +10,6 @@ extern crate num_traits;
 
 mod app_state;
 mod audio;
-mod controller;
 mod enum_iter;
 mod game;
 mod game_option_menu;
@@ -40,8 +39,8 @@ fn main() {
                             max_height: f32::INFINITY,
                         },
                         present_mode: PresentMode::AutoNoVsync,
-                        position: WindowPosition::Centered(MonitorSelection::Primary),
-                        cursor: Cursor {
+                        position: WindowPosition::Automatic,
+                        cursor_options: CursorOptions {
                             visible: false,
                             ..default()
                         },
@@ -55,18 +54,14 @@ fn main() {
         )
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
-                text_config: TextStyle {
-                    font_size: 20.0,
-                    color: GREEN.into(),
-                    font: default(),
-                },
+                text_color: GREEN.into(),
+                ..default()
             },
         })
         .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
         .add_systems(Startup, setup_camera)
         .add_plugins((
-            controller::setup,
             input::plugin::setup,
             scale::plugin::setup,
             audio::plugin::setup,
@@ -80,5 +75,5 @@ fn main() {
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 }

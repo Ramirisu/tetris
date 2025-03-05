@@ -6,7 +6,6 @@ use bevy::{
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    controller::Controller,
     game::{
         game::{GameConfig, GameState},
         player::{PlayerData, PlayerPhase},
@@ -70,55 +69,43 @@ fn setup_screen(
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..default()
             },
             LevelMenuEntityMarker,
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                        margin: UiRect::all(Val::Px(transform.fs_medium())),
-                        ..default()
-                    },
+                .spawn(Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
+                    margin: UiRect::all(Val::Px(transform.fs_medium())),
                     ..default()
                 })
                 .with_children(|parent| {
                     TETRIS_BITMAP.iter().for_each(|rows| {
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
-                                NodeBundle {
-                                    style: Style {
-                                        width: Val::Px(transform.fs_small()),
-                                        height: Val::Px(transform.fs_small()),
-                                        ..default()
-                                    },
+                                Node {
+                                    width: Val::Px(transform.fs_small()),
+                                    height: Val::Px(transform.fs_small()),
                                     ..default()
                                 },
-                                UiImage {
-                                    texture: logo_images[(*sqr) as usize].clone(),
-                                    ..default()
-                                },
+                                ImageNode::new(logo_images[(*sqr) as usize].clone()),
                             ));
                         })
                     });
                 });
 
             parent
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         margin: UiRect::all(Val::Px(transform.scale() * 10.0)),
@@ -126,29 +113,26 @@ fn setup_screen(
                         border: UiRect::all(Val::Px(transform.scale() * 5.0)),
                         ..default()
                     },
-                    border_color: BLUE.into(),
-                    border_radius: BorderRadius::all(Val::Px(transform.scale() * 5.0)),
-                    ..default()
-                })
+                    BorderColor(BLUE.into()),
+                    BorderRadius::all(Val::Px(transform.scale() * 5.0)),
+                ))
                 .with_children(|parent| {
-                    parent.spawn(
-                        TextBundle::from_section(
-                            "LEVEL",
-                            TextStyle {
-                                font_size: transform.fs_medium(),
-                                color: WHITE.into(),
-                                ..default()
-                            },
-                        )
-                        .with_style(Style {
+                    parent
+                        .spawn(Node {
                             margin: UiRect::all(Val::Px(transform.fs_small())),
                             ..default()
-                        }),
-                    );
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((
+                                Text::new("LEVEL"),
+                                TextFont::from_font_size(transform.fs_medium()),
+                                TextColor::from(WHITE),
+                            ));
+                        });
 
                     parent
-                        .spawn(NodeBundle {
-                            style: Style {
+                        .spawn((
+                            Node {
                                 display: Display::Grid,
                                 grid_template_columns: vec![GridTrack::auto(); 5],
                                 row_gap: Val::Px(transform.scale() * 5.0),
@@ -156,53 +140,45 @@ fn setup_screen(
                                 border: UiRect::all(Val::Px(transform.scale() * 5.0)),
                                 ..default()
                             },
-                            background_color: GREEN.into(),
-                            border_color: GREEN.into(),
-                            ..default()
-                        })
+                            BackgroundColor(GREEN.into()),
+                            BorderColor(GREEN.into()),
+                        ))
                         .with_children(|parent| {
                             for (y, rows) in LEVELS.iter().enumerate() {
                                 for (x, col) in rows.iter().enumerate() {
                                     if let Some(level) = col {
                                         parent
                                             .spawn((
-                                                NodeBundle {
-                                                    style: Style {
-                                                        width: Val::Px(transform.fs_large()),
-                                                        height: Val::Px(transform.fs_large()),
-                                                        align_items: AlignItems::Center,
-                                                        justify_content: JustifyContent::Center,
-                                                        ..default()
-                                                    },
-                                                    background_color: BLUE.into(),
+                                                Node {
+                                                    width: Val::Px(transform.fs_large()),
+                                                    height: Val::Px(transform.fs_large()),
+                                                    align_items: AlignItems::Center,
+                                                    justify_content: JustifyContent::Center,
                                                     ..default()
                                                 },
+                                                BackgroundColor(BLUE.into()),
                                                 LevelButtonEntityMarker {
                                                     cordinate: (x as i32, y as i32),
                                                 },
                                             ))
                                             .with_children(|parent| {
-                                                parent.spawn(TextBundle::from_section(
-                                                    format!("{}", level),
-                                                    TextStyle {
-                                                        font_size: transform.fs_medium(),
-                                                        color: CRIMSON.into(),
-                                                        ..default()
-                                                    },
+                                                parent.spawn((
+                                                    Text::new(format!("{}", level)),
+                                                    TextFont::from_font_size(transform.fs_medium()),
+                                                    TextColor::from(CRIMSON),
                                                 ));
                                             });
                                     } else {
-                                        parent.spawn(NodeBundle {
-                                            style: Style {
+                                        parent.spawn((
+                                            Node {
                                                 width: Val::Px(transform.fs_large()),
                                                 height: Val::Px(transform.fs_large()),
                                                 align_items: AlignItems::Center,
                                                 justify_content: JustifyContent::Center,
                                                 ..default()
                                             },
-                                            background_color: BLACK.into(),
-                                            ..default()
-                                        });
+                                            BackgroundColor(BLACK.into()),
+                                        ));
                                     }
                                 }
                             }
@@ -235,7 +211,7 @@ fn update_ui_system(
 
     query.iter_mut().for_each(|(mut bg_color, level_button)| {
         if level_button.cordinate == level_menu_data.selected_level {
-            let color = GOLD * sin(time.elapsed_seconds());
+            let color = GOLD * sin(time.elapsed_secs());
             *bg_color = color.into();
         } else {
             *bg_color = BLACK.into();
@@ -245,8 +221,7 @@ fn update_ui_system(
 
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    controller: Res<Controller>,
+    gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
     mut level_menu_data: ResMut<LevelMenuData>,
     mut play_sound: EventWriter<PlaySoundEvent>,
@@ -257,7 +232,7 @@ fn handle_input_system(
     mut player_data: ResMut<PlayerData>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
-        | PlayerInputs::with_gamepads(&buttons, &controller, *controller_mapping);
+        | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
         play_sound.send(PlaySoundEvent::StartGame);

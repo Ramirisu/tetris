@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::controller::Controller;
-
 use super::controller_mapping::ControllerMapping;
 
 #[derive(Clone, Copy)]
@@ -91,78 +89,59 @@ impl PlayerInputs {
         }
     }
 
-    pub fn with_gamepads(
-        buttons: &ButtonInput<GamepadButton>,
-        controller: &Controller,
-        controller_mapping: ControllerMapping,
-    ) -> Self {
+    pub fn with_gamepads(gamepads: Query<&Gamepad>, controller_mapping: ControllerMapping) -> Self {
         let mut inputs = Self::new();
-        for gamepad in &controller.gamepads {
-            inputs |= Self::with_gamepad(buttons, *gamepad, controller_mapping);
+        for gamepad in gamepads.iter() {
+            inputs |= Self::with_gamepad(gamepad, controller_mapping);
         }
         inputs
     }
 
-    fn with_gamepad(
-        buttons: &ButtonInput<GamepadButton>,
-        gamepad: Gamepad,
-        controller_mapping: ControllerMapping,
-    ) -> Self {
+    fn with_gamepad(gamepad: &Gamepad, controller_mapping: ControllerMapping) -> Self {
         match controller_mapping {
-            ControllerMapping::MappingA => Self::with_gamepad_mapping_a(buttons, gamepad),
-            ControllerMapping::MappingB => Self::with_gamepad_mapping_b(buttons, gamepad),
+            ControllerMapping::MappingA => Self::with_gamepad_mapping_a(gamepad),
+            ControllerMapping::MappingB => Self::with_gamepad_mapping_b(gamepad),
         }
     }
 
-    fn with_gamepad_mapping_a(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+    fn with_gamepad_mapping_a(gamepad: &Gamepad) -> Self {
         Self {
-            up: Self::from_gamepad_button(GamepadButtonType::DPadUp, buttons, gamepad),
-            down: Self::from_gamepad_button(GamepadButtonType::DPadDown, buttons, gamepad),
-            left: Self::from_gamepad_button(GamepadButtonType::DPadLeft, buttons, gamepad),
-            right: Self::from_gamepad_button(GamepadButtonType::DPadRight, buttons, gamepad),
-            a: Self::from_gamepad_button(GamepadButtonType::East, buttons, gamepad),
-            b: Self::from_gamepad_button(GamepadButtonType::South, buttons, gamepad),
-            start: Self::from_gamepad_button(GamepadButtonType::Start, buttons, gamepad),
-            select: Self::from_gamepad_button(GamepadButtonType::Select, buttons, gamepad),
-            soft_reset: buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::East))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South)),
+            up: Self::from_gamepad_button(GamepadButton::DPadUp, gamepad),
+            down: Self::from_gamepad_button(GamepadButton::DPadDown, gamepad),
+            left: Self::from_gamepad_button(GamepadButton::DPadLeft, gamepad),
+            right: Self::from_gamepad_button(GamepadButton::DPadRight, gamepad),
+            a: Self::from_gamepad_button(GamepadButton::East, gamepad),
+            b: Self::from_gamepad_button(GamepadButton::South, gamepad),
+            start: Self::from_gamepad_button(GamepadButton::Start, gamepad),
+            select: Self::from_gamepad_button(GamepadButton::Select, gamepad),
+            soft_reset: gamepad.pressed(GamepadButton::Select)
+                && gamepad.pressed(GamepadButton::Start)
+                && gamepad.pressed(GamepadButton::East)
+                && gamepad.pressed(GamepadButton::South),
         }
     }
 
-    fn with_gamepad_mapping_b(buttons: &ButtonInput<GamepadButton>, gamepad: Gamepad) -> Self {
+    fn with_gamepad_mapping_b(gamepad: &Gamepad) -> Self {
         Self {
-            up: Self::from_gamepad_button(GamepadButtonType::DPadUp, buttons, gamepad),
-            down: Self::from_gamepad_button(GamepadButtonType::DPadDown, buttons, gamepad),
-            left: Self::from_gamepad_button(GamepadButtonType::DPadLeft, buttons, gamepad),
-            right: Self::from_gamepad_button(GamepadButtonType::DPadRight, buttons, gamepad),
-            a: Self::from_gamepad_button(GamepadButtonType::South, buttons, gamepad),
-            b: Self::from_gamepad_button(GamepadButtonType::West, buttons, gamepad),
-            start: Self::from_gamepad_button(GamepadButtonType::Start, buttons, gamepad),
-            select: Self::from_gamepad_button(GamepadButtonType::Select, buttons, gamepad),
-            soft_reset: buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Select))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::Start))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::South))
-                && buttons.pressed(Self::gamepad_button(gamepad, GamepadButtonType::West)),
+            up: Self::from_gamepad_button(GamepadButton::DPadUp, gamepad),
+            down: Self::from_gamepad_button(GamepadButton::DPadDown, gamepad),
+            left: Self::from_gamepad_button(GamepadButton::DPadLeft, gamepad),
+            right: Self::from_gamepad_button(GamepadButton::DPadRight, gamepad),
+            a: Self::from_gamepad_button(GamepadButton::South, gamepad),
+            b: Self::from_gamepad_button(GamepadButton::West, gamepad),
+            start: Self::from_gamepad_button(GamepadButton::Start, gamepad),
+            select: Self::from_gamepad_button(GamepadButton::Select, gamepad),
+            soft_reset: gamepad.pressed(GamepadButton::Select)
+                && gamepad.pressed(GamepadButton::Start)
+                && gamepad.pressed(GamepadButton::South)
+                && gamepad.pressed(GamepadButton::West),
         }
     }
 
-    fn from_gamepad_button(
-        button_type: GamepadButtonType,
-        buttons: &ButtonInput<GamepadButton>,
-        gamepad: Gamepad,
-    ) -> PlayerInput {
+    fn from_gamepad_button(button_type: GamepadButton, gamepad: &Gamepad) -> PlayerInput {
         PlayerInput {
-            just_pressed: buttons.just_pressed(Self::gamepad_button(gamepad, button_type)),
-            pressed: buttons.pressed(Self::gamepad_button(gamepad, button_type)),
-        }
-    }
-
-    fn gamepad_button(gamepad: Gamepad, button_type: GamepadButtonType) -> GamepadButton {
-        GamepadButton {
-            gamepad,
-            button_type,
+            just_pressed: gamepad.just_pressed(button_type),
+            pressed: gamepad.pressed(button_type),
         }
     }
 }

@@ -16,8 +16,12 @@ impl Into<bevy::window::WindowMode> for WindowMode {
     fn into(self) -> bevy::window::WindowMode {
         match self {
             WindowMode::Windowed => bevy::window::WindowMode::Windowed,
-            WindowMode::BorderlessFullscreen => bevy::window::WindowMode::BorderlessFullscreen,
-            WindowMode::Fullscreen => bevy::window::WindowMode::Fullscreen,
+            WindowMode::BorderlessFullscreen => bevy::window::WindowMode::BorderlessFullscreen(
+                bevy::window::MonitorSelection::Current,
+            ),
+            WindowMode::Fullscreen => {
+                bevy::window::WindowMode::Fullscreen(bevy::window::MonitorSelection::Current)
+            }
         }
     }
 }
