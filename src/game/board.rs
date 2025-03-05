@@ -297,13 +297,13 @@ impl Default for Board {
 }
 
 fn gen<R: rand::Rng>(rng: &mut R) -> Piece {
-    rng.gen_range(0..(Piece::variant_len() - 1)).into()
+    rng.random_range(0..(Piece::variant_len() - 1)).into()
 }
 
 fn gen_1h2r<R: rand::Rng>(rng: &mut R, history: &VecDeque<Piece>) -> Piece {
     match history.back() {
         Some(piece) => {
-            let index = rng.gen_range(0..Piece::variant_len());
+            let index = rng.random_range(0..Piece::variant_len());
             if index + 1 != Piece::variant_len() && index != piece.variant_index() {
                 index.into()
             } else {

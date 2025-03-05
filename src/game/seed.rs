@@ -13,7 +13,7 @@ pub struct Seed {
 impl Seed {
     pub fn new() -> Self {
         Self {
-            bytes: rand::thread_rng().gen(),
+            bytes: rand::rng().random(),
         }
     }
 
