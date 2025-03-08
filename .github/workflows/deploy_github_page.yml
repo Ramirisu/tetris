@@ -23,7 +23,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --profile wasm-release --target wasm32-unknown-unknown
+          RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build --profile wasm-release --target wasm32-unknown-unknown
           wasm-bindgen --no-typescript --target web --out-dir ./dist/tetris --out-name "tetris" ./target/wasm32-unknown-unknown/wasm-release/tetris.wasm
 
       - name: Copy Assets

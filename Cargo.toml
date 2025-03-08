@@ -9,6 +9,7 @@ bevy_dev_tools = "0.15"
 bevy_framepace = "0.18"
 rand = "0.9"
 rand_chacha = "0.9"
+getrandom = { version = "0.3", features = ["wasm_js"] }
 num-traits = "0.2"
 num-derive = "0.4"
 image = "0.25"
