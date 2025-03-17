@@ -40,7 +40,7 @@ impl Board {
         };
         let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.into());
         let next_pieces = (0..5).fold(VecDeque::new(), |mut accu, _| {
-            accu.push_back(gen_1h2r(&mut rng, &accu));
+            accu.push_back(gen_piece_1h2r(&mut rng, &accu));
             accu
         });
         let mut board = Self {
@@ -161,7 +161,7 @@ impl Board {
 
     pub fn switch_to_next_piece(&mut self) {
         self.next_pieces
-            .push_back(gen_1h2r(&mut self.rng, &self.next_pieces));
+            .push_back(gen_piece_1h2r(&mut self.rng, &self.next_pieces));
         self.curr_piece = self.next_pieces.pop_front().unwrap();
 
         self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
@@ -296,20 +296,20 @@ impl Default for Board {
     }
 }
 
-fn gen<R: rand::Rng>(rng: &mut R) -> Piece {
+fn gen_piece<R: rand::Rng>(rng: &mut R) -> Piece {
     rng.random_range(0..(Piece::variant_len() - 1)).into()
 }
 
-fn gen_1h2r<R: rand::Rng>(rng: &mut R, history: &VecDeque<Piece>) -> Piece {
+fn gen_piece_1h2r<R: rand::Rng>(rng: &mut R, history: &VecDeque<Piece>) -> Piece {
     match history.back() {
         Some(piece) => {
             let index = rng.random_range(0..Piece::variant_len());
             if index + 1 != Piece::variant_len() && index != piece.variant_index() {
                 index.into()
             } else {
-                gen(rng)
+                gen_piece(rng)
             }
         }
-        None => gen(rng),
+        None => gen_piece(rng),
     }
 }
