@@ -1,10 +1,12 @@
 use std::{fmt::Display, time::Duration};
 
 use bevy::prelude::*;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::enum_iter;
+use crate::enum_advance;
 
-#[derive(Default, Clone, Copy, FromPrimitive, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
 pub enum FPSLimiter {
     #[default]
     Unlimited,
@@ -13,7 +15,7 @@ pub enum FPSLimiter {
     F960,
 }
 
-enum_iter::enum_iter_derive!(FPSLimiter);
+enum_advance::enum_advance_derive!(FPSLimiter);
 
 impl Into<bevy_framepace::Limiter> for FPSLimiter {
     fn into(self) -> bevy_framepace::Limiter {

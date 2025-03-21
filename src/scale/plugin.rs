@@ -1,9 +1,11 @@
 use std::fmt::Display;
 
 use bevy::prelude::*;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
-    app_state::AppState, enum_iter, game::transform::GameTransform,
+    app_state::AppState, enum_advance, game::transform::GameTransform,
     game_option_menu::transform::GameOptionMenuTransform,
     level_menu::transform::LevelMenuTransform, splash::transform::SplashTransform,
 };
@@ -19,7 +21,7 @@ pub fn setup(app: &mut App) {
         );
 }
 
-#[derive(Default, Clone, Copy, FromPrimitive, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
 pub enum ScaleFactor {
     #[default]
     S720,
@@ -32,7 +34,7 @@ pub enum ScaleFactor {
     S4320,
 }
 
-enum_iter::enum_iter_derive!(ScaleFactor);
+enum_advance::enum_advance_derive!(ScaleFactor);
 
 impl ScaleFactor {
     pub fn mul(&self) -> f32 {

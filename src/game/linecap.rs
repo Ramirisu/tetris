@@ -1,15 +1,18 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Linecap {
     #[default]
     Off,
     SuperKillScreen,
 }
 
-enum_iter::enum_iter_derive!(Linecap);
+enum_advance::enum_advance_derive!(Linecap);
 
 impl Linecap {
     pub fn to_string_abbr(&self) -> String {

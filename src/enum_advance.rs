@@ -1,24 +1,34 @@
-macro_rules! enum_iter_derive {
+macro_rules! enum_advance_derive {
     ($name: ident) => {
         impl $name {
             pub fn enum_prev(&self) -> Option<Self> {
-                <Self as num_traits::FromPrimitive>::from_i64(*self as i64 - 1)
+                let v = *self as usize;
+                if v == 0 { None } else { Self::from_repr(v - 1) }
             }
 
             pub fn enum_next(&self) -> Option<Self> {
-                <Self as num_traits::FromPrimitive>::from_i64(*self as i64 + 1)
+                let v = *self as usize;
+                if v == Self::COUNT - 1 {
+                    None
+                } else {
+                    Self::from_repr(v + 1)
+                }
             }
         }
     };
 }
 
-pub(crate) use enum_iter_derive;
+pub(crate) use enum_advance_derive;
 
 #[cfg(test)]
 mod test {
+
     #[test]
     fn test() {
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+        use strum::EnumCount;
+        use strum_macros::{EnumCount, EnumIter, FromRepr};
+
+        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
         enum E {
             #[default]
             A,
@@ -26,7 +36,7 @@ mod test {
             C,
         }
 
-        enum_iter_derive!(E);
+        enum_advance_derive!(E);
 
         let mut e = E::default();
         assert_eq!(e, E::A);

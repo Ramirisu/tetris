@@ -1,4 +1,7 @@
-use num_traits::FromPrimitive;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
+
+use crate::{enum_advance, enum_advance_cycle};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub i32, pub i32);
@@ -9,7 +12,7 @@ impl Square {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceT {
     #[default]
     T0,
@@ -17,6 +20,9 @@ pub enum PieceT {
     T2,
     T3,
 }
+
+enum_advance::enum_advance_derive!(PieceT);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceT);
 
 impl PieceT {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -27,23 +33,9 @@ impl PieceT {
             PieceT::T3 => [Square(0, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
         }
     }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceT::T0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceT::T3,
-        };
-    }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceJ {
     #[default]
     J0,
@@ -51,6 +43,9 @@ pub enum PieceJ {
     J2,
     J3,
 }
+
+enum_advance::enum_advance_derive!(PieceJ);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceJ);
 
 impl PieceJ {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -61,28 +56,17 @@ impl PieceJ {
             PieceJ::J3 => [Square(0, -1), Square(0, 0), Square(0, 1), Square(1, 1)],
         }
     }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceJ::J0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceJ::J3,
-        };
-    }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceZ {
     #[default]
     Z0,
     Z1,
 }
+
+enum_advance::enum_advance_derive!(PieceZ);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceZ);
 
 impl PieceZ {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -91,44 +75,32 @@ impl PieceZ {
             PieceZ::Z1 => [Square(0, -1), Square(0, 0), Square(1, 0), Square(1, 1)],
         }
     }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceZ::Z0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceZ::Z1,
-        };
-    }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceO {
     #[default]
     O0,
 }
 
+enum_advance::enum_advance_derive!(PieceO);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceO);
+
 impl PieceO {
     pub fn to_squares(&self) -> [Square; 4] {
         [Square(-1, -1), Square(0, -1), Square(-1, 0), Square(0, 0)]
     }
-
-    pub fn rotate_clockwise(&mut self) {}
-
-    pub fn rotate_counterclockwise(&mut self) {}
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceS {
     #[default]
     S0,
     S1,
 }
+
+enum_advance::enum_advance_derive!(PieceS);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceS);
 
 impl PieceS {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -137,23 +109,9 @@ impl PieceS {
             PieceS::S1 => [Square(1, -1), Square(0, 0), Square(1, 0), Square(0, 1)],
         }
     }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceS::S0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceS::S1,
-        };
-    }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceL {
     #[default]
     L0,
@@ -161,6 +119,9 @@ pub enum PieceL {
     L2,
     L3,
 }
+
+enum_advance::enum_advance_derive!(PieceL);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceL);
 
 impl PieceL {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -171,28 +132,17 @@ impl PieceL {
             PieceL::L3 => [Square(0, -1), Square(1, -1), Square(0, 0), Square(0, 1)],
         }
     }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceL::L0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceL::L3,
-        };
-    }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceI {
     #[default]
     I0,
     I1,
 }
+
+enum_advance::enum_advance_derive!(PieceI);
+enum_advance_cycle::enum_advance_cycle_derive!(PieceI);
 
 impl PieceI {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -200,20 +150,6 @@ impl PieceI {
             PieceI::I0 => [Square(-2, 0), Square(-1, 0), Square(0, 0), Square(1, 0)],
             PieceI::I1 => [Square(0, -1), Square(0, 0), Square(0, 1), Square(0, 2)],
         }
-    }
-
-    pub fn rotate_clockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 + 1) {
-            Some(p) => *self = p,
-            None => *self = PieceI::I0,
-        };
-    }
-
-    pub fn rotate_counterclockwise(&mut self) {
-        match FromPrimitive::from_i8(*self as i8 - 1) {
-            Some(p) => *self = p,
-            None => *self = PieceI::I1,
-        };
     }
 }
 
@@ -300,28 +236,28 @@ impl Piece {
     }
 
     pub fn rotate_clockwise(&mut self) {
-        match self {
-            Piece::T(piece) => piece.rotate_clockwise(),
-            Piece::J(piece) => piece.rotate_clockwise(),
-            Piece::Z(piece) => piece.rotate_clockwise(),
-            Piece::O(piece) => piece.rotate_clockwise(),
-            Piece::S(piece) => piece.rotate_clockwise(),
-            Piece::L(piece) => piece.rotate_clockwise(),
-            Piece::I(piece) => piece.rotate_clockwise(),
-            Piece::X => (),
+        *self = match self {
+            Piece::T(piece) => Piece::T(piece.enum_next_cycle()),
+            Piece::J(piece) => Piece::J(piece.enum_next_cycle()),
+            Piece::Z(piece) => Piece::Z(piece.enum_next_cycle()),
+            Piece::O(piece) => Piece::O(piece.enum_next_cycle()),
+            Piece::S(piece) => Piece::S(piece.enum_next_cycle()),
+            Piece::L(piece) => Piece::L(piece.enum_next_cycle()),
+            Piece::I(piece) => Piece::I(piece.enum_next_cycle()),
+            Piece::X => Piece::X,
         }
     }
 
     pub fn rotate_counterclockwise(&mut self) {
-        match self {
-            Piece::T(piece) => piece.rotate_counterclockwise(),
-            Piece::J(piece) => piece.rotate_counterclockwise(),
-            Piece::Z(piece) => piece.rotate_counterclockwise(),
-            Piece::O(piece) => piece.rotate_counterclockwise(),
-            Piece::S(piece) => piece.rotate_counterclockwise(),
-            Piece::L(piece) => piece.rotate_counterclockwise(),
-            Piece::I(piece) => piece.rotate_counterclockwise(),
-            Piece::X => (),
+        *self = match self {
+            Piece::T(piece) => Piece::T(piece.enum_prev_cycle()),
+            Piece::J(piece) => Piece::J(piece.enum_prev_cycle()),
+            Piece::Z(piece) => Piece::Z(piece.enum_prev_cycle()),
+            Piece::O(piece) => Piece::O(piece.enum_prev_cycle()),
+            Piece::S(piece) => Piece::S(piece.enum_prev_cycle()),
+            Piece::L(piece) => Piece::L(piece.enum_prev_cycle()),
+            Piece::I(piece) => Piece::I(piece.enum_prev_cycle()),
+            Piece::X => Piece::X,
         }
     }
 

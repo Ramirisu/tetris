@@ -1,15 +1,18 @@
 use std::{fmt::Display, time::Duration};
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum TVSystem {
     #[default]
     NTSC,
     PAL,
 }
 
-enum_iter::enum_iter_derive!(TVSystem);
+enum_advance::enum_advance_derive!(TVSystem);
 
 impl TVSystem {
     pub fn to_string_abbr(&self) -> String {

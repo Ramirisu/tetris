@@ -1,8 +1,11 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Transition {
     #[default]
     Classic,
@@ -11,7 +14,7 @@ pub enum Transition {
     Every4Lines,
 }
 
-enum_iter::enum_iter_derive!(Transition);
+enum_advance::enum_advance_derive!(Transition);
 
 impl Transition {
     pub fn to_string_abbr(&self) -> String {

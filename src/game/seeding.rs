@@ -1,15 +1,18 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Seeding {
     #[default]
     System,
     Custom,
 }
 
-enum_iter::enum_iter_derive!(Seeding);
+enum_advance::enum_advance_derive!(Seeding);
 
 impl Seeding {
     pub fn to_string_abbr(&self) -> String {

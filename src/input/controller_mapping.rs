@@ -1,17 +1,19 @@
 use std::fmt::Display;
 
 use bevy::prelude::*;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::enum_iter;
+use crate::enum_advance;
 
-#[derive(Default, Clone, Copy, FromPrimitive, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
 pub enum ControllerMapping {
     #[default]
     MappingA,
     MappingB,
 }
 
-enum_iter::enum_iter_derive!(ControllerMapping);
+enum_advance::enum_advance_derive!(ControllerMapping);
 
 impl Display for ControllerMapping {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,17 +1,19 @@
 use std::fmt::Display;
 
 use bevy::prelude::Visibility;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::enum_iter;
+use crate::enum_advance;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Invisible {
     #[default]
     Off,
     On,
 }
 
-enum_iter::enum_iter_derive!(Invisible);
+enum_advance::enum_advance_derive!(Invisible);
 
 impl Invisible {
     pub fn to_string_abbr(&self) -> String {

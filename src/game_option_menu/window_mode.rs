@@ -1,8 +1,11 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount)]
 pub enum WindowMode {
     #[default]
     Windowed,
@@ -10,7 +13,7 @@ pub enum WindowMode {
     Fullscreen,
 }
 
-enum_iter::enum_iter_derive!(WindowMode);
+enum_advance::enum_advance_derive!(WindowMode);
 
 impl Into<bevy::window::WindowMode> for WindowMode {
     fn into(self) -> bevy::window::WindowMode {

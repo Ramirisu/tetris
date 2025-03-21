@@ -4,13 +4,10 @@ use bevy::{
     window::{CursorOptions, PresentMode, WindowResolution},
 };
 
-#[macro_use]
-extern crate num_derive;
-extern crate num_traits;
-
 mod app_state;
 mod audio;
-mod enum_iter;
+mod enum_advance;
+mod enum_advance_cycle;
 mod game;
 mod game_option_menu;
 mod init;

@@ -1,8 +1,11 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Scoring {
     #[default]
     Decimal,
@@ -10,7 +13,7 @@ pub enum Scoring {
     Base36,
 }
 
-enum_iter::enum_iter_derive!(Scoring);
+enum_advance::enum_advance_derive!(Scoring);
 
 impl Scoring {
     pub fn format(&self, score: usize) -> String {

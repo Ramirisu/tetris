@@ -1,15 +1,18 @@
 use std::fmt::Display;
 
-use crate::enum_iter;
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+use crate::enum_advance;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Gravity {
     #[default]
     Level,
     Locked,
 }
 
-enum_iter::enum_iter_derive!(Gravity);
+enum_advance::enum_advance_derive!(Gravity);
 
 impl Gravity {
     pub fn to_string_abbr(&self) -> String {

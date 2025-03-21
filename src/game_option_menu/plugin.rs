@@ -1,16 +1,18 @@
 use bevy::{color::palettes::css::WHITE, prelude::*};
+use strum::EnumCount;
+use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    enum_iter,
+    enum_advance, enum_advance_cycle,
     game::{
         game::GameConfig,
-        seed::{Seed, SEED_BYTES_USED},
+        seed::{SEED_BYTES_USED, Seed},
         seeding::Seeding,
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    logo::{load_logo_images, TETRIS_BITMAP},
+    logo::{TETRIS_BITMAP, load_logo_images},
     scale::plugin::ScaleFactor,
     utility::despawn_all,
 };
@@ -54,7 +56,7 @@ struct GameOptionEntityMarker(pub GameOptionMenuSelection);
 #[derive(Component)]
 struct GameOptionMenuEntityMarker;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromPrimitive)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 enum GameOptionMenuSelection {
     #[default]
     Tetris,
@@ -76,32 +78,8 @@ enum GameOptionMenuSelection {
     WindowMode,
 }
 
-enum_iter::enum_iter_derive!(GameOptionMenuSelection);
-
-impl GameOptionMenuSelection {
-    pub fn enum_prev_cycle(&self) -> Self {
-        match self.enum_prev() {
-            Some(e) => e,
-            None => {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    GameOptionMenuSelection::WindowMode
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    GameOptionMenuSelection::ScaleFactor
-                }
-            }
-        }
-    }
-
-    pub fn enum_next_cycle(&self) -> Self {
-        match self.enum_next() {
-            Some(e) => e,
-            None => GameOptionMenuSelection::Tetris,
-        }
-    }
-}
+enum_advance::enum_advance_derive!(GameOptionMenuSelection);
+enum_advance_cycle::enum_advance_cycle_derive!(GameOptionMenuSelection);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 enum GameOptionMenuSeedSelection {
