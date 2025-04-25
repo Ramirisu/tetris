@@ -32,10 +32,10 @@ The *TRANSITION* option determines how the level advances after lines clear.
 
 |        Options |                                                                                                                                                                                                       |
 | -------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|        Classic | When the player line clear `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` lines, whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
-|          Fixed | When the player line clear `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
-| Every 10 Lines | The level advacnes by 1 for every `10` lines.                                                                                                                                                         |
-|  Every 4 Lines | The level advacnes by 1 for every `4` lines.                                                                                                                                                          |
+|        Classic | When the player clears `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` , whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
+|          Fixed | When the player clears `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
+| Every 10 Lines | The level advances by 1 for every `10` lines.                                                                                                                                                         |
+|  Every 4 Lines | The level advances by 1 for every `4` lines.                                                                                                                                                          |
 
 **LINECAP**
 
@@ -128,7 +128,7 @@ The *INVISIBLE* option determines the visibility of the locked squres.
 | Start      | Pause/Resume            |  Enter   |         Start          |         Start          |
 | Soft Reset | Soft Reset              |   Esc    | Select + Start + A + B | Select + Start + B + Y |
 
-> A, B, X and Y button mapping is in NES/SNES/NSwitch Controller layout.
+> A, B, X and Y button mapping is in NES/SNES Controller layout.
 
 ## Build & Run
 
