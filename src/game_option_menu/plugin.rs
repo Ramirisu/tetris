@@ -118,6 +118,7 @@ fn setup_screen(
                 height: Val::Percent(100.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                overflow: Overflow::clip(),
                 ..default()
             },
             GameOptionMenuEntityMarker,
@@ -162,6 +163,7 @@ fn setup_screen(
                                 Text::default(),
                                 TextFont::from_font_size(transform.fs_medium()),
                                 TextColor::from(WHITE),
+                                TextLayout::new(JustifyText::Left, LineBreak::NoWrap),
                                 GameOptionEntityMarker(selection),
                             ))
                             .with_child((
@@ -177,7 +179,7 @@ fn setup_screen(
                         }
                     }
                 });
-    });
+        });
 }
 
 fn handle_input_system(
