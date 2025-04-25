@@ -531,16 +531,16 @@ fn update_statistics_system(
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
 ) {
-    if let Ok(entity) = query.p0().p0().get_single_mut() {
+    if let Ok(entity) = query.p0().p0().single_mut() {
         *tw.text(entity, 1) = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(entity) = query.p0().p1().get_single_mut() {
+    if let Ok(entity) = query.p0().p1().single_mut() {
         *tw.text(entity, 1) = game_config.scoring.format(player_data.board.score());
     }
-    if let Ok(entity) = query.p0().p2().get_single_mut() {
+    if let Ok(entity) = query.p0().p2().single_mut() {
         *tw.text(entity, 1) = format!("{:02}", player_data.board.level());
     }
-    if let Ok(entity) = query.p0().p3().get_single_mut() {
+    if let Ok(entity) = query.p0().p3().single_mut() {
         *tw.text(entity, 0) = format!("BRN {:4}\n", player_data.board.burned_lines());
         *tw.text(entity, 1) = format!(" 1X {:4}\n", player_data.board.single_clear());
         *tw.text(entity, 2) = format!(" 2X {:4}\n", player_data.board.double_clear());
@@ -564,7 +564,7 @@ fn update_statistics_system(
         }
         *tw.text(entity, 9) = format!(" ({:02})\n", player_data.board.max_drought());
     }
-    if let Ok(entity) = query.p0().p4().get_single_mut() {
+    if let Ok(entity) = query.p0().p4().single_mut() {
         *tw.text(entity, 0) = format!("SLV {:3}\n", game_config.start_level);
         *tw.text(entity, 1) = format!("CAP {:3}\n", game_config.linecap.to_string_abbr());
         *tw.text(entity, 2) = format!("TRS {:3}\n", game_config.transition.to_string_abbr());
@@ -574,7 +574,7 @@ fn update_statistics_system(
         *tw.text(entity, 6) = format!("SDG {:3}\n", game_config.seeding.to_string_abbr());
         *tw.text(entity, 7) = format!("{}\n", player_data.board.seed());
     }
-    if let Ok(entity) = query.p0().p5().get_single_mut() {
+    if let Ok(entity) = query.p0().p5().single_mut() {
         *tw.text(entity, 0) = format!("TIME: {}", format_hhmmss(player_data.stopwatch.elapsed()));
     }
     for (entity, piece) in query.p0().p6().iter_mut() {
@@ -586,7 +586,7 @@ fn update_statistics_system(
     } else {
         RED
     };
-    if let Ok(entity) = query.p0().p7().get_single_mut() {
+    if let Ok(entity) = query.p0().p7().single_mut() {
         *tw.text(entity, 1) = format!(
             "{:02}",
             game_config
@@ -596,7 +596,7 @@ fn update_statistics_system(
         *tw.color(entity, 1) = das_color.into();
     }
     if game_config.das_counter == DASCounter::Full {
-        if let Ok(mut sprite) = query.p1().get_single_mut() {
+        if let Ok(mut sprite) = query.p1().single_mut() {
             sprite.color = das_color.into();
         }
     }
@@ -635,13 +635,15 @@ mod state_player_dropping {
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }
 
         if player_inputs.start.just_pressed {
-            *query.p1().single_mut() = Visibility::Inherited;
+            if let Ok(mut vis) = query.p1().single_mut() {
+                *vis = Visibility::Inherited;
+            }
             game_state.set(GameState::Pause);
             return;
         }
@@ -673,10 +675,10 @@ mod state_player_dropping {
             });
         }
         if lr_moved {
-            play_sound.send(PlaySoundEvent::MoveCurrPiece);
+            play_sound.write(PlaySoundEvent::MoveCurrPiece);
         }
         if rotated {
-            play_sound.send(PlaySoundEvent::RotateCurrPiece);
+            play_sound.write(PlaySoundEvent::RotateCurrPiece);
         }
     }
 
@@ -787,7 +789,7 @@ mod state_player_dropping {
                     *vis = Visibility::Inherited;
                 });
 
-                play_sound.send(PlaySoundEvent::GameOver);
+                play_sound.write(PlaySoundEvent::GameOver);
                 game_state.set(GameState::Over);
                 player_phase.set(PlayerPhase::Over);
             } else {
@@ -824,13 +826,13 @@ mod state_player_dropping {
 
                 match lines.len() {
                     0 => {
-                        play_sound.send(PlaySoundEvent::LockCurrPiece);
+                        play_sound.write(PlaySoundEvent::LockCurrPiece);
                     }
                     1 | 2 | 3 => {
-                        play_sound.send(PlaySoundEvent::LineClear);
+                        play_sound.write(PlaySoundEvent::LineClear);
                     }
                     4 => {
-                        play_sound.send(PlaySoundEvent::TetrisClear);
+                        play_sound.write(PlaySoundEvent::TetrisClear);
                     }
                     _ => (),
                 }
@@ -879,7 +881,7 @@ mod state_player_line_clear {
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
-                    if let Ok(mut vis) = query.p1().get_single_mut() {
+                    if let Ok(mut vis) = query.p1().single_mut() {
                         match *vis {
                             Visibility::Hidden => *vis = Visibility::Inherited,
                             Visibility::Inherited => *vis = Visibility::Hidden,
@@ -893,7 +895,7 @@ mod state_player_line_clear {
                 player_data.board.clear_lines();
                 let new_level = player_data.board.level();
                 if new_level > old_level {
-                    play_sound.send(PlaySoundEvent::LevelUp);
+                    play_sound.write(PlaySoundEvent::LevelUp);
                     player_data.fall_timer.set_level(new_level);
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
@@ -925,7 +927,7 @@ mod state_player_entry_delay {
         if player_data.entry_delay_timer.tick(time.delta()).consume() {
             player_data.board.switch_to_next_piece();
 
-            if let Ok(mut vis) = query.p0().get_single_mut() {
+            if let Ok(mut vis) = query.p0().single_mut() {
                 *vis = Visibility::Hidden;
             }
 
@@ -991,13 +993,15 @@ mod state_game_pause {
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }
 
         if player_inputs.start.just_pressed {
-            *query.single_mut() = Visibility::Hidden;
+            if let Ok(mut vis) = query.single_mut() {
+                *vis = Visibility::Hidden;
+            }
             game_state.set(GameState::Running);
         }
     }
@@ -1017,7 +1021,7 @@ mod state_game_over {
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundEvent::StartGame);
             app_state.set(AppState::Splash);
             return;
         }

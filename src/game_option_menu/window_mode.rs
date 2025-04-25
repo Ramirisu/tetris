@@ -22,9 +22,10 @@ impl Into<bevy::window::WindowMode> for WindowMode {
             WindowMode::BorderlessFullscreen => bevy::window::WindowMode::BorderlessFullscreen(
                 bevy::window::MonitorSelection::Current,
             ),
-            WindowMode::Fullscreen => {
-                bevy::window::WindowMode::Fullscreen(bevy::window::MonitorSelection::Current)
-            }
+            WindowMode::Fullscreen => bevy::window::WindowMode::Fullscreen(
+                bevy::window::MonitorSelection::Current,
+                bevy::window::VideoModeSelection::Current,
+            ),
         }
     }
 }

@@ -11,7 +11,7 @@ use crate::{
         player::{PlayerData, PlayerPhase},
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    logo::{load_logo_images, TETRIS_BITMAP},
+    logo::{TETRIS_BITMAP, load_logo_images},
     utility::despawn_all,
 };
 
@@ -235,7 +235,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
-        play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::Splash);
         return;
     }
@@ -250,7 +250,7 @@ fn handle_input_system(
             if level_menu_data.selected_level.1 >= 4 {
                 level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            play_sound.send(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundEvent::MoveCursor);
         }
         (false, true) => {
             level_menu_data.selected_level.1 =
@@ -258,7 +258,7 @@ fn handle_input_system(
             if level_menu_data.selected_level.1 >= 4 {
                 level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            play_sound.send(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundEvent::MoveCursor);
         }
         _ => {
             if level_menu_data.selected_level.1 < 4 {
@@ -269,12 +269,12 @@ fn handle_input_system(
                     (true, false) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.send(PlaySoundEvent::MoveCursor);
+                        play_sound.write(PlaySoundEvent::MoveCursor);
                     }
                     (false, true) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.send(PlaySoundEvent::MoveCursor);
+                        play_sound.write(PlaySoundEvent::MoveCursor);
                     }
                     _ => {}
                 }
@@ -289,13 +289,13 @@ fn handle_input_system(
             game_config.start_level = level;
 
             *player_data = PlayerData::new(*game_config);
-            play_sound.send(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundEvent::StartGame);
             game_state.set(GameState::Running);
             player_phase.set(PlayerPhase::Dropping);
             app_state.set(AppState::Game);
         }
     } else if player_inputs.b.just_pressed {
-        play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::GameModeMenu);
     }
 }

@@ -20,14 +20,9 @@ use crate::{
 use super::transform::GameOptionMenuTransform;
 
 #[cfg(not(target_arch = "wasm32"))]
-use super::{fps_limiter::FPSLimiter, window_mode::WindowMode};
+use super::window_mode::WindowMode;
 
 pub fn setup(app: &mut App) {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        app.add_plugins(bevy_framepace::FramepacePlugin)
-            .add_systems(Startup, init_framepace_settings);
-    }
     app.insert_resource(GameOptionMenuTransform::default())
         .insert_resource(GameOptionMenuData::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
@@ -41,13 +36,6 @@ pub fn setup(app: &mut App) {
             OnExit(AppState::GameModeMenu),
             despawn_all::<GameOptionMenuEntityMarker>,
         );
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn init_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::FramepaceSettings>) {
-    *framepace_settins = bevy_framepace::FramepaceSettings {
-        limiter: FPSLimiter::default().into(),
-    };
 }
 
 #[derive(Component)]
@@ -73,8 +61,6 @@ enum GameOptionMenuSelection {
     ControllerMapping,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
-    FPSLimiter,
-    #[cfg(not(target_arch = "wasm32"))]
     WindowMode,
 }
 
@@ -96,8 +82,6 @@ struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
     seed_selection: GameOptionMenuSeedSelection,
     #[cfg(not(target_arch = "wasm32"))]
-    fps_limiter: FPSLimiter,
-    #[cfg(not(target_arch = "wasm32"))]
     window_mode: WindowMode,
 }
 
@@ -106,8 +90,6 @@ impl GameOptionMenuData {
         Self {
             selection: GameOptionMenuSelection::default(),
             seed_selection: GameOptionMenuSeedSelection::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            fps_limiter: FPSLimiter::default(),
             #[cfg(not(target_arch = "wasm32"))]
             window_mode: WindowMode::default(),
         }
@@ -332,15 +314,6 @@ fn update_ui_system(
                 );
             }
             #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuSelection::FPSLimiter => {
-                *tw.text(entity, 0) = fname("FPS LIMITER");
-                *tw.text(entity, 1) = fopt(
-                    game_option_menu_data.fps_limiter.to_string(),
-                    game_option_menu_data.fps_limiter.enum_prev().is_some(),
-                    game_option_menu_data.fps_limiter.enum_next().is_some(),
-                );
-            }
-            #[cfg(not(target_arch = "wasm32"))]
             GameOptionMenuSelection::WindowMode => {
                 *tw.text(entity, 0) = fname("WINDOW MODE");
                 *tw.text(entity, 1) = fopt(
@@ -362,23 +335,20 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     mut play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
-    #[cfg(not(target_arch = "wasm32"))] mut framepace_settins: ResMut<
-        bevy_framepace::FramepaceSettings,
-    >,
     #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
-        play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::Splash);
         return;
     }
 
     if player_inputs.b.just_pressed {
         app_state.set(AppState::Splash);
-        play_sound.send(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundEvent::StartGame);
         return;
     }
 
@@ -392,13 +362,13 @@ fn handle_input_system(
         ) {
             (true, false) => {
                 game_option_menu_data.selection = game_option_menu_data.selection.enum_prev_cycle();
-                play_sound.send(PlaySoundEvent::MoveCursor);
+                play_sound.write(PlaySoundEvent::MoveCursor);
 
                 return;
             }
             (false, true) => {
                 game_option_menu_data.selection = game_option_menu_data.selection.enum_next_cycle();
-                play_sound.send(PlaySoundEvent::MoveCursor);
+                play_sound.write(PlaySoundEvent::MoveCursor);
                 return;
             }
             _ => (),
@@ -408,14 +378,12 @@ fn handle_input_system(
     let mut option_changed = false;
     let mut scale_changed = false;
     #[cfg(not(target_arch = "wasm32"))]
-    let mut fps_changed = false;
-    #[cfg(not(target_arch = "wasm32"))]
     let mut window_mode_changed = false;
 
     match game_option_menu_data.selection {
         GameOptionMenuSelection::Tetris => {
             if player_inputs.start.just_pressed {
-                play_sound.send(PlaySoundEvent::StartGame);
+                play_sound.write(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
         }
@@ -609,20 +577,6 @@ fn handle_input_system(
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        GameOptionMenuSelection::FPSLimiter => {
-            if player_inputs.right.just_pressed {
-                if let Some(e) = game_option_menu_data.fps_limiter.enum_next() {
-                    game_option_menu_data.fps_limiter = e;
-                    fps_changed = true;
-                }
-            } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_option_menu_data.fps_limiter.enum_prev() {
-                    game_option_menu_data.fps_limiter = e;
-                    fps_changed = true;
-                }
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
         GameOptionMenuSelection::WindowMode => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_option_menu_data.window_mode.enum_next() {
@@ -644,22 +598,14 @@ fn handle_input_system(
     option_changed |= scale_changed;
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if fps_changed {
-            *framepace_settins = bevy_framepace::FramepaceSettings {
-                limiter: game_option_menu_data.fps_limiter.into(),
-            };
-        }
-        option_changed |= fps_changed;
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
         if window_mode_changed {
-            let mut window = query.single_mut();
-            window.mode = game_option_menu_data.window_mode.into();
+            if let Ok(mut window) = query.single_mut() {
+                window.mode = game_option_menu_data.window_mode.into();
+            }
         }
         option_changed |= window_mode_changed;
     }
     if option_changed {
-        play_sound.send(PlaySoundEvent::MoveCursor);
+        play_sound.write(PlaySoundEvent::MoveCursor);
     }
 }
