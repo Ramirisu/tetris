@@ -23,7 +23,7 @@ pub fn setup(app: &mut App) {
         .add_systems(OnEnter(AppState::LevelMenu), setup_screen)
         .add_systems(
             Update,
-            (update_ui_system, handle_input_system)
+            (handle_input_system, update_ui_system)
                 .chain()
                 .run_if(in_state(AppState::LevelMenu)),
         )
@@ -59,6 +59,18 @@ impl Default for LevelMenuData {
         Self::new()
     }
 }
+
+const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
+    [Some(0), Some(1), Some(2), Some(3), Some(4)],
+    [Some(5), Some(6), Some(7), Some(8), Some(9)],
+    [Some(10), Some(11), Some(12), Some(13), Some(14)],
+    [Some(15), Some(16), Some(17), Some(18), Some(19)],
+    [None, None, None, None, Some(29)],
+    [None, None, None, None, Some(39)],
+];
+
+const LEVELS_ROWS: usize = LEVELS.len();
+const LEVELS_COLS: usize = LEVELS[0].len();
 
 fn setup_screen(
     mut commands: Commands,
@@ -187,38 +199,6 @@ fn setup_screen(
         });
 }
 
-const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
-    [Some(0), Some(1), Some(2), Some(3), Some(4)],
-    [Some(5), Some(6), Some(7), Some(8), Some(9)],
-    [Some(10), Some(11), Some(12), Some(13), Some(14)],
-    [Some(15), Some(16), Some(17), Some(18), Some(19)],
-    [None, None, None, None, Some(29)],
-    [None, None, None, None, Some(39)],
-];
-
-const LEVELS_ROWS: usize = LEVELS.len();
-const LEVELS_COLS: usize = LEVELS[0].len();
-
-fn update_ui_system(
-    time: Res<Time>,
-    mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
-    level_menu_data: Res<LevelMenuData>,
-) {
-    fn sin(elapsed: f32) -> f32 {
-        const SPEED: f32 = 30.0;
-        (((elapsed * SPEED).sin() + 1.0) / 4.0 + 0.5).clamp(0.5, 1.0)
-    }
-
-    query.iter_mut().for_each(|(mut bg_color, level_button)| {
-        if level_button.cordinate == level_menu_data.selected_level {
-            let color = GOLD * sin(time.elapsed_secs());
-            *bg_color = color.into();
-        } else {
-            *bg_color = BLACK.into();
-        }
-    });
-}
-
 fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
@@ -298,4 +278,24 @@ fn handle_input_system(
         play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::GameModeMenu);
     }
+}
+
+fn update_ui_system(
+    time: Res<Time>,
+    mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
+    level_menu_data: Res<LevelMenuData>,
+) {
+    fn sin(elapsed: f32) -> f32 {
+        const SPEED: f32 = 30.0;
+        (((elapsed * SPEED).sin() + 1.0) / 4.0 + 0.5).clamp(0.5, 1.0)
+    }
+
+    query.iter_mut().for_each(|(mut bg_color, level_button)| {
+        if level_button.cordinate == level_menu_data.selected_level {
+            let color = GOLD * sin(time.elapsed_secs());
+            *bg_color = color.into();
+        } else {
+            *bg_color = BLACK.into();
+        }
+    });
 }

@@ -28,7 +28,7 @@ pub fn setup(app: &mut App) {
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
         .add_systems(
             Update,
-            (update_ui_system, handle_input_system)
+            (handle_input_system, update_ui_system)
                 .chain()
                 .run_if(in_state(AppState::GameModeMenu)),
         )
@@ -39,10 +39,10 @@ pub fn setup(app: &mut App) {
 }
 
 #[derive(Component)]
-struct GameOptionEntityMarker(pub GameOptionMenuSelection);
+struct GameOptionMenuEntityMarker;
 
 #[derive(Component)]
-struct GameOptionMenuEntityMarker;
+struct GameOptionEntityMarker(pub GameOptionMenuSelection);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 enum GameOptionMenuSelection {
@@ -177,152 +177,6 @@ fn setup_screen(
                         }
                     }
                 });
-        });
-}
-
-fn update_ui_system(
-    mut query: Query<(Entity, &GameOptionEntityMarker)>,
-    mut tw: TextUiWriter,
-    game_option_menu_data: Res<GameOptionMenuData>,
-    game_config: Res<GameConfig>,
-    controller_mapping: Res<ControllerMapping>,
-    scale_factor: Res<ScaleFactor>,
-    app_state: Res<State<AppState>>,
-) {
-    if !app_state.is_changed()
-        && !game_option_menu_data.is_changed()
-        && !game_config.is_changed()
-        && !controller_mapping.is_changed()
-        && !scale_factor.is_changed()
-    {
-        return;
-    }
-
-    query.iter_mut().for_each(|(entity, marker)| {
-        let fname = |name| -> String {
-            let s = if marker.0 == game_option_menu_data.selection {
-                ">>"
-            } else {
-                ""
-            };
-            format!("{:>2} {:20} ", s, name)
-        };
-        let fopt = |name: String, left_arrow, right_arrow| -> String {
-            let l = if left_arrow { "<" } else { "" };
-            let r = if right_arrow { ">" } else { "" };
-            format!("{:1} {:18} {:1}", l, name, r)
-        };
-        let fopt_n = || -> String { fopt("".to_owned(), false, false) };
-        match marker.0 {
-            GameOptionMenuSelection::Tetris => {
-                *tw.text(entity, 0) = fname("TETRIS");
-                *tw.text(entity, 1) = fopt_n();
-            }
-            GameOptionMenuSelection::Transition => {
-                *tw.text(entity, 0) = fname("TRANSITION");
-                *tw.text(entity, 1) = fopt(
-                    game_config.transition.to_string(),
-                    game_config.transition.enum_prev().is_some(),
-                    game_config.transition.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::Linecap => {
-                *tw.text(entity, 0) = fname("LINECAP");
-                *tw.text(entity, 1) = fopt(
-                    game_config.linecap.to_string(),
-                    game_config.linecap.enum_prev().is_some(),
-                    game_config.linecap.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::Gravity => {
-                *tw.text(entity, 0) = fname("GRAVITY");
-                *tw.text(entity, 1) = fopt(
-                    game_config.gravity.to_string(),
-                    game_config.gravity.enum_prev().is_some(),
-                    game_config.gravity.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::Seeding => {
-                *tw.text(entity, 0) = fname("SEEDING");
-                *tw.text(entity, 1) = fopt(
-                    game_config.seeding.to_string(),
-                    game_config.seeding.enum_prev().is_some(),
-                    game_config.seeding.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::Seed => {
-                *tw.text(entity, 0) = fname("SEED");
-                *tw.text(entity, 1) = match game_config.seeding {
-                    Seeding::System => fopt_n(),
-                    Seeding::Custom => fopt(game_config.seed.to_string(), false, false),
-                };
-            }
-            GameOptionMenuSelection::Scoring => {
-                *tw.text(entity, 0) = fname("SCORING");
-                *tw.text(entity, 1) = fopt(
-                    game_config.scoring.to_string(),
-                    game_config.scoring.enum_prev().is_some(),
-                    game_config.scoring.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::TVSystem => {
-                *tw.text(entity, 0) = fname("TV SYSTEM");
-                *tw.text(entity, 1) = fopt(
-                    game_config.tv_system.to_string(),
-                    game_config.tv_system.enum_prev().is_some(),
-                    game_config.tv_system.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::NextPieceHint => {
-                *tw.text(entity, 0) = fname("NEXT PIECE HINT");
-                *tw.text(entity, 1) = fopt(
-                    game_config.next_piece_hint.to_string(),
-                    game_config.next_piece_hint.enum_prev().is_some(),
-                    game_config.next_piece_hint.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::Invisible => {
-                *tw.text(entity, 0) = fname("INVISIBLE");
-                *tw.text(entity, 1) = fopt(
-                    game_config.invisible.to_string(),
-                    game_config.invisible.enum_prev().is_some(),
-                    game_config.invisible.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::DASCounter => {
-                *tw.text(entity, 0) = fname("DAS COUNTER");
-                *tw.text(entity, 1) = fopt(
-                    game_config.das_counter.to_string(),
-                    game_config.das_counter.enum_prev().is_some(),
-                    game_config.das_counter.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::ControllerMapping => {
-                *tw.text(entity, 0) = fname("CONTROLLER MAPPING");
-                *tw.text(entity, 1) = fopt(
-                    controller_mapping.to_string(),
-                    controller_mapping.enum_prev().is_some(),
-                    controller_mapping.enum_next().is_some(),
-                );
-            }
-            GameOptionMenuSelection::ScaleFactor => {
-                *tw.text(entity, 0) = fname("SCALE FACTOR");
-                *tw.text(entity, 1) = fopt(
-                    scale_factor.to_string(),
-                    scale_factor.enum_prev().is_some(),
-                    scale_factor.enum_next().is_some(),
-                );
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuSelection::WindowMode => {
-                *tw.text(entity, 0) = fname("WINDOW MODE");
-                *tw.text(entity, 1) = fopt(
-                    game_option_menu_data.window_mode.to_string(),
-                    game_option_menu_data.window_mode.enum_prev().is_some(),
-                    game_option_menu_data.window_mode.enum_next().is_some(),
-                );
-            }
-        }
     });
 }
 
@@ -608,4 +462,140 @@ fn handle_input_system(
     if option_changed {
         play_sound.write(PlaySoundEvent::MoveCursor);
     }
+}
+
+fn update_ui_system(
+    mut query: Query<(Entity, &GameOptionEntityMarker)>,
+    mut tw: TextUiWriter,
+    game_option_menu_data: Res<GameOptionMenuData>,
+    game_config: Res<GameConfig>,
+    controller_mapping: Res<ControllerMapping>,
+    scale_factor: Res<ScaleFactor>,
+) {
+    query.iter_mut().for_each(|(entity, marker)| {
+        let fname = |name| -> String {
+            let s = if marker.0 == game_option_menu_data.selection {
+                ">>"
+            } else {
+                ""
+            };
+            format!("{:>2} {:20} ", s, name)
+        };
+        let fopt = |name: String, left_arrow, right_arrow| -> String {
+            let l = if left_arrow { "<" } else { "" };
+            let r = if right_arrow { ">" } else { "" };
+            format!("{:1} {:18} {:1}", l, name, r)
+        };
+        let fopt_n = || -> String { fopt("".to_owned(), false, false) };
+        match marker.0 {
+            GameOptionMenuSelection::Tetris => {
+                *tw.text(entity, 0) = fname("TETRIS");
+                *tw.text(entity, 1) = fopt_n();
+            }
+            GameOptionMenuSelection::Transition => {
+                *tw.text(entity, 0) = fname("TRANSITION");
+                *tw.text(entity, 1) = fopt(
+                    game_config.transition.to_string(),
+                    game_config.transition.enum_prev().is_some(),
+                    game_config.transition.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::Linecap => {
+                *tw.text(entity, 0) = fname("LINECAP");
+                *tw.text(entity, 1) = fopt(
+                    game_config.linecap.to_string(),
+                    game_config.linecap.enum_prev().is_some(),
+                    game_config.linecap.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::Gravity => {
+                *tw.text(entity, 0) = fname("GRAVITY");
+                *tw.text(entity, 1) = fopt(
+                    game_config.gravity.to_string(),
+                    game_config.gravity.enum_prev().is_some(),
+                    game_config.gravity.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::Seeding => {
+                *tw.text(entity, 0) = fname("SEEDING");
+                *tw.text(entity, 1) = fopt(
+                    game_config.seeding.to_string(),
+                    game_config.seeding.enum_prev().is_some(),
+                    game_config.seeding.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::Seed => {
+                *tw.text(entity, 0) = fname("SEED");
+                *tw.text(entity, 1) = match game_config.seeding {
+                    Seeding::System => fopt_n(),
+                    Seeding::Custom => fopt(game_config.seed.to_string(), false, false),
+                };
+            }
+            GameOptionMenuSelection::Scoring => {
+                *tw.text(entity, 0) = fname("SCORING");
+                *tw.text(entity, 1) = fopt(
+                    game_config.scoring.to_string(),
+                    game_config.scoring.enum_prev().is_some(),
+                    game_config.scoring.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::TVSystem => {
+                *tw.text(entity, 0) = fname("TV SYSTEM");
+                *tw.text(entity, 1) = fopt(
+                    game_config.tv_system.to_string(),
+                    game_config.tv_system.enum_prev().is_some(),
+                    game_config.tv_system.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::NextPieceHint => {
+                *tw.text(entity, 0) = fname("NEXT PIECE HINT");
+                *tw.text(entity, 1) = fopt(
+                    game_config.next_piece_hint.to_string(),
+                    game_config.next_piece_hint.enum_prev().is_some(),
+                    game_config.next_piece_hint.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::Invisible => {
+                *tw.text(entity, 0) = fname("INVISIBLE");
+                *tw.text(entity, 1) = fopt(
+                    game_config.invisible.to_string(),
+                    game_config.invisible.enum_prev().is_some(),
+                    game_config.invisible.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::DASCounter => {
+                *tw.text(entity, 0) = fname("DAS COUNTER");
+                *tw.text(entity, 1) = fopt(
+                    game_config.das_counter.to_string(),
+                    game_config.das_counter.enum_prev().is_some(),
+                    game_config.das_counter.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::ControllerMapping => {
+                *tw.text(entity, 0) = fname("CONTROLLER MAPPING");
+                *tw.text(entity, 1) = fopt(
+                    controller_mapping.to_string(),
+                    controller_mapping.enum_prev().is_some(),
+                    controller_mapping.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::ScaleFactor => {
+                *tw.text(entity, 0) = fname("SCALE FACTOR");
+                *tw.text(entity, 1) = fopt(
+                    scale_factor.to_string(),
+                    scale_factor.enum_prev().is_some(),
+                    scale_factor.enum_next().is_some(),
+                );
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            GameOptionMenuSelection::WindowMode => {
+                *tw.text(entity, 0) = fname("WINDOW MODE");
+                *tw.text(entity, 1) = fopt(
+                    game_option_menu_data.window_mode.to_string(),
+                    game_option_menu_data.window_mode.enum_prev().is_some(),
+                    game_option_menu_data.window_mode.enum_next().is_some(),
+                );
+            }
+        }
+    });
 }
