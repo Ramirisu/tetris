@@ -12,7 +12,7 @@ rand = "0.9"
 rand_chacha = "0.9"
 getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.25"
-log = { version = "*", features = [
+log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
