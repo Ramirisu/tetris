@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
 use super::{
-    das_counter::DASCounter, gravity::Gravity, invisible::Invisible, linecap::Linecap,
-    next_piece_hint::NextPieceHint, scoring::Scoring, seed::Seed, seeding::Seeding,
-    transition::Transition, tv_system::TVSystem,
+    gravity::Gravity, invisible::Invisible, linecap::Linecap, next_piece_hint::NextPieceHint,
+    scoring::Scoring, seed::Seed, seeding::Seeding, transition::Transition, tv_system::TVSystem,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -26,7 +25,6 @@ pub struct GameConfig {
     pub tv_system: TVSystem,
     pub next_piece_hint: NextPieceHint,
     pub invisible: Invisible,
-    pub das_counter: DASCounter,
 }
 
 impl Default for GameConfig {
@@ -42,7 +40,6 @@ impl Default for GameConfig {
             tv_system: TVSystem::default(),
             next_piece_hint: NextPieceHint::default(),
             invisible: Invisible::default(),
-            das_counter: DASCounter::default(),
         }
     }
 }

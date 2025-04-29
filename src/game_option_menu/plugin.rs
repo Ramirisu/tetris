@@ -1,4 +1,7 @@
-use bevy::{color::palettes::css::WHITE, prelude::*};
+use bevy::{
+    color::palettes::css::{BLUE, WHITE},
+    prelude::*,
+};
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
@@ -13,18 +16,14 @@ use crate::{
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::{TETRIS_BITMAP, load_logo_images},
-    scale::plugin::ScaleFactor,
     utility::despawn_all,
 };
 
-use super::transform::GameOptionMenuTransform;
-
-#[cfg(not(target_arch = "wasm32"))]
-use super::window_mode::WindowMode;
+use super::scale_factor::ScaleFactor;
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(GameOptionMenuTransform::default())
-        .insert_resource(GameOptionMenuData::default())
+    app.insert_resource(GameOptionMenuData::default())
+        .insert_resource(ScaleFactor::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
         .add_systems(
             Update,
@@ -57,11 +56,8 @@ enum GameOptionMenuSelection {
     TVSystem,
     NextPieceHint,
     Invisible,
-    DASCounter,
     ControllerMapping,
     ScaleFactor,
-    #[cfg(not(target_arch = "wasm32"))]
-    WindowMode,
 }
 
 enum_advance::enum_advance_derive!(GameOptionMenuSelection);
@@ -81,8 +77,6 @@ const GAME_OPTION_MENU_SEED_LAST: usize = SEED_BYTES_USED * 2 - 1;
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
     seed_selection: GameOptionMenuSeedSelection,
-    #[cfg(not(target_arch = "wasm32"))]
-    window_mode: WindowMode,
 }
 
 impl GameOptionMenuData {
@@ -90,8 +84,6 @@ impl GameOptionMenuData {
         Self {
             selection: GameOptionMenuSelection::default(),
             seed_selection: GameOptionMenuSeedSelection::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            window_mode: WindowMode::default(),
         }
     }
 }
@@ -102,11 +94,7 @@ impl Default for GameOptionMenuData {
     }
 }
 
-fn setup_screen(
-    mut commands: Commands,
-    mut image_assets: ResMut<Assets<Image>>,
-    transform: Res<GameOptionMenuTransform>,
-) {
+fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     let logo_images = load_logo_images(&mut image_assets);
 
     commands
@@ -128,7 +116,7 @@ fn setup_screen(
                 .spawn(Node {
                     display: Display::Grid,
                     grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                    margin: UiRect::all(Val::Px(transform.fs_medium())),
+                    margin: UiRect::all(Val::Px(30.0)),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -136,8 +124,8 @@ fn setup_screen(
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
                                 Node {
-                                    width: Val::Px(transform.fs_small()),
-                                    height: Val::Px(transform.fs_small()),
+                                    width: Val::Px(30.0),
+                                    height: Val::Px(30.0),
                                     ..default()
                                 },
                                 ImageNode::new(logo_images[(*sqr) as usize].clone()),
@@ -145,30 +133,34 @@ fn setup_screen(
                         })
                     });
                 });
-
             parent
-                .spawn(Node {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    margin: UiRect::all(Val::Px(transform.fs_medium())),
-                    ..default()
-                })
+                .spawn((
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        margin: UiRect::all(Val::Px(30.0)),
+                        padding: UiRect::all(Val::Px(30.0)),
+                        border: UiRect::all(Val::Px(5.0)),
+                        ..default()
+                    },
+                    BorderColor::from(BLUE),
+                ))
                 .with_children(|parent| {
                     let mut selection = GameOptionMenuSelection::default();
                     loop {
                         parent
                             .spawn((
                                 Text::default(),
-                                TextFont::from_font_size(transform.fs_medium()),
+                                TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Left, LineBreak::NoWrap),
                                 GameOptionEntityMarker(selection),
                             ))
                             .with_child((
                                 TextSpan::default(),
-                                TextFont::from_font_size(transform.fs_medium()),
+                                TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                             ));
 
@@ -191,7 +183,7 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     mut play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
-    #[cfg(not(target_arch = "wasm32"))] mut query: Query<&mut Window>,
+    mut window_query: Query<&mut Window>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
@@ -233,8 +225,6 @@ fn handle_input_system(
 
     let mut option_changed = false;
     let mut scale_changed = false;
-    #[cfg(not(target_arch = "wasm32"))]
-    let mut window_mode_changed = false;
 
     match game_option_menu_data.selection {
         GameOptionMenuSelection::Tetris => {
@@ -393,19 +383,6 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::DASCounter => {
-            if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.das_counter.enum_next() {
-                    game_config.das_counter = e;
-                    option_changed = true;
-                }
-            } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.das_counter.enum_prev() {
-                    game_config.das_counter = e;
-                    option_changed = true;
-                }
-            }
-        }
         GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = controller_mapping.enum_next() {
@@ -432,35 +409,16 @@ fn handle_input_system(
                 }
             }
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        GameOptionMenuSelection::WindowMode => {
-            if player_inputs.right.just_pressed {
-                if let Some(e) = game_option_menu_data.window_mode.enum_next() {
-                    game_option_menu_data.window_mode = e;
-                    window_mode_changed = true;
-                }
-            } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_option_menu_data.window_mode.enum_prev() {
-                    game_option_menu_data.window_mode = e;
-                    window_mode_changed = true;
-                }
-            }
-        }
     }
 
     if scale_changed {
-        app_state.set(AppState::ChangeScale);
+        if let Ok(mut window) = window_query.single_mut() {
+            window
+                .resolution
+                .set_scale_factor_override(Some(scale_factor.mul()));
+        }
     }
     option_changed |= scale_changed;
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        if window_mode_changed {
-            if let Ok(mut window) = query.single_mut() {
-                window.mode = game_option_menu_data.window_mode.into();
-            }
-        }
-        option_changed |= window_mode_changed;
-    }
     if option_changed {
         play_sound.write(PlaySoundEvent::MoveCursor);
     }
@@ -565,14 +523,6 @@ fn update_ui_system(
                     game_config.invisible.enum_next().is_some(),
                 );
             }
-            GameOptionMenuSelection::DASCounter => {
-                *tw.text(entity, 0) = fname("DAS COUNTER");
-                *tw.text(entity, 1) = fopt(
-                    game_config.das_counter.to_string(),
-                    game_config.das_counter.enum_prev().is_some(),
-                    game_config.das_counter.enum_next().is_some(),
-                );
-            }
             GameOptionMenuSelection::ControllerMapping => {
                 *tw.text(entity, 0) = fname("CONTROLLER MAPPING");
                 *tw.text(entity, 1) = fopt(
@@ -587,15 +537,6 @@ fn update_ui_system(
                     scale_factor.to_string(),
                     scale_factor.enum_prev().is_some(),
                     scale_factor.enum_next().is_some(),
-                );
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            GameOptionMenuSelection::WindowMode => {
-                *tw.text(entity, 0) = fname("WINDOW MODE");
-                *tw.text(entity, 1) = fopt(
-                    game_option_menu_data.window_mode.to_string(),
-                    game_option_menu_data.window_mode.enum_prev().is_some(),
-                    game_option_menu_data.window_mode.enum_next().is_some(),
                 );
             }
         }

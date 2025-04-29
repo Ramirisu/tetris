@@ -29,7 +29,7 @@ pub struct Board {
 impl Board {
     pub const BOARD_ROWS: usize = 20;
     pub const BOARD_COLS: usize = 10;
-    const INTERNAL_BOARD_ROWS: usize = Self::BOARD_ROWS + 2;
+    pub const INTERNAL_BOARD_ROWS: usize = Self::BOARD_ROWS + 2;
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
@@ -48,7 +48,7 @@ impl Board {
             transition,
             seed,
             rng,
-            squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::BOARD_ROWS],
+            squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::INTERNAL_BOARD_ROWS],
             curr_piece: Piece::X,
             curr_pos: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
             next_pieces,
@@ -155,8 +155,10 @@ impl Board {
             1..=4 => self.lines_clear[rows.len() - 1] += 1,
             _ => (),
         }
-        self.squares
-            .resize(Self::BOARD_ROWS, vec![Piece::default(); Self::BOARD_COLS]);
+        self.squares.resize(
+            Self::INTERNAL_BOARD_ROWS,
+            vec![Piece::default(); Self::BOARD_COLS],
+        );
     }
 
     pub fn switch_to_next_piece(&mut self) {

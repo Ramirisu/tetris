@@ -262,6 +262,7 @@ impl EntryDelayTimer {
             threshold: Self::height_to_duration(height, tv_system),
         }
     }
+
     pub fn tick(&mut self, delta: Duration) -> &mut Self {
         self.elapsed += delta;
         self

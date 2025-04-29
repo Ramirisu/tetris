@@ -1,6 +1,5 @@
 mod asset;
 mod board;
-pub mod das_counter;
 pub mod game;
 pub mod gravity;
 pub mod invisible;
@@ -15,6 +14,5 @@ mod scoring;
 pub mod seed;
 pub mod seeding;
 mod timer;
-pub mod transform;
 pub mod transition;
 pub mod tv_system;

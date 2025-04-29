@@ -15,11 +15,8 @@ use crate::{
     utility::despawn_all,
 };
 
-use super::transform::LevelMenuTransform;
-
 pub fn setup(app: &mut App) {
-    app.insert_resource(LevelMenuTransform::default())
-        .insert_resource(LevelMenuData::default())
+    app.insert_resource(LevelMenuData::default())
         .add_systems(OnEnter(AppState::LevelMenu), setup_screen)
         .add_systems(
             Update,
@@ -72,11 +69,7 @@ const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
 const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
 
-fn setup_screen(
-    mut commands: Commands,
-    mut image_assets: ResMut<Assets<Image>>,
-    transform: Res<LevelMenuTransform>,
-) {
+fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     let logo_images = load_logo_images(&mut image_assets);
 
     commands
@@ -97,7 +90,7 @@ fn setup_screen(
                 .spawn(Node {
                     display: Display::Grid,
                     grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                    margin: UiRect::all(Val::Px(transform.fs_medium())),
+                    margin: UiRect::all(Val::Px(30.0)),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -105,8 +98,8 @@ fn setup_screen(
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
                                 Node {
-                                    width: Val::Px(transform.fs_small()),
-                                    height: Val::Px(transform.fs_small()),
+                                    width: Val::Px(30.0),
+                                    height: Val::Px(30.0),
                                     ..default()
                                 },
                                 ImageNode::new(logo_images[(*sqr) as usize].clone()),
@@ -120,24 +113,23 @@ fn setup_screen(
                     Node {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(transform.scale() * 10.0)),
-                        padding: UiRect::all(Val::Px(transform.scale() * 10.0)),
-                        border: UiRect::all(Val::Px(transform.scale() * 5.0)),
+                        margin: UiRect::all(Val::Px(10.0)),
+                        padding: UiRect::all(Val::Px(10.0)),
+                        border: UiRect::all(Val::Px(5.0)),
                         ..default()
                     },
-                    BorderColor(BLUE.into()),
-                    BorderRadius::all(Val::Px(transform.scale() * 5.0)),
+                    BorderColor::from(BLUE),
                 ))
                 .with_children(|parent| {
                     parent
                         .spawn(Node {
-                            margin: UiRect::all(Val::Px(transform.fs_small())),
+                            margin: UiRect::all(Val::Px(20.0)),
                             ..default()
                         })
                         .with_children(|parent| {
                             parent.spawn((
                                 Text::new("LEVEL"),
-                                TextFont::from_font_size(transform.fs_medium()),
+                                TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                             ));
                         });
@@ -147,13 +139,13 @@ fn setup_screen(
                             Node {
                                 display: Display::Grid,
                                 grid_template_columns: vec![GridTrack::auto(); 5],
-                                row_gap: Val::Px(transform.scale() * 5.0),
-                                column_gap: Val::Px(transform.scale() * 5.0),
-                                border: UiRect::all(Val::Px(transform.scale() * 5.0)),
+                                row_gap: Val::Px(5.0),
+                                column_gap: Val::Px(5.0),
+                                border: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
-                            BackgroundColor(GREEN.into()),
-                            BorderColor(GREEN.into()),
+                            BackgroundColor::from(GREEN),
+                            BorderColor::from(GREEN),
                         ))
                         .with_children(|parent| {
                             for (y, rows) in LEVELS.iter().enumerate() {
@@ -162,13 +154,13 @@ fn setup_screen(
                                         parent
                                             .spawn((
                                                 Node {
-                                                    width: Val::Px(transform.fs_large()),
-                                                    height: Val::Px(transform.fs_large()),
+                                                    width: Val::Px(60.0),
+                                                    height: Val::Px(60.0),
                                                     align_items: AlignItems::Center,
                                                     justify_content: JustifyContent::Center,
                                                     ..default()
                                                 },
-                                                BackgroundColor(BLUE.into()),
+                                                BackgroundColor::from(BLUE),
                                                 LevelButtonEntityMarker {
                                                     cordinate: (x as i32, y as i32),
                                                 },
@@ -176,20 +168,20 @@ fn setup_screen(
                                             .with_children(|parent| {
                                                 parent.spawn((
                                                     Text::new(format!("{}", level)),
-                                                    TextFont::from_font_size(transform.fs_medium()),
+                                                    TextFont::from_font_size(40.0),
                                                     TextColor::from(CRIMSON),
                                                 ));
                                             });
                                     } else {
                                         parent.spawn((
                                             Node {
-                                                width: Val::Px(transform.fs_large()),
-                                                height: Val::Px(transform.fs_large()),
+                                                width: Val::Px(60.0),
+                                                height: Val::Px(60.0),
                                                 align_items: AlignItems::Center,
                                                 justify_content: JustifyContent::Center,
                                                 ..default()
                                             },
-                                            BackgroundColor(BLACK.into()),
+                                            BackgroundColor::from(BLACK),
                                         ));
                                     }
                                 }
@@ -271,7 +263,7 @@ fn handle_input_system(
             *player_data = PlayerData::new(*game_config);
             play_sound.write(PlaySoundEvent::StartGame);
             game_state.set(GameState::Running);
-            player_phase.set(PlayerPhase::Dropping);
+            player_phase.set(PlayerPhase::Init);
             app_state.set(AppState::Game);
         }
     } else if player_inputs.b.just_pressed {

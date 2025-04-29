@@ -10,6 +10,7 @@ use super::{
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
 pub enum PlayerPhase {
     #[default]
+    Init,
     Dropping,
     LineClear,
     EntryDelay,

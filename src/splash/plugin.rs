@@ -3,15 +3,12 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 use crate::{
     app_state::AppState,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    logo::{load_logo_images, TETRIS_BITMAP},
+    logo::{TETRIS_BITMAP, load_logo_images},
     utility::despawn_all,
 };
 
-use super::transform::SplashTransform;
-
 pub fn setup(app: &mut App) {
-    app.insert_resource(SplashTransform::default())
-        .add_systems(OnEnter(AppState::Splash), setup_screen)
+    app.add_systems(OnEnter(AppState::Splash), setup_screen)
         .add_systems(
             Update,
             handle_input_system.run_if(in_state(AppState::Splash)),
@@ -22,11 +19,7 @@ pub fn setup(app: &mut App) {
 #[derive(Component)]
 struct SplashEntityMarker;
 
-fn setup_screen(
-    mut commands: Commands,
-    mut image_assets: ResMut<Assets<Image>>,
-    transform: Res<SplashTransform>,
-) {
+fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     let logo_images = load_logo_images(&mut image_assets);
 
     commands
@@ -47,7 +40,7 @@ fn setup_screen(
                 .spawn(Node {
                     display: Display::Grid,
                     grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
-                    margin: UiRect::all(Val::Px(transform.fs_medium())),
+                    margin: UiRect::all(Val::Px(40.0)),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -55,8 +48,8 @@ fn setup_screen(
                         rows.iter().for_each(|sqr| {
                             parent.spawn((
                                 Node {
-                                    width: Val::Px(transform.fs_medium()),
-                                    height: Val::Px(transform.fs_medium()),
+                                    width: Val::Px(40.0),
+                                    height: Val::Px(40.0),
                                     ..default()
                                 },
                                 ImageNode::new(logo_images[(*sqr) as usize].clone()),
@@ -64,16 +57,15 @@ fn setup_screen(
                         })
                     });
                 });
-
             parent
                 .spawn(Node {
-                    margin: UiRect::all(Val::Px(transform.fs_large())),
+                    margin: UiRect::all(Val::Px(40.0)),
                     ..default()
                 })
                 .with_children(|parent| {
                     parent.spawn((
                         Text::new("PRESS START"),
-                        TextFont::from_font_size(transform.fs_medium()),
+                        TextFont::from_font_size(40.0),
                         TextColor::from(WHITE),
                     ));
                 });

@@ -15,7 +15,7 @@ pub enum Gravity {
 enum_advance::enum_advance_derive!(Gravity);
 
 impl Gravity {
-    pub fn to_string_abbr(&self) -> String {
+    pub fn to_str_abbr(&self) -> String {
         match self {
             Gravity::Level => "LVL",
             Gravity::Locked => "LCK",

@@ -14,12 +14,12 @@ mod init;
 mod input;
 mod level_menu;
 mod logo;
-mod scale;
 mod splash;
 mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
+use game_option_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH};
 
 fn main() {
     App::new()
@@ -27,7 +27,7 @@ fn main() {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resolution: WindowResolution::new(960.0, 720.0)
+                        resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT)
                             .with_scale_factor_override(1.0),
                         resize_constraints: WindowResizeConstraints {
                             min_width: 960.0,
@@ -60,7 +60,6 @@ fn main() {
         .add_systems(Startup, setup_camera)
         .add_plugins((
             input::plugin::setup,
-            scale::plugin::setup,
             audio::plugin::setup,
             init::plugin::setup,
             splash::plugin::setup,

@@ -15,7 +15,7 @@ pub enum TVSystem {
 enum_advance::enum_advance_derive!(TVSystem);
 
 impl TVSystem {
-    pub fn to_string_abbr(&self) -> String {
+    pub fn to_str_abbr(&self) -> String {
         match self {
             TVSystem::NTSC => "NTSC",
             TVSystem::PAL => "PAL",

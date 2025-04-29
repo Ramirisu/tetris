@@ -229,12 +229,6 @@ impl Piece {
         }
     }
 
-    pub fn to_squares_with_piece_center_align(&self) -> [(f32, f32); 4] {
-        let offset = self.get_piece_center_align_offset();
-        self.to_squares()
-            .map(|sqr| (sqr.0 as f32 + offset.0, sqr.1 as f32 + offset.1))
-    }
-
     pub fn rotate_clockwise(&mut self) {
         *self = match self {
             Piece::T(piece) => Piece::T(piece.enum_next_cycle()),
@@ -273,22 +267,6 @@ impl Piece {
             Piece::X,
         ];
         PIECES.iter()
-    }
-
-    fn get_piece_center_align_offset(&self) -> (f32, f32) {
-        let mut maxx = 0;
-        let mut minx = 0;
-        let mut maxy = 0;
-        let mut miny = 0;
-
-        self.to_squares().iter().for_each(|sqr| {
-            maxx = maxx.max(sqr.0);
-            minx = minx.min(sqr.0);
-            maxy = maxy.max(sqr.1);
-            miny = miny.min(sqr.1);
-        });
-
-        ((maxx + minx) as f32 / -2.0, (maxy + miny) as f32 / -2.0)
     }
 }
 

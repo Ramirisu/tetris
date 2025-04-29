@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
-    palette::{get_square_image, SquareImageSize},
+    palette::{SquareImageSize, get_square_image},
     piece::Piece,
 };
 
@@ -33,10 +33,4 @@ impl SquareImageAssets {
             SquareImageSize::Small => self.small[piece.variant_index()].clone(),
         }
     }
-}
-
-#[derive(Resource)]
-pub struct ColorMaterialAssets {
-    pub red: Handle<ColorMaterial>,
-    pub white: Handle<ColorMaterial>,
 }
