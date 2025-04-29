@@ -201,18 +201,27 @@ impl DelayAutoShiftTimer {
         self.elapsed >= self.get_active_threshold()
     }
 
-    fn get_threshold(&self) -> Duration {
+    pub fn get_threshold_ticks(&self) -> u64 {
         match self.tv_system {
-            TVSystem::NTSC => self.tv_system.ticks_to_duration(16),
-            TVSystem::PAL => self.tv_system.ticks_to_duration(12),
+            TVSystem::NTSC => 16,
+            TVSystem::PAL => 12,
         }
     }
 
-    fn get_active_threshold(&self) -> Duration {
+    pub fn get_active_threshold_ticks(&self) -> u64 {
         match self.tv_system {
-            TVSystem::NTSC => self.tv_system.ticks_to_duration(10),
-            TVSystem::PAL => self.tv_system.ticks_to_duration(8),
+            TVSystem::NTSC => 10,
+            TVSystem::PAL => 8,
         }
+    }
+
+    fn get_threshold(&self) -> Duration {
+        self.tv_system.ticks_to_duration(self.get_threshold_ticks())
+    }
+
+    fn get_active_threshold(&self) -> Duration {
+        self.tv_system
+            .ticks_to_duration(self.get_active_threshold_ticks())
     }
 }
 
