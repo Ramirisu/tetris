@@ -52,6 +52,7 @@ fn main() {
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 text_color: GREEN.into(),
+                enabled: cfg!(debug_assertions),
                 ..default()
             },
         })
