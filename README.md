@@ -23,6 +23,7 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
   - [x] High FPS Support
   - [x] Cross-platform (Web/Windows/Linux/MacOS)
 
+> It's recommended to run the DESKTOP version which is much smoother than the WEB version.
 
 ## Game Options
 
@@ -39,7 +40,7 @@ The *TRANSITION* option determines how the level advances after lines clear.
 
 **LINECAP**
 
-The *LINECAP* option enables the *Super Kill Screen* as the end game mechanism for competitive games. Players can keep going under *kill screen* due to the inventation of the *rolling* technique. The gravity will double again after 10 levels clear in the *kill screen* in order to avoid endless game playing.
+The *LINECAP* option enables the *Super Kill Screen* as the end game mechanism for competitive games. Players can keep going under *kill screen* due to the invention of the *rolling* technique. The gravity will double again after 10 levels clear in the *kill screen* in order to avoid endless game playing.
 
 |           Options |                                                              |
 | ----------------: | :----------------------------------------------------------- |
