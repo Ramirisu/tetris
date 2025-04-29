@@ -2,6 +2,7 @@ use bevy::{
     color::palettes::css::{BLUE, WHITE},
     prelude::*,
 };
+use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
@@ -19,7 +20,7 @@ use crate::{
     utility::despawn_all,
 };
 
-use super::scale_factor::ScaleFactor;
+use super::{scale_factor::ScaleFactor, show_fps::ShowFPS};
 
 pub fn setup(app: &mut App) {
     app.insert_resource(GameOptionMenuData::default())
@@ -56,6 +57,7 @@ enum GameOptionMenuSelection {
     TVSystem,
     NextPieceHint,
     Invisible,
+    ShowFPS,
     ControllerMapping,
     ScaleFactor,
 }
@@ -77,6 +79,7 @@ const GAME_OPTION_MENU_SEED_LAST: usize = SEED_BYTES_USED * 2 - 1;
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
     seed_selection: GameOptionMenuSeedSelection,
+    show_fps: ShowFPS,
 }
 
 impl GameOptionMenuData {
@@ -84,6 +87,7 @@ impl GameOptionMenuData {
         Self {
             selection: GameOptionMenuSelection::default(),
             seed_selection: GameOptionMenuSeedSelection::default(),
+            show_fps: ShowFPS::default(),
         }
     }
 }
@@ -184,6 +188,7 @@ fn handle_input_system(
     mut play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
     mut window_query: Query<&mut Window>,
+    mut fps_overlay_config: ResMut<FpsOverlayConfig>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
@@ -383,6 +388,20 @@ fn handle_input_system(
                 }
             }
         }
+        GameOptionMenuSelection::ShowFPS => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_option_menu_data.show_fps.enum_next() {
+                    game_option_menu_data.show_fps = e;
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_option_menu_data.show_fps.enum_prev() {
+                    game_option_menu_data.show_fps = e;
+                    option_changed = true;
+                }
+            }
+            fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
+        }
         GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = controller_mapping.enum_next() {
@@ -521,6 +540,14 @@ fn update_ui_system(
                     game_config.invisible.to_string(),
                     game_config.invisible.enum_prev().is_some(),
                     game_config.invisible.enum_next().is_some(),
+                );
+            }
+            GameOptionMenuSelection::ShowFPS => {
+                *tw.text(entity, 0) = fname("SHOW FPS");
+                *tw.text(entity, 1) = fopt(
+                    game_option_menu_data.show_fps.to_string(),
+                    game_option_menu_data.show_fps.enum_prev().is_some(),
+                    game_option_menu_data.show_fps.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::ControllerMapping => {
