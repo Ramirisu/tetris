@@ -515,7 +515,8 @@ fn setup_screen(
                         |parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
                          idx: usize,
                          scale: f32,
-                         vis: Visibility| {
+                         block_vis: Visibility,
+                         piece_vis: Visibility| {
                             parent
                                 .spawn((
                                     Node {
@@ -528,6 +529,7 @@ fn setup_screen(
                                         ..default()
                                     },
                                     BorderColor::from(WHITE),
+                                    block_vis,
                                 ))
                                 .with_children(|parent| {
                                     for y in (-2..2).rev() {
@@ -545,7 +547,7 @@ fn setup_screen(
                                                     ),
                                                     ..default()
                                                 },
-                                                vis,
+                                                piece_vis,
                                                 NextPieceEntityMarker::new(idx, x, y),
                                             ));
                                         }
@@ -627,6 +629,7 @@ fn setup_screen(
                                                 parent,
                                                 0,
                                                 1.0,
+                                                Visibility::Inherited,
                                                 game_config.next_piece_hint.as_visibility(0),
                                             );
                                         });
@@ -692,6 +695,7 @@ fn setup_screen(
                                             parent,
                                             idx,
                                             0.5,
+                                            game_config.next_piece_hint.as_visibility(idx),
                                             game_config.next_piece_hint.as_visibility(idx),
                                         );
                                     }
