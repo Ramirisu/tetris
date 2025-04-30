@@ -607,13 +607,29 @@ fn setup_screen(
                                     ..default()
                                 })
                                 .with_children(|parent| {
-                                    // NEXT PIECE (0)
-                                    spawn_next_piece(
-                                        parent,
-                                        0,
-                                        1.0,
-                                        game_config.next_piece_hint.as_visibility(0),
-                                    );
+                                    parent
+                                        .spawn(Node {
+                                            display: Display::Flex,
+                                            flex_direction: FlexDirection::Column,
+                                            justify_content: JustifyContent::Center,
+                                            align_items: AlignItems::Center,
+                                            ..default()
+                                        })
+                                        .with_children(|parent| {
+                                            parent.spawn((
+                                                Text::new("NEXT"),
+                                                TextFont::from_font_size(40.0),
+                                                TextColor::from(WHITE),
+                                                TextLayout::new_with_justify(JustifyText::Center),
+                                            ));
+                                            // NEXT PIECE (0)
+                                            spawn_next_piece(
+                                                parent,
+                                                0,
+                                                1.0,
+                                                game_config.next_piece_hint.as_visibility(0),
+                                            );
+                                        });
 
                                     // GAME MODE
                                     parent
