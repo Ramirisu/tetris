@@ -22,7 +22,15 @@ use crate::{
 
 use super::{scale_factor::ScaleFactor, show_fps::ShowFPS};
 
+#[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+use super::fps_limiter::FPSLimiter;
+
 pub fn setup(app: &mut App) {
+    #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+    {
+        app.add_plugins(bevy_framepace::FramepacePlugin)
+            .add_systems(Startup, init_bevy_framepace_settings);
+    }
     app.insert_resource(GameOptionMenuData::default())
         .insert_resource(ScaleFactor::default())
         .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
@@ -36,6 +44,13 @@ pub fn setup(app: &mut App) {
             OnExit(AppState::GameModeMenu),
             despawn_all::<GameOptionMenuEntityMarker>,
         );
+}
+
+#[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+fn init_bevy_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::FramepaceSettings>) {
+    *framepace_settins = bevy_framepace::FramepaceSettings {
+        limiter: FPSLimiter::default().into(),
+    };
 }
 
 #[derive(Component)]
@@ -57,6 +72,8 @@ enum GameOptionMenuSelection {
     TVSystem,
     NextPieceHint,
     Invisible,
+    #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+    FPSLimiter,
     ShowFPS,
     ControllerMapping,
     ScaleFactor,
@@ -79,6 +96,8 @@ const GAME_OPTION_MENU_SEED_LAST: usize = SEED_BYTES_USED * 2 - 1;
 struct GameOptionMenuData {
     selection: GameOptionMenuSelection,
     seed_selection: GameOptionMenuSeedSelection,
+    #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+    fps_limiter: FPSLimiter,
     show_fps: ShowFPS,
 }
 
@@ -87,6 +106,8 @@ impl GameOptionMenuData {
         Self {
             selection: GameOptionMenuSelection::default(),
             seed_selection: GameOptionMenuSeedSelection::default(),
+            #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+            fps_limiter: FPSLimiter::default(),
             show_fps: ShowFPS::default(),
         }
     }
@@ -189,6 +210,9 @@ fn handle_input_system(
     mut scale_factor: ResMut<ScaleFactor>,
     mut window_query: Query<&mut Window>,
     mut fps_overlay_config: ResMut<FpsOverlayConfig>,
+    #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))] mut framepace_settins: ResMut<
+        bevy_framepace::FramepaceSettings,
+    >,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
@@ -388,19 +412,36 @@ fn handle_input_system(
                 }
             }
         }
+        #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+        GameOptionMenuSelection::FPSLimiter => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_option_menu_data.fps_limiter.enum_next() {
+                    game_option_menu_data.fps_limiter = e;
+                    framepace_settins.limiter = game_option_menu_data.fps_limiter.into();
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_option_menu_data.fps_limiter.enum_prev() {
+                    game_option_menu_data.fps_limiter = e;
+                    framepace_settins.limiter = game_option_menu_data.fps_limiter.into();
+                    option_changed = true;
+                }
+            }
+        }
         GameOptionMenuSelection::ShowFPS => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_option_menu_data.show_fps.enum_next() {
                     game_option_menu_data.show_fps = e;
+                    fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
                 if let Some(e) = game_option_menu_data.show_fps.enum_prev() {
                     game_option_menu_data.show_fps = e;
+                    fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
                     option_changed = true;
                 }
             }
-            fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
         }
         GameOptionMenuSelection::ControllerMapping => {
             if player_inputs.right.just_pressed {
@@ -540,6 +581,15 @@ fn update_ui_system(
                     game_config.invisible.to_string(),
                     game_config.invisible.enum_prev().is_some(),
                     game_config.invisible.enum_next().is_some(),
+                );
+            }
+            #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+            GameOptionMenuSelection::FPSLimiter => {
+                *tw.text(entity, 0) = fname("FPS LIMITER");
+                *tw.text(entity, 1) = fopt(
+                    game_option_menu_data.fps_limiter.to_string(),
+                    game_option_menu_data.fps_limiter.enum_prev().is_some(),
+                    game_option_menu_data.fps_limiter.enum_next().is_some(),
                 );
             }
             GameOptionMenuSelection::ShowFPS => {
