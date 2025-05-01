@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
-use strum::EnumCount;
+use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
@@ -173,8 +173,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     BorderColor::from(BLUE),
                 ))
                 .with_children(|parent| {
-                    let mut selection = GameOptionMenuSelection::default();
-                    loop {
+                    for selection in GameOptionMenuSelection::iter() {
                         parent
                             .spawn((
                                 Text::default(),
@@ -188,12 +187,6 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                             ));
-
-                        if let Some(e) = selection.enum_next() {
-                            selection = e;
-                        } else {
-                            break;
-                        }
                     }
                 });
         });
