@@ -100,9 +100,6 @@ struct DASCounterEntityMarker;
 struct DASCounterBarEntityMarker(u64);
 
 #[derive(Component)]
-struct GameModeEntityMarker(usize);
-
-#[derive(Component)]
 struct GameStopwatchEntityMarker;
 
 #[derive(Component)]
@@ -652,13 +649,19 @@ fn setup_screen(
                                             BorderColor::from(WHITE),
                                         ))
                                         .with_children(|parent| {
-                                            let titles = [
-                                                "SLV", "CAP", "TRS", "GRV", "TVS", "INV", "SDG",
-                                                "SED",
+                                            let options = [
+                                                ("SLV", format!("{:3}", game_config.start_level)),
+                                                ("CAP", game_config.linecap.to_str_abbr()),
+                                                ("TRS", game_config.transition.to_str_abbr()),
+                                                ("GRV", game_config.gravity.to_str_abbr()),
+                                                ("TVS", game_config.tv_system.to_str_abbr()),
+                                                ("INV", game_config.invisible.to_str_abbr()),
+                                                ("SDG", game_config.seeding.to_str_abbr()),
+                                                ("SED", format!("{}", player_data.board.seed())),
                                             ];
-                                            for (idx, title) in titles.iter().enumerate() {
+                                            for (name, value) in options.iter() {
                                                 parent.spawn((
-                                                    Text::new(*title),
+                                                    Text::new(*name),
                                                     TextFont::from_font_size(30.0),
                                                     TextColor::from(WHITE),
                                                     TextLayout::new_with_justify(
@@ -666,11 +669,10 @@ fn setup_screen(
                                                     ),
                                                 ));
                                                 parent.spawn((
-                                                    Text::default(),
+                                                    Text::new(value.clone()),
                                                     TextFont::from_font_size(30.0),
                                                     TextColor::from(WHITE),
                                                     TextLayout::new_with_justify(JustifyText::Left),
-                                                    GameModeEntityMarker(idx),
                                                 ));
                                             }
                                         });
@@ -909,32 +911,29 @@ fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData
 
 fn update_statistics_system(
     mut query: ParamSet<(
-        ParamSet<(
-            Query<Entity, With<LinesEntityMarker>>,
-            Query<Entity, With<ScoreEntityMarker>>,
-            Query<Entity, With<LevelEntityMarker>>,
-            Query<(Entity, &GameStatisticsEntityMarker)>,
-            Query<(Entity, &GameModeEntityMarker)>,
-            Query<Entity, With<GameStopwatchEntityMarker>>,
-            Query<(Entity, &PieceStatisticsCounterEntityMarker)>,
-            Query<Entity, With<DASCounterEntityMarker>>,
-        )>,
+        Query<Entity, With<LinesEntityMarker>>,
+        Query<Entity, With<ScoreEntityMarker>>,
+        Query<Entity, With<LevelEntityMarker>>,
+        Query<(Entity, &GameStatisticsEntityMarker)>,
+        Query<Entity, With<GameStopwatchEntityMarker>>,
+        Query<(Entity, &PieceStatisticsCounterEntityMarker)>,
+        Query<Entity, With<DASCounterEntityMarker>>,
         Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
     )>,
     mut tw: TextUiWriter,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
 ) {
-    if let Ok(entity) = query.p0().p0().single_mut() {
+    if let Ok(entity) = query.p0().single_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(entity) = query.p0().p1().single_mut() {
+    if let Ok(entity) = query.p1().single_mut() {
         *tw.text(entity, 0) = game_config.scoring.format(player_data.board.score());
     }
-    if let Ok(entity) = query.p0().p2().single_mut() {
+    if let Ok(entity) = query.p2().single_mut() {
         *tw.text(entity, 0) = format!("{:02}", player_data.board.level());
     }
-    for (entity, marker) in query.p0().p3() {
+    for (entity, marker) in query.p3() {
         match marker.0 {
             0 => *tw.text(entity, 0) = format!("{:4}", player_data.board.burned_lines()),
             1 => *tw.text(entity, 0) = format!("{:4}", player_data.board.single_clear()),
@@ -963,23 +962,10 @@ fn update_statistics_system(
             _ => unreachable!(),
         }
     }
-    for (entity, marker) in query.p0().p4() {
-        match marker.0 {
-            0 => *tw.text(entity, 0) = format!("{:3}", game_config.start_level),
-            1 => *tw.text(entity, 0) = format!("{:3}", game_config.linecap.to_str_abbr()),
-            2 => *tw.text(entity, 0) = format!("{:3}", game_config.transition.to_str_abbr()),
-            3 => *tw.text(entity, 0) = format!("{:3}", game_config.gravity.to_str_abbr()),
-            4 => *tw.text(entity, 0) = format!("{:3}", game_config.tv_system.to_str_abbr()),
-            5 => *tw.text(entity, 0) = format!("{:3}", game_config.invisible.to_str_abbr()),
-            6 => *tw.text(entity, 0) = format!("{:3}", game_config.seeding.to_str_abbr()),
-            7 => *tw.text(entity, 0) = format!("{}", player_data.board.seed()),
-            _ => unreachable!(),
-        }
-    }
-    if let Ok(entity) = query.p0().p5().single_mut() {
+    if let Ok(entity) = query.p4().single_mut() {
         *tw.text(entity, 0) = format!("TIME {}", format_hhmmss(player_data.stopwatch.elapsed()));
     }
-    for (entity, piece) in query.p0().p6().iter_mut() {
+    for (entity, piece) in query.p5().iter_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 
@@ -991,11 +977,11 @@ fn update_statistics_system(
     let das_ticks = game_config
         .tv_system
         .duration_to_ticks(player_data.das_timer.elapsed());
-    if let Ok(entity) = query.p0().p7().single_mut() {
+    if let Ok(entity) = query.p6().single_mut() {
         *tw.text(entity, 0) = format!("{:02}", das_ticks);
         *tw.color(entity, 0) = das_color.into();
     }
-    for (mut bg_color, marker) in query.p1() {
+    for (mut bg_color, marker) in query.p7() {
         if marker.0 < das_ticks {
             *bg_color = das_color.into();
         } else {
