@@ -335,12 +335,18 @@ fn handle_input_system(
                 }
             } else if player_inputs.up.just_pressed {
                 match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(index) => game_config.seed.increment(index),
+                    GameOptionMenuSeedSelection::Index(index) => {
+                        game_config.seed.increment(index);
+                        option_changed = true;
+                    }
                     GameOptionMenuSeedSelection::None => (),
                 }
             } else if player_inputs.down.just_pressed {
                 match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(index) => game_config.seed.decrement(index),
+                    GameOptionMenuSeedSelection::Index(index) => {
+                        game_config.seed.decrement(index);
+                        option_changed = true;
+                    }
                     GameOptionMenuSeedSelection::None => (),
                 }
             } else if player_inputs.select.just_pressed {
