@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use bevy::prelude::*;
 use strum::EnumCount;
@@ -27,16 +26,6 @@ impl NextPieceHint {
             Visibility::Hidden
         } else {
             Visibility::Inherited
-        }
-    }
-}
-
-impl Display for NextPieceHint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            NextPieceHint::Off => f.write_str("OFF"),
-            NextPieceHint::Classic => f.write_str("CLASSIC"),
-            NextPieceHint::Modern => f.write_str("MODERN"),
         }
     }
 }

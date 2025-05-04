@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -21,14 +20,5 @@ impl Gravity {
             Gravity::Locked => "LCK",
         }
         .into()
-    }
-}
-
-impl Display for Gravity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Gravity::Level => f.write_str("LEVEL"),
-            Gravity::Locked => f.write_str("LOCKED"),
-        }
     }
 }

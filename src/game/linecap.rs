@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -21,14 +20,5 @@ impl Linecap {
             Linecap::SuperKillScreen => "SKS",
         }
         .into()
-    }
-}
-
-impl Display for Linecap {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Linecap::Off => f.write_str("OFF"),
-            Linecap::SuperKillScreen => f.write_str("SUPER KILL SCREEN"),
-        }
     }
 }

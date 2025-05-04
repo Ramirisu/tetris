@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -21,14 +20,5 @@ impl Seeding {
             Seeding::Custom => "CUS",
         }
         .into()
-    }
-}
-
-impl Display for Seeding {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Seeding::System => f.write_str("SYSTEM"),
-            Seeding::Custom => f.write_str("CUSTOM"),
-        }
     }
 }

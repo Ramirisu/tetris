@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use bevy::prelude::Visibility;
 use strum::EnumCount;
@@ -30,15 +29,6 @@ impl Into<Visibility> for Invisible {
         match self {
             Invisible::Off => Visibility::Inherited,
             Invisible::On => Visibility::Hidden,
-        }
-    }
-}
-
-impl Display for Invisible {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Invisible::Off => f.write_str("OFF"),
-            Invisible::On => f.write_str("ON"),
         }
     }
 }

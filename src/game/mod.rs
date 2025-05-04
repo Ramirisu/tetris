@@ -10,7 +10,7 @@ pub mod palette;
 pub mod piece;
 pub mod player;
 pub mod plugin;
-mod scoring;
+pub mod scoring;
 pub mod seed;
 pub mod seeding;
 mod timer;

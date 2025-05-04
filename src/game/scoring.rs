@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -47,16 +46,6 @@ impl Scoring {
         }
 
         s.chars().map(|c| c.to_ascii_uppercase()).rev().collect()
-    }
-}
-
-impl Display for Scoring {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Scoring::Decimal => f.write_str("DECIMAL"),
-            Scoring::Classic => f.write_str("CLASSIC"),
-            Scoring::Base36 => f.write_str("BASE36"),
-        }
     }
 }
 

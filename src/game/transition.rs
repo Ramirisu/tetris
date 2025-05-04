@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -62,17 +61,6 @@ impl Transition {
 
     fn tf_lv_every_n_lines(start_level: usize, lines: usize, every: usize) -> usize {
         start_level + lines / every
-    }
-}
-
-impl Display for Transition {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Transition::Classic => f.write_str("CLASSIC"),
-            Transition::Fixed => f.write_str("FIXED"),
-            Transition::Every10Lines => f.write_str("EVERY 10 LINES"),
-            Transition::Every4Lines => f.write_str("EVERY 4 LINES"),
-        }
     }
 }
 

@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Duration};
+use std::time::Duration;
 
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -39,15 +39,6 @@ impl TVSystem {
         match self {
             TVSystem::NTSC => 60_000_000,
             TVSystem::PAL => 50_000_000,
-        }
-    }
-}
-
-impl Display for TVSystem {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TVSystem::NTSC => f.write_str("NTSC"),
-            TVSystem::PAL => f.write_str("PAL"),
         }
     }
 }

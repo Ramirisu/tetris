@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Duration};
+use std::time::Duration;
 
 use bevy::prelude::*;
 use strum::EnumCount;
@@ -23,16 +23,6 @@ impl Into<bevy_framepace::Limiter> for FPSLimiter {
             FPSLimiter::Unlimited => bevy_framepace::Limiter::Off,
             FPSLimiter::F240 => bevy_framepace::Limiter::Manual(ft(240)),
             FPSLimiter::F480 => bevy_framepace::Limiter::Manual(ft(480)),
-        }
-    }
-}
-
-impl Display for FPSLimiter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FPSLimiter::Unlimited => f.write_str("UNLIMITED"),
-            FPSLimiter::F240 => f.write_str("240 FPS"),
-            FPSLimiter::F480 => f.write_str("480 FPS"),
         }
     }
 }

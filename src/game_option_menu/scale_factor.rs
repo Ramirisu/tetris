@@ -1,4 +1,3 @@
-use std::fmt::Display;
 
 use bevy::prelude::*;
 use strum::EnumCount;
@@ -35,21 +34,6 @@ impl ScaleFactor {
             ScaleFactor::S2880 => 2880.0 / WINDOW_HEIGHT,
             ScaleFactor::S3240 => 3240.0 / WINDOW_HEIGHT,
             ScaleFactor::S4320 => 4320.0 / WINDOW_HEIGHT,
-        }
-    }
-}
-
-impl Display for ScaleFactor {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ScaleFactor::S720 => f.write_str("0.66 (720P)"),
-            ScaleFactor::S1080 => f.write_str("1.00 (1080P)"),
-            ScaleFactor::S1440 => f.write_str("1.33 (1440P)"),
-            ScaleFactor::S1800 => f.write_str("1.66 (1800P)"),
-            ScaleFactor::S2160 => f.write_str("2.00 (2160P)"),
-            ScaleFactor::S2880 => f.write_str("2.66 (2880P)"),
-            ScaleFactor::S3240 => f.write_str("3.00 (3240P)"),
-            ScaleFactor::S4320 => f.write_str("4.00 (4320P)"),
         }
     }
 }
