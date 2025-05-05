@@ -65,6 +65,7 @@ jobs:
           # PS
           # $env:RUSTFLAGS='--cfg getrandom_backend="wasm_js"'
           # cargo build --target wasm32-unknown-unknown
+          # wasm-bindgen --no-typescript --target web --out-dir ./dist/tetris --out-name "tetris" ./target/wasm32-unknown-unknown/debug/tetris.wasm
 
           RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build --target wasm32-unknown-unknown
           wasm-bindgen --no-typescript --target web --out-dir ./dist/tetris --out-name "tetris" ./target/wasm32-unknown-unknown/debug/tetris.wasm

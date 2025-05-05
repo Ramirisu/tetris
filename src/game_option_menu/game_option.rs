@@ -6,7 +6,10 @@ use crate::{
     input::controller_mapping::ControllerMapping,
 };
 
-use super::{fps_limiter::FPSLimiter, scale_factor::ScaleFactor, show_fps::ShowFPS};
+use super::{scale_factor::ScaleFactor, show_fps::ShowFPS};
+
+#[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
+use super::fps_limiter::FPSLimiter;
 
 pub trait GameOption {
     fn desc(&self) -> String;
@@ -96,6 +99,7 @@ impl GameOption for Invisible {
     }
 }
 
+#[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
 impl GameOption for FPSLimiter {
     fn desc(&self) -> String {
         match self {
