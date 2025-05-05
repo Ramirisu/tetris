@@ -595,6 +595,13 @@ fn setup_screen(
                                     ));
                                 });
 
+                            // placeholder
+                            parent.spawn(Node {
+                                width: Val::Auto,
+                                height: Val::Px(100.0),
+                                ..default()
+                            });
+
                             parent
                                 .spawn(Node {
                                     display: Display::Flex,
