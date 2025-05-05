@@ -8,7 +8,7 @@ default = ["fps_limiter"]
 fps_limiter = ["bevy_framepace"]
 
 [dependencies]
-bevy = { version = "0.16.0", features = ["wav"] }
+bevy = { version = "0.16.0", features = ["vorbis"] }
 bevy_dev_tools = "0.16.0"
 bevy_framepace = { version = "0.19.1", optional = true }
 strum = "0.27"

@@ -21,15 +21,15 @@ struct AudioAssets {
 
 fn load_audio_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AudioAssets {
-        move_cursor: asset_server.load("sound/sfx02.wav"),
-        start_game: asset_server.load("sound/sfx03.wav"),
-        move_curr_piece: asset_server.load("sound/sfx04.wav"),
-        rotate_curr_piece: asset_server.load("sound/sfx06.wav"),
-        lock_curr_piece: asset_server.load("sound/sfx08.wav"),
-        line_clear: asset_server.load("sound/sfx11.wav"),
-        tetris_clear: asset_server.load("sound/sfx19.wav"),
-        level_up: asset_server.load("sound/sfx07.wav"),
-        game_over: asset_server.load("sound/sfx14.wav"),
+        move_cursor: asset_server.load("sound/sfx02.ogg"),
+        start_game: asset_server.load("sound/sfx03.ogg"),
+        move_curr_piece: asset_server.load("sound/sfx04.ogg"),
+        rotate_curr_piece: asset_server.load("sound/sfx06.ogg"),
+        lock_curr_piece: asset_server.load("sound/sfx08.ogg"),
+        line_clear: asset_server.load("sound/sfx11.ogg"),
+        tetris_clear: asset_server.load("sound/sfx19.ogg"),
+        level_up: asset_server.load("sound/sfx07.ogg"),
+        game_over: asset_server.load("sound/sfx14.ogg"),
     });
 }
 
