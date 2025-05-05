@@ -31,7 +31,7 @@ impl GameOption for Linecap {
     fn desc(&self) -> String {
         match self {
             Linecap::Off => "OFF",
-            Linecap::SuperKillScreen => "SUPER KILL SCREEN",
+            Linecap::KillScreenX2 => "KILL SCREEN X2",
         }
         .into()
     }

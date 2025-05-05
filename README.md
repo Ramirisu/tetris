@@ -14,8 +14,8 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
   - [x] 1H2R RNG for Next Piece
   - [X] Glitched Color Palettes
   - [x] Level 39 Super Kill Screen
+  - [x] Game Statistics
   - [x] Piece Distribution
-  - [x] Statistics
   - [x] Display Input
   - [x] Sound Effect
 
@@ -31,23 +31,21 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
 
 The *TRANSITION* option determines how the level advances after lines clear.
 
-|        Options |                                                                                                                                                                                                       |
-| -------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|        Options |                                                                                                                                                                                              |
+| -------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 |        Classic | When the player clears `(startLevel × 10 + 10) or max(100, (startLevel × 10 - 50))` , whatever comes first, the level advances by 1. After this, the level advances by 1 for every 10 lines. |
-|          Fixed | When the player clears `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                           |
-| Every 10 Lines | The level advances by 1 for every `10` lines.                                                                                                                                                         |
-|  Every 4 Lines | The level advances by 1 for every `4` lines.                                                                                                                                                          |
+|          Fixed | When the player clears `(startLevel x 10 + 10)` lines, the level advances by 1. After this, the level advances by 1 for every 10 lines.                                                      |
+| Every 10 Lines | The level advances by 1 for every `10` lines.                                                                                                                                                |
+|  Every 4 Lines | The level advances by 1 for every `4` lines.                                                                                                                                                 |
 
 **LINECAP**
 
 The *LINECAP* option enables the *Super Kill Screen* as the end game mechanism for competitive games. Players can keep going under *kill screen* due to the invention of the *rolling* technique. The gravity will double again after 10 levels clear in the *kill screen* in order to avoid endless game playing.
 
-|           Options |                                                              |
-| ----------------: | :----------------------------------------------------------- |
-|               Off | The gravity is the same as level 29 for level 39 and beyond. |
-| Super Kill Screen | The gravity is *200%* of level 29 starting from level 39.    |
-
-> For TV SYSTEM: PAL, the gravity is *200%* of level 19 starting from level 29.
+|        Options |                                                                                                                                               |
+| -------------: | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+|            Off | The gravity is the same as level 29 for level 39 and beyond.                                                                                  |
+| Kill Screen X2 | NTSC: The gravity becomes *200%* of level 29 starting from level 39.<br />PAL: the gravity becomes *200%* of level 19 starting from level 29. |
 
 **GRAVITY**
 
