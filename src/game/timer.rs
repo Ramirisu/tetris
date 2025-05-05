@@ -3,7 +3,7 @@ use std::time::Duration;
 use super::{gravity::Gravity, linecap::Linecap, tv_system::TVSystem};
 
 #[derive(Clone, Copy)]
-pub struct FallTimer {
+pub struct SoftDropTimer {
     elapsed: Duration,
     threshold: Duration,
     linecap: Linecap,
@@ -12,7 +12,7 @@ pub struct FallTimer {
     initial_entry_delay: bool,
 }
 
-impl FallTimer {
+impl SoftDropTimer {
     pub fn new(
         start_level: usize,
         linecap: Linecap,

@@ -3,7 +3,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use super::{
     board::Board,
     game::GameConfig,
-    timer::{DelayAutoShiftTimer, EntryDelayTimer, FallTimer, LineClearTimer, PressDownTimer},
+    timer::{DelayAutoShiftTimer, EntryDelayTimer, LineClearTimer, PressDownTimer, SoftDropTimer},
     tv_system::TVSystem,
 };
 
@@ -21,7 +21,7 @@ pub enum PlayerPhase {
 pub struct PlayerData {
     pub board: Board,
     pub stopwatch: Stopwatch,
-    pub fall_timer: FallTimer,
+    pub soft_drop_timer: SoftDropTimer,
     pub lock_curr_piece_immediately: bool,
     pub can_press_down: bool,
     pub press_down_timer: PressDownTimer,
@@ -41,7 +41,7 @@ impl PlayerData {
                 config.seed,
             ),
             stopwatch: Stopwatch::new(),
-            fall_timer: FallTimer::new(
+            soft_drop_timer: SoftDropTimer::new(
                 config.start_level,
                 config.linecap,
                 config.gravity,

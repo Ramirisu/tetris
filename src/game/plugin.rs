@@ -1093,7 +1093,7 @@ mod state_player_dropping {
     use super::*;
 
     pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-        player_data.fall_timer.tick(time.delta());
+        player_data.soft_drop_timer.tick(time.delta());
     }
 
     pub(super) fn handle_input_system(
@@ -1185,7 +1185,9 @@ mod state_player_dropping {
             }
         } else if inputs.down.just_pressed {
             player_data.can_press_down = true;
-            player_data.fall_timer.set_level(player_data.board.level());
+            player_data
+                .soft_drop_timer
+                .set_level(player_data.board.level());
             player_data.press_down_timer.reset();
         }
 
@@ -1244,16 +1246,16 @@ mod state_player_dropping {
     ) {
         let lock = {
             if std::mem::replace(&mut player_data.lock_curr_piece_immediately, false) {
-                player_data.fall_timer.reset();
+                player_data.soft_drop_timer.reset();
                 true
             } else {
-                player_data.fall_timer.consume()
+                player_data.soft_drop_timer.consume()
             }
         };
 
         if lock {
             let new_level = player_data.board.level();
-            player_data.fall_timer.set_level(new_level);
+            player_data.soft_drop_timer.set_level(new_level);
 
             if player_data.board.move_piece_down() {
                 update_board(
@@ -1371,7 +1373,7 @@ mod state_player_line_clear {
                 let new_level = player_data.board.level();
                 if new_level > old_level {
                     play_sound.write(PlaySoundEvent::LevelUp);
-                    player_data.fall_timer.set_level(new_level);
+                    player_data.soft_drop_timer.set_level(new_level);
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
                 }
