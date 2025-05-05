@@ -3,7 +3,7 @@
 [![Build](https://github.com/Ramirisu/tetris/actions/workflows/build.yml/badge.svg)](https://github.com/Ramirisu/tetris/actions/workflows/build.yml)
 [![dependency status](https://deps.rs/repo/github/Ramirisu/tetris/status.svg)](https://deps.rs/repo/github/Ramirisu/tetris)
 
-Classic Tetris (NES Tetris) written in BEVY/RUST.
+Classic Tetris (NES Tetris) built using the Bevy engine.
 
 ![gameplay](https://github.com/Ramirisu/tetris/blob/main/docs/gameplay.png)
 
@@ -18,6 +18,7 @@ Classic Tetris (NES Tetris) written in BEVY/RUST.
   - [x] Piece Distribution
   - [x] Display Input
   - [x] Sound Effect
+  - [x] Support English/繁體中文/简体中文
 
 - Platform
   - [x] High FPS Support
@@ -154,15 +155,7 @@ cargo run --release
 
 ```
 
-#### Windows
-
-```sh
-
-cargo run --release
-
-```
-
-#### MacOS
+#### Windows & MacOS
 
 ```sh
 

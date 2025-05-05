@@ -73,7 +73,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 })
                 .with_children(|parent| {
                     parent.spawn((
-                        Text::new("PRESS START"),
+                        Text::new(t!("tetris.splash.press_start")),
                         TextFont::from_font_size(40.0),
                         TextColor::from(WHITE),
                         PressStartEntityMarker,

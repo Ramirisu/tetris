@@ -21,6 +21,7 @@ log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
+rust-i18n = "3.1.4"
 
 [profile.wasm-release]
 inherits = "release"

@@ -7,5 +7,5 @@ pub fn setup(app: &mut App) {
 }
 
 fn init_system(mut app_state: ResMut<NextState<AppState>>) {
-    app_state.set(AppState::Splash);
+    app_state.set(AppState::LanguageMenu);
 }

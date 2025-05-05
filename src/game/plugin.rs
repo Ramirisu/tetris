@@ -221,7 +221,7 @@ fn setup_screen(
                                 })
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("LINES"),
+                                        Text::new(t!("tetris.game.lines")),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(WHITE),
                                         TextLayout::new_with_justify(JustifyText::Right),
@@ -238,23 +238,28 @@ fn setup_screen(
                             // GAME STATISTICS
                             parent
                                 .spawn(Node {
-                                    width: Val::Px(300.0),
+                                    width: Val::Px(250.0),
                                     height: Val::Auto,
                                     display: Display::Grid,
-                                    grid_template_columns: vec![GridTrack::auto(); 2],
+                                    grid_template_columns: vec![GridTrack::fr(1.0); 2],
                                     column_gap: Val::Px(10.0),
                                     justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
+                                    align_items: AlignItems::Stretch,
                                     margin: UiRect::all(Val::Px(10.0)),
                                     padding: UiRect::all(Val::Px(10.0)),
                                     ..default()
                                 })
                                 .with_children(|parent| {
-                                    let titles = ["BRN", "TRT", "TRT", "DRT"];
+                                    let titles = [
+                                        t!("tetris.game.brn"),
+                                        t!("tetris.game.tetris"),
+                                        t!("tetris.game.tetris"),
+                                        t!("tetris.game.drt"),
+                                    ];
                                     for (idx, title) in titles.iter().enumerate() {
                                         parent.spawn((
-                                            Text::new(*title),
-                                            TextFont::from_font_size(40.0),
+                                            Text::new((*title).to_string()),
+                                            TextFont::from_font_size(30.0),
                                             TextColor::from(WHITE),
                                             TextLayout::new_with_justify(JustifyText::Right),
                                         ));
@@ -262,7 +267,7 @@ fn setup_screen(
                                             Text::default(),
                                             TextFont::from_font_size(40.0),
                                             TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Left),
+                                            TextLayout::new_with_justify(JustifyText::Right),
                                             GameStatisticsEntityMarker(idx),
                                         ));
                                     }
@@ -346,7 +351,7 @@ fn setup_screen(
                                 })
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("TIME"),
+                                        Text::new(t!("tetris.game.time")),
                                         TextFont::from_font_size(20.0),
                                         TextColor::from(WHITE),
                                         TextLayout::new_with_justify(JustifyText::Right),
@@ -592,7 +597,7 @@ fn setup_screen(
                                 })
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("SCORE"),
+                                        Text::new(t!("tetris.game.score")),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(WHITE),
                                         TextLayout::new_with_justify(JustifyText::Left),
@@ -629,7 +634,7 @@ fn setup_screen(
                                             display: Display::Flex,
                                             flex_direction: FlexDirection::Column,
                                             justify_content: JustifyContent::Center,
-                                            align_items: AlignItems::Center,
+                                            align_items: AlignItems::Start,
                                             ..default()
                                         })
                                         .with_children(|parent| {
@@ -641,12 +646,10 @@ fn setup_screen(
                                                     ..default()
                                                 })
                                                 .with_child((
-                                                    Text::new("NEXT"),
+                                                    Text::new(t!("tetris.game.next")),
                                                     TextFont::from_font_size(40.0),
                                                     TextColor::from(WHITE),
-                                                    TextLayout::new_with_justify(
-                                                        JustifyText::Center,
-                                                    ),
+                                                    TextLayout::new_with_justify(JustifyText::Left),
                                                 ));
                                             // NEXT PIECE (0)
                                             spawn_next_piece(
@@ -747,7 +750,7 @@ fn setup_screen(
                                 })
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("LEVEL"),
+                                        Text::new(t!("tetris.game.level")),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(WHITE),
                                         TextLayout::new_with_justify(JustifyText::Center),

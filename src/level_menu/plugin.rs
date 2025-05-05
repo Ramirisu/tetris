@@ -130,7 +130,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         })
                         .with_children(|parent| {
                             parent.spawn((
-                                Text::new("LEVEL"),
+                                Text::new(t!("tetris.level_option.level")),
                                 TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                             ));

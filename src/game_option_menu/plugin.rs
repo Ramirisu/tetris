@@ -80,23 +80,25 @@ enum GameOptionMenuSelection {
 }
 
 impl GameOptionMenuSelection {
-    pub fn name(&self) -> &'static str {
+    pub fn name(&self) -> std::borrow::Cow<'_, str> {
         match *self {
-            GameOptionMenuSelection::Tetris => "TETRIS",
-            GameOptionMenuSelection::Transition => "TRANSITION",
-            GameOptionMenuSelection::Linecap => "LINECAP",
-            GameOptionMenuSelection::Gravity => "GRAVITY",
-            GameOptionMenuSelection::Seeding => "SEEDING",
-            GameOptionMenuSelection::Seed => "SEED",
-            GameOptionMenuSelection::Scoring => "SCORING",
-            GameOptionMenuSelection::TVSystem => "TV SYSTEM",
-            GameOptionMenuSelection::NextPieceHint => "NEXT PIECE HINT",
-            GameOptionMenuSelection::Invisible => "INVISIBLE",
+            GameOptionMenuSelection::Tetris => "TETRIS".into(),
+            GameOptionMenuSelection::Transition => t!("tetris.game_option.transition"),
+            GameOptionMenuSelection::Linecap => t!("tetris.game_option.linecap"),
+            GameOptionMenuSelection::Gravity => t!("tetris.game_option.gravity"),
+            GameOptionMenuSelection::Seeding => t!("tetris.game_option.seeding"),
+            GameOptionMenuSelection::Seed => t!("tetris.game_option.seed"),
+            GameOptionMenuSelection::Scoring => t!("tetris.game_option.scoring"),
+            GameOptionMenuSelection::TVSystem => t!("tetris.game_option.tv_system"),
+            GameOptionMenuSelection::NextPieceHint => t!("tetris.game_option.next_piece_hint"),
+            GameOptionMenuSelection::Invisible => t!("tetris.game_option.invisible"),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            GameOptionMenuSelection::FPSLimiter => "FPS LIMITER",
-            GameOptionMenuSelection::ShowFPS => "SHOW FPS",
-            GameOptionMenuSelection::ControllerMapping => "CONTROLLER MAPPING",
-            GameOptionMenuSelection::ScaleFactor => "SCALE FACTOR",
+            GameOptionMenuSelection::FPSLimiter => t!("tetris.game_option.fps_limiter"),
+            GameOptionMenuSelection::ShowFPS => t!("tetris.game_option.show_fps"),
+            GameOptionMenuSelection::ControllerMapping => {
+                t!("tetris.game_option.controller_mapping")
+            }
+            GameOptionMenuSelection::ScaleFactor => t!("tetris.game_option.scale_factor"),
         }
     }
 }
@@ -188,6 +190,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         column_gap: Val::Px(20.0),
+                        row_gap: Val::Px(5.0),
                         margin: UiRect::all(Val::Px(20.0)),
                         padding: UiRect::all(Val::Px(20.0)),
                         border: UiRect::all(Val::Px(5.0)),
@@ -204,12 +207,18 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             GameOptionEntityMarker(selection, 0),
                         ));
-                        parent.spawn((
-                            Text::new(selection.name()),
-                            TextFont::from_font_size(40.0),
-                            TextColor::from(WHITE),
-                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                        ));
+                        parent
+                            .spawn(Node {
+                                width: Val::Px(500.0),
+                                height: Val::Auto,
+                                ..default()
+                            })
+                            .with_child((
+                                Text::new(selection.name()),
+                                TextFont::from_font_size(40.0),
+                                TextColor::from(WHITE),
+                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                            ));
                         parent.spawn((
                             Text::default(),
                             TextFont::from_font_size(40.0),
@@ -217,13 +226,19 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             GameOptionEntityMarker(selection, 1),
                         ));
-                        parent.spawn((
-                            Text::default(),
-                            TextFont::from_font_size(40.0),
-                            TextColor::from(WHITE),
-                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            GameOptionEntityMarker(selection, 2),
-                        ));
+                        parent
+                            .spawn(Node {
+                                width: Val::Px(500.0),
+                                height: Val::Auto,
+                                ..default()
+                            })
+                            .with_child((
+                                Text::default(),
+                                TextFont::from_font_size(40.0),
+                                TextColor::from(WHITE),
+                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                GameOptionEntityMarker(selection, 2),
+                            ));
                         parent.spawn((
                             Text::default(),
                             TextFont::from_font_size(40.0),
@@ -550,8 +565,7 @@ fn update_ui_system(
         let fmt_rarrow = |tw: &mut TextUiWriter, b: bool| {
             *tw.text(entity, 0) = (if b { ">" } else { " " }).into()
         };
-        let fmt_desc =
-            |tw: &mut TextUiWriter, desc: String| *tw.text(entity, 0) = format!("{:20}", desc);
+        let fmt_desc = |tw: &mut TextUiWriter, desc: String| *tw.text(entity, 0) = desc;
         match (marker.0, marker.1) {
             (GameOptionMenuSelection::Tetris, 0) => fmt_selected(&mut tw),
             (GameOptionMenuSelection::Tetris, 1) => (),

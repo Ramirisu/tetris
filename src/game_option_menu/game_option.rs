@@ -18,10 +18,10 @@ pub trait GameOption {
 impl GameOption for Transition {
     fn desc(&self) -> String {
         match self {
-            Transition::Classic => "CLASSIC",
-            Transition::Fixed => "FIXED",
-            Transition::Every10Lines => "EVERY 10 LINES",
-            Transition::Every4Lines => "EVERY 4 LINES",
+            Transition::Classic => t!("tetris.game_option.transition.classic"),
+            Transition::Fixed => t!("tetris.game_option.transition.fixed"),
+            Transition::Every10Lines => t!("tetris.game_option.transition.every10lines"),
+            Transition::Every4Lines => t!("tetris.game_option.transition.every4lines"),
         }
         .into()
     }
@@ -30,8 +30,8 @@ impl GameOption for Transition {
 impl GameOption for Linecap {
     fn desc(&self) -> String {
         match self {
-            Linecap::Off => "OFF",
-            Linecap::KillScreenX2 => "KILL SCREEN X2",
+            Linecap::Off => t!("tetris.game_option.linecap.off"),
+            Linecap::KillScreenX2 => t!("tetris.game_option.linecap.killscreenx2"),
         }
         .into()
     }
@@ -40,8 +40,8 @@ impl GameOption for Linecap {
 impl GameOption for Gravity {
     fn desc(&self) -> String {
         match self {
-            Gravity::Level => "LEVEL",
-            Gravity::Locked => "LOCKED",
+            Gravity::Level => t!("tetris.game_option.gravity.level"),
+            Gravity::Locked => t!("tetris.game_option.gravity.locked"),
         }
         .into()
     }
@@ -50,8 +50,8 @@ impl GameOption for Gravity {
 impl GameOption for Seeding {
     fn desc(&self) -> String {
         match self {
-            Seeding::System => "SYSTEM",
-            Seeding::Custom => "CUSTOM",
+            Seeding::System => t!("tetris.game_option.seeding.system"),
+            Seeding::Custom => t!("tetris.game_option.seeding.custom"),
         }
         .into()
     }
@@ -60,9 +60,9 @@ impl GameOption for Seeding {
 impl GameOption for Scoring {
     fn desc(&self) -> String {
         match self {
-            Scoring::Decimal => "DECIMAL",
-            Scoring::Classic => "CLASSIC",
-            Scoring::Base36 => "BASE36",
+            Scoring::Decimal => t!("tetris.game_option.scoring.decimal"),
+            Scoring::Classic => t!("tetris.game_option.scoring.classic"),
+            Scoring::Base36 => t!("tetris.game_option.scoring.base36"),
         }
         .into()
     }
@@ -81,9 +81,9 @@ impl GameOption for TVSystem {
 impl GameOption for NextPieceHint {
     fn desc(&self) -> String {
         match self {
-            NextPieceHint::Off => "OFF",
-            NextPieceHint::Classic => "CLASSIC",
-            NextPieceHint::Modern => "MODERN",
+            NextPieceHint::Off => t!("tetris.game_option.next_piece_hint.off"),
+            NextPieceHint::Classic => t!("tetris.game_option.next_piece_hint.classic"),
+            NextPieceHint::Modern => t!("tetris.game_option.next_piece_hint.modern"),
         }
         .into()
     }
@@ -92,8 +92,8 @@ impl GameOption for NextPieceHint {
 impl GameOption for Invisible {
     fn desc(&self) -> String {
         match self {
-            Invisible::Off => "OFF",
-            Invisible::On => "ON",
+            Invisible::Off => t!("tetris.game_option.invisible.off"),
+            Invisible::On => t!("tetris.game_option.invisible.on"),
         }
         .into()
     }
@@ -103,9 +103,9 @@ impl GameOption for Invisible {
 impl GameOption for FPSLimiter {
     fn desc(&self) -> String {
         match self {
-            FPSLimiter::Unlimited => "UNLIMITED",
-            FPSLimiter::F240 => "240 FPS",
-            FPSLimiter::F480 => "480 FPS",
+            FPSLimiter::Unlimited => t!("tetris.game_option.fps_limiter.unlimited"),
+            FPSLimiter::F240 => t!("tetris.game_option.fps_limiter.240fps"),
+            FPSLimiter::F480 => t!("tetris.game_option.fps_limiter.480fps"),
         }
         .into()
     }
@@ -114,9 +114,9 @@ impl GameOption for FPSLimiter {
 impl GameOption for ShowFPS {
     fn desc(&self) -> String {
         match self {
-            ShowFPS::Off => "OFF",
-            ShowFPS::Auto => "AUTO",
-            ShowFPS::On => "ON",
+            ShowFPS::Off => t!("tetris.game_option.show_fps.off"),
+            ShowFPS::Auto => t!("tetris.game_option.show_fps.auto"),
+            ShowFPS::On => t!("tetris.game_option.show_fps.on"),
         }
         .into()
     }
@@ -125,8 +125,8 @@ impl GameOption for ShowFPS {
 impl GameOption for ControllerMapping {
     fn desc(&self) -> String {
         match self {
-            ControllerMapping::MappingA => "MAPPING A",
-            ControllerMapping::MappingB => "MAPPING B",
+            ControllerMapping::MappingA => t!("tetris.game_option.controller_mapping.mapping_a"),
+            ControllerMapping::MappingB => t!("tetris.game_option.controller_mapping.mapping_b"),
         }
         .into()
     }

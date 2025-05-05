@@ -1,4 +1,5 @@
 use bevy::{
+    asset::load_internal_binary_asset,
     color::palettes::css::GREEN,
     prelude::*,
     window::{CursorOptions, PresentMode, WindowResolution},
@@ -12,6 +13,7 @@ mod game;
 mod game_option_menu;
 mod init;
 mod input;
+mod language_menu;
 mod level_menu;
 mod logo;
 mod splash;
@@ -21,54 +23,69 @@ use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use game_option_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH};
 
+#[macro_use]
+extern crate rust_i18n;
+
+i18n!("locales", fallback = "en");
+
 fn main() {
-    App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT)
-                            .with_scale_factor_override(1.0),
-                        resize_constraints: WindowResizeConstraints {
-                            min_width: 960.0,
-                            min_height: 720.0,
-                            max_width: f32::INFINITY,
-                            max_height: f32::INFINITY,
-                        },
-                        present_mode: PresentMode::AutoNoVsync,
-                        position: WindowPosition::Automatic,
-                        cursor_options: CursorOptions {
-                            visible: false,
-                            ..default()
-                        },
-                        fit_canvas_to_parent: true,
-                        title: "TETRIS".into(),
+    let mut app = App::new();
+
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT)
+                        .with_scale_factor_override(1.0),
+                    resize_constraints: WindowResizeConstraints {
+                        min_width: 960.0,
+                        min_height: 720.0,
+                        max_width: f32::INFINITY,
+                        max_height: f32::INFINITY,
+                    },
+                    present_mode: PresentMode::AutoNoVsync,
+                    position: WindowPosition::Automatic,
+                    cursor_options: CursorOptions {
+                        visible: false,
                         ..default()
-                    }),
+                    },
+                    fit_canvas_to_parent: true,
+                    title: "TETRIS".into(),
                     ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-        )
-        .add_plugins(FpsOverlayPlugin {
-            config: FpsOverlayConfig {
-                text_color: GREEN.into(),
-                enabled: cfg!(debug_assertions),
+                }),
                 ..default()
-            },
-        })
-        .insert_resource(ClearColor(Color::BLACK)) // application background color
-        .init_state::<AppState>()
-        .add_systems(Startup, setup_camera)
-        .add_plugins((
-            input::plugin::setup,
-            audio::plugin::setup,
-            init::plugin::setup,
-            splash::plugin::setup,
-            game_option_menu::plugin::setup,
-            level_menu::plugin::setup,
-            game::plugin::setup,
-        ))
-        .run();
+            })
+            .set(ImagePlugin::default_nearest()),
+    )
+    .add_plugins(FpsOverlayPlugin {
+        config: FpsOverlayConfig {
+            text_color: GREEN.into(),
+            enabled: cfg!(debug_assertions),
+            ..default()
+        },
+    })
+    .insert_resource(ClearColor(Color::BLACK)) // application background color
+    .init_state::<AppState>()
+    .add_systems(Startup, setup_camera)
+    .add_plugins((
+        input::plugin::setup,
+        audio::plugin::setup,
+        init::plugin::setup,
+        language_menu::plugin::setup,
+        splash::plugin::setup,
+        game_option_menu::plugin::setup,
+        level_menu::plugin::setup,
+        game::plugin::setup,
+    ));
+
+    load_internal_binary_asset!(
+        app,
+        TextFont::default().font,
+        "../assets/fonts/NotoSansCJK-Regular.ttc",
+        |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
+    );
+
+    app.run();
 }
 
 fn setup_camera(mut commands: Commands) {
