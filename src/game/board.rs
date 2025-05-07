@@ -82,14 +82,17 @@ impl Board {
         self.lines - self.tetris_clear() * 4
     }
 
+    #[allow(dead_code)]
     pub fn single_clear(&self) -> usize {
         self.lines_clear[0]
     }
 
+    #[allow(dead_code)]
     pub fn double_clear(&self) -> usize {
         self.lines_clear[1]
     }
 
+    #[allow(dead_code)]
     pub fn triple_clear(&self) -> usize {
         self.lines_clear[2]
     }
@@ -110,6 +113,7 @@ impl Board {
         self.drought
     }
 
+    #[allow(dead_code)]
     pub fn max_drought(&self) -> usize {
         self.max_drought
     }

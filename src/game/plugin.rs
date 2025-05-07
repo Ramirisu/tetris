@@ -208,68 +208,59 @@ fn setup_screen(
                         .with_children(|parent| {
                             // LINES
                             parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Column,
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Flex,
+                                    flex_direction: FlexDirection::Column,
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Stretch,
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    padding: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
                                 .with_children(|parent| {
                                     parent.spawn((
                                         Text::new("LINES"),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextLayout::new_with_justify(JustifyText::Right),
                                     ));
                                     parent.spawn((
                                         Text::default(),
-                                        TextFont::from_font_size(60.0),
+                                        TextFont::from_font_size(80.0),
                                         TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextLayout::new_with_justify(JustifyText::Right),
                                         LinesEntityMarker,
                                     ));
                                 });
 
                             // GAME STATISTICS
                             parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Grid,
-                                        grid_template_columns: vec![GridTrack::auto(); 2],
-                                        column_gap: Val::Px(10.0),
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Grid,
+                                    grid_template_columns: vec![GridTrack::auto(); 2],
+                                    column_gap: Val::Px(10.0),
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    padding: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
                                 .with_children(|parent| {
-                                    let titles =
-                                        ["BRN", "1X", "2X", "3X", "TRT", "TRT", "DRT", "MAX DRT"];
+                                    let titles = ["BRN", "TRT", "TRT", "DRT"];
                                     for (idx, title) in titles.iter().enumerate() {
                                         parent.spawn((
                                             Text::new(*title),
-                                            TextFont::from_font_size(30.0),
+                                            TextFont::from_font_size(40.0),
                                             TextColor::from(WHITE),
                                             TextLayout::new_with_justify(JustifyText::Right),
                                         ));
                                         parent.spawn((
                                             Text::default(),
-                                            TextFont::from_font_size(30.0),
+                                            TextFont::from_font_size(40.0),
                                             TextColor::from(WHITE),
                                             TextLayout::new_with_justify(JustifyText::Left),
                                             GameStatisticsEntityMarker(idx),
@@ -279,22 +270,17 @@ fn setup_screen(
 
                             // PIECE STATISTICS
                             parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Grid,
-                                        grid_template_columns: vec![GridTrack::auto(); 2],
-                                        column_gap: Val::Px(10.0),
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Grid,
+                                    grid_template_columns: vec![GridTrack::auto(); 2],
+                                    column_gap: Val::Px(10.0),
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
                                 .with_children(|parent| {
                                     Piece::iter().filter(|piece| **piece != Piece::X).for_each(
                                         |piece| {
@@ -315,8 +301,8 @@ fn setup_screen(
                                                         for x in -2..2 {
                                                             parent.spawn((
                                                                 Node {
-                                                                    width: Val::Px(20.0),
-                                                                    height: Val::Px(20.0),
+                                                                    width: Val::Px(25.0),
+                                                                    height: Val::Px(25.0),
                                                                     ..default()
                                                                 },
                                                                 ImageNode {
@@ -336,13 +322,42 @@ fn setup_screen(
                                                 });
                                             parent.spawn((
                                                 Text::default(),
-                                                TextFont::from_font_size(30.0),
+                                                TextFont::from_font_size(40.0),
                                                 TextColor::from(WHITE),
                                                 TextLayout::new_with_justify(JustifyText::Left),
                                                 PieceStatisticsCounterEntityMarker(*piece),
                                             ));
                                         },
                                     );
+                                });
+
+                            // TIME
+                            parent
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Flex,
+                                    flex_direction: FlexDirection::Column,
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Stretch,
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    padding: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        Text::new("TIME"),
+                                        TextFont::from_font_size(20.0),
+                                        TextColor::from(WHITE),
+                                        TextLayout::new_with_justify(JustifyText::Right),
+                                    ));
+                                    parent.spawn((
+                                        Text::default(),
+                                        TextFont::from_font_size(30.0),
+                                        TextColor::from(WHITE),
+                                        TextLayout::new_with_justify(JustifyText::Right),
+                                        GameStopwatchEntityMarker,
+                                    ));
                                 });
                         });
 
@@ -564,33 +579,29 @@ fn setup_screen(
                         .with_children(|parent| {
                             // SCORE
                             parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Column,
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Flex,
+                                    flex_direction: FlexDirection::Column,
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Stretch,
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    padding: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
                                 .with_children(|parent| {
                                     parent.spawn((
                                         Text::new("SCORE"),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextLayout::new_with_justify(JustifyText::Left),
                                     ));
                                     parent.spawn((
                                         Text::default(),
-                                        TextFont::from_font_size(60.0),
+                                        TextFont::from_font_size(80.0),
                                         TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextLayout::new_with_justify(JustifyText::Left),
                                         ScoreEntityMarker,
                                     ));
                                 });
@@ -622,12 +633,21 @@ fn setup_screen(
                                             ..default()
                                         })
                                         .with_children(|parent| {
-                                            parent.spawn((
-                                                Text::new("NEXT"),
-                                                TextFont::from_font_size(40.0),
-                                                TextColor::from(WHITE),
-                                                TextLayout::new_with_justify(JustifyText::Center),
-                                            ));
+                                            parent
+                                                .spawn(Node {
+                                                    width: Val::Auto,
+                                                    height: Val::Auto,
+                                                    margin: UiRect::all(Val::Px(10.0)),
+                                                    ..default()
+                                                })
+                                                .with_child((
+                                                    Text::new("NEXT"),
+                                                    TextFont::from_font_size(40.0),
+                                                    TextColor::from(WHITE),
+                                                    TextLayout::new_with_justify(
+                                                        JustifyText::Center,
+                                                    ),
+                                                ));
                                             // NEXT PIECE (0)
                                             spawn_next_piece(
                                                 parent,
@@ -654,6 +674,7 @@ fn setup_screen(
                                                 ..default()
                                             },
                                             BorderColor::from(WHITE),
+                                            Visibility::Hidden,
                                         ))
                                         .with_children(|parent| {
                                             let options = [
@@ -712,22 +733,18 @@ fn setup_screen(
 
                             // LEVEL
                             parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Row,
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        column_gap: Val::Px(20.0),
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
+                                .spawn(Node {
+                                    width: Val::Px(300.0),
+                                    height: Val::Auto,
+                                    display: Display::Flex,
+                                    flex_direction: FlexDirection::Row,
+                                    justify_content: JustifyContent::Start,
+                                    align_items: AlignItems::Center,
+                                    column_gap: Val::Px(40.0),
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    padding: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                })
                                 .with_children(|parent| {
                                     parent.spawn((
                                         Text::new("LEVEL"),
@@ -737,44 +754,11 @@ fn setup_screen(
                                     ));
                                     parent.spawn((
                                         Text::default(),
-                                        TextFont::from_font_size(60.0),
+                                        TextFont::from_font_size(80.0),
                                         TextColor::from(WHITE),
                                         TextLayout::new_with_justify(JustifyText::Center),
                                         LevelEntityMarker,
                                     ));
-                                });
-
-                            // TIME
-                            parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Column,
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
-                                .with_children(|parent| {
-                                    parent
-                                        .spawn((
-                                            Text::new("TIME"),
-                                            TextFont::from_font_size(30.0),
-                                            TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Center),
-                                            GameStopwatchEntityMarker,
-                                        ))
-                                        .with_child((
-                                            TextSpan::default(),
-                                            TextFont::from_font_size(30.0),
-                                            TextColor::from(WHITE),
-                                        ));
                                 });
 
                             // PLAYER INPUTS
@@ -928,8 +912,8 @@ fn update_statistics_system(
         Query<Entity, With<ScoreEntityMarker>>,
         Query<Entity, With<LevelEntityMarker>>,
         Query<(Entity, &GameStatisticsEntityMarker)>,
-        Query<Entity, With<GameStopwatchEntityMarker>>,
         Query<(Entity, &PieceStatisticsCounterEntityMarker)>,
+        Query<Entity, With<GameStopwatchEntityMarker>>,
         Query<Entity, With<DASCounterEntityMarker>>,
         Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
     )>,
@@ -949,11 +933,8 @@ fn update_statistics_system(
     for (entity, marker) in query.p3() {
         match marker.0 {
             0 => *tw.text(entity, 0) = format!("{:4}", player_data.board.burned_lines()),
-            1 => *tw.text(entity, 0) = format!("{:4}", player_data.board.single_clear()),
-            2 => *tw.text(entity, 0) = format!("{:4}", player_data.board.double_clear()),
-            3 => *tw.text(entity, 0) = format!("{:4}", player_data.board.triple_clear()),
-            4 => *tw.text(entity, 0) = format!("{:4}", player_data.board.tetris_clear()),
-            5 => {
+            1 => *tw.text(entity, 0) = format!("{:4}", player_data.board.tetris_clear()),
+            2 => {
                 let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
                 *tw.text(entity, 0) = format!("{:3}%", rate);
                 match rate {
@@ -962,7 +943,7 @@ fn update_statistics_system(
                     _ => *tw.color(entity, 0) = GREEN.into(),
                 }
             }
-            6 => {
+            3 => {
                 let drought = player_data.board.drought();
                 *tw.text(entity, 0) = format!("{:4}", drought);
                 match drought {
@@ -971,15 +952,14 @@ fn update_statistics_system(
                     _ => *tw.color(entity, 0) = RED.into(),
                 }
             }
-            7 => *tw.text(entity, 0) = format!("{:4}", player_data.board.max_drought()),
             _ => unreachable!(),
         }
     }
-    if let Ok(entity) = query.p4().single_mut() {
-        *tw.text(entity, 1) = format!(" {}", format_hhmmss(player_data.stopwatch.elapsed()));
-    }
-    for (entity, piece) in query.p5().iter_mut() {
+    for (entity, piece) in query.p4().iter_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
+    }
+    if let Ok(entity) = query.p5().single_mut() {
+        *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
     }
 
     let das_color = if player_data.das_timer.is_active() {
