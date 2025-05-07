@@ -762,13 +762,20 @@ fn setup_screen(
                                     BorderColor::from(WHITE),
                                 ))
                                 .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(30.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
-                                        GameStopwatchEntityMarker,
-                                    ));
+                                    parent
+                                        .spawn((
+                                            Text::new("TIME"),
+                                            TextFont::from_font_size(30.0),
+                                            TextColor::from(WHITE),
+                                            TextLayout::new_with_justify(JustifyText::Center),
+                                            GameStopwatchEntityMarker,
+                                        ))
+                                        .with_child((
+                                            TextSpan::default(),
+                                            TextFont::from_font_size(30.0),
+                                            TextColor::from(WHITE),
+                                            TextLayout::new_with_justify(JustifyText::Center),
+                                        ));
                                 });
 
                             // PLAYER INPUTS
@@ -970,7 +977,7 @@ fn update_statistics_system(
         }
     }
     if let Ok(entity) = query.p4().single_mut() {
-        *tw.text(entity, 0) = format!("TIME {}", format_hhmmss(player_data.stopwatch.elapsed()));
+        *tw.text(entity, 1) = format!(" {}", format_hhmmss(player_data.stopwatch.elapsed()));
     }
     for (entity, piece) in query.p5().iter_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));

@@ -151,8 +151,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 flex_direction: FlexDirection::Column,
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 overflow: Overflow::clip(),
                 ..default()
             },

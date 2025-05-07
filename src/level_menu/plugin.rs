@@ -79,8 +79,8 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 flex_direction: FlexDirection::Column,
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 ..default()
             },
             LevelMenuEntityMarker,
@@ -111,7 +111,9 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             parent
                 .spawn((
                     Node {
+                        display: Display::Flex,
                         flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         margin: UiRect::all(Val::Px(10.0)),
                         padding: UiRect::all(Val::Px(10.0)),
