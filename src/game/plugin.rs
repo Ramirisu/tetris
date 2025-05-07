@@ -774,7 +774,6 @@ fn setup_screen(
                                             TextSpan::default(),
                                             TextFont::from_font_size(30.0),
                                             TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Center),
                                         ));
                                 });
 
