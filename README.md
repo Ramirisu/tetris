@@ -5,8 +5,6 @@
 
 Classic Tetris (NES Tetris) built using the Bevy engine.
 
-![gameplay](https://github.com/Ramirisu/tetris/blob/main/docs/gameplay.png)
-
 ## Features
 
 - Game Play
@@ -141,6 +139,7 @@ wasm-bindgen --no-typescript --target web --out-dir ./dist/tetris --out-name "te
 cp -r ./assets ./dist/assets
 
 # Start a web server to serve the files under "./dist"
+# ex: npx serve -l 8080 ./dist
 
 ```
 
