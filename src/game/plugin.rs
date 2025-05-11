@@ -105,6 +105,8 @@ struct GameStopwatchEntityMarker;
 #[derive(Component)]
 struct GameStatisticsEntityMarker(usize);
 
+const SQUARE_SIZE: f32 = 40.0;
+
 #[derive(Component)]
 struct PieceStatisticsEntityMarker {
     pub piece: Piece,
@@ -126,11 +128,12 @@ struct NextPieceEntityMarker {
     pub idx: usize,
     pub x: i32,
     pub y: i32,
+    pub scale: f32,
 }
 
 impl NextPieceEntityMarker {
-    pub fn new(idx: usize, x: i32, y: i32) -> Self {
-        Self { idx, x, y }
+    pub fn new(idx: usize, x: i32, y: i32, scale: f32) -> Self {
+        Self { idx, x, y, scale }
     }
 }
 
@@ -553,8 +556,8 @@ fn setup_screen(
                                         for x in -2..2 {
                                             parent.spawn((
                                                 Node {
-                                                    width: Val::Px(40.0 * scale),
-                                                    height: Val::Px(40.0 * scale),
+                                                    width: Val::Px(SQUARE_SIZE * scale),
+                                                    height: Val::Px(SQUARE_SIZE * scale),
                                                     ..default()
                                                 },
                                                 ImageNode {
@@ -565,7 +568,7 @@ fn setup_screen(
                                                     ..default()
                                                 },
                                                 piece_vis,
-                                                NextPieceEntityMarker::new(idx, x, y),
+                                                NextPieceEntityMarker::new(idx, x, y, scale),
                                             ));
                                         }
                                     }
@@ -1021,19 +1024,41 @@ fn update_board(
 }
 
 fn update_next_piece(
-    query: Query<(&mut ImageNode, &NextPieceEntityMarker)>,
+    query: Query<(
+        &mut Node,
+        &mut ImageNode,
+        &mut Visibility,
+        &NextPieceEntityMarker,
+    )>,
     player_data: &PlayerData,
     square_image_assets: &SquareImageAssets,
 ) {
-    for (mut img, marker) in query {
+    for (mut node, mut img, mut vis, marker) in query {
         let piece = player_data.board.next_pieces()[marker.idx];
+
+        let shift: (f32, f32) = match piece {
+            Piece::T(_) => (-0.5, 0.0),
+            Piece::J(_) => (-0.5, 0.0),
+            Piece::Z(_) => (-0.5, 0.0),
+            Piece::O(_) => (0.0, 0.0),
+            Piece::S(_) => (-0.5, 0.0),
+            Piece::L(_) => (-0.5, 0.0),
+            Piece::I(_) => (0.0, 0.5),
+            Piece::X => (0.0, 0.0),
+        };
+
+        node.left = Val::Px(shift.0 * marker.scale * SQUARE_SIZE);
+        node.top = Val::Px(shift.1 * marker.scale * SQUARE_SIZE);
+
         if piece
             .to_squares()
             .iter()
             .any(|square| square.0 == marker.x && square.1 == marker.y)
         {
+            *vis = Visibility::Inherited;
             img.image = square_image_assets.get_image(SquareImageSize::Standard, piece);
         } else {
+            *vis = Visibility::Hidden;
             img.image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
         }
     }
@@ -1061,7 +1086,12 @@ mod state_player_init {
     pub(super) fn init_system(
         mut query: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
-            Query<(&mut ImageNode, &NextPieceEntityMarker)>,
+            Query<(
+                &mut Node,
+                &mut ImageNode,
+                &mut Visibility,
+                &NextPieceEntityMarker,
+            )>,
             Query<(&mut ImageNode, &PieceStatisticsEntityMarker)>,
         )>,
         player_data: Res<PlayerData>,
@@ -1387,7 +1417,12 @@ mod state_player_entry_delay {
         mut query: ParamSet<(
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
-            Query<(&mut ImageNode, &NextPieceEntityMarker)>,
+            Query<(
+                &mut Node,
+                &mut ImageNode,
+                &mut Visibility,
+                &NextPieceEntityMarker,
+            )>,
             Query<(&mut ImageNode, &PieceStatisticsEntityMarker)>,
         )>,
         game_config: Res<GameConfig>,
