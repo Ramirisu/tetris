@@ -145,14 +145,17 @@ cp -r ./assets ./dist/assets
 
 #### Linux
 
+[Install Linux dependencies](https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md)
+
 Ubuntu
 
 ```sh
 
-apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
-cargo run --release
+WGPU_BACKEND=vulkan cargo run --release
 
 ```
+
+> OpenGL backend is broken, run with vulkan backend instead.
 
 #### Windows & MacOS
 

@@ -1,7 +1,7 @@
 _version: 2
 tetris.splash.press_start:
   en: PRESS START
-  zh-TW: 請按開始繼續
+  zh-TW: 按開始繼續
   zh-CN: 按开始继续
 tetris.game_option.transition:
   en: TRANSITION
