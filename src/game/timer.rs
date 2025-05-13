@@ -7,6 +7,7 @@ pub struct SoftDropTimer {
     elapsed: Duration,
     threshold: Duration,
     linecap: Linecap,
+    linecap_level: usize,
     gravity: Gravity,
     tv_system: TVSystem,
     initial_entry_delay: bool,
@@ -16,14 +17,16 @@ impl SoftDropTimer {
     pub fn new(
         start_level: usize,
         linecap: Linecap,
+        linecap_level: usize,
         gravity: Gravity,
         tv_system: TVSystem,
         initial_entry_delay: bool,
     ) -> Self {
         Self {
             elapsed: Duration::ZERO,
-            threshold: Self::level_to_duration(start_level, linecap, tv_system),
+            threshold: Self::level_to_duration(start_level, linecap_level, linecap, tv_system),
             linecap,
+            linecap_level,
             gravity,
             tv_system,
             initial_entry_delay,
@@ -34,7 +37,12 @@ impl SoftDropTimer {
         self.elapsed = Duration::ZERO;
         match self.gravity {
             Gravity::Level => {
-                self.threshold = Self::level_to_duration(level, self.linecap, self.tv_system);
+                self.threshold = Self::level_to_duration(
+                    level,
+                    self.linecap_level,
+                    self.linecap,
+                    self.tv_system,
+                );
             }
             Gravity::Locked => (),
         }
@@ -65,7 +73,16 @@ impl SoftDropTimer {
         self.elapsed = Duration::ZERO;
     }
 
-    fn level_to_duration(level: usize, linecap: Linecap, tv_system: TVSystem) -> Duration {
+    fn level_to_duration(
+        level: usize,
+        linecap_level: usize,
+        linecap: Linecap,
+        tv_system: TVSystem,
+    ) -> Duration {
+        if linecap == Linecap::KillScreenX2 && level >= linecap_level {
+            return tv_system.subticks_to_duration(500);
+        }
+
         match tv_system {
             TVSystem::NTSC => match level {
                 0 => tv_system.ticks_to_duration(48),
@@ -82,11 +99,7 @@ impl SoftDropTimer {
                 13..16 => tv_system.ticks_to_duration(4),
                 16..19 => tv_system.ticks_to_duration(3),
                 19..29 => tv_system.ticks_to_duration(2),
-                29..39 => tv_system.ticks_to_duration(1),
-                _ => match linecap {
-                    Linecap::Off => tv_system.ticks_to_duration(1),
-                    Linecap::KillScreenX2 => tv_system.subticks_to_duration(500),
-                },
+                _ => tv_system.ticks_to_duration(1),
             },
             TVSystem::PAL => match level {
                 0 => tv_system.ticks_to_duration(36),
@@ -102,11 +115,7 @@ impl SoftDropTimer {
                 10..13 => tv_system.ticks_to_duration(4),
                 13..16 => tv_system.ticks_to_duration(3),
                 16..19 => tv_system.ticks_to_duration(2),
-                19..29 => tv_system.ticks_to_duration(1),
-                _ => match linecap {
-                    Linecap::Off => tv_system.ticks_to_duration(1),
-                    Linecap::KillScreenX2 => tv_system.subticks_to_duration(500),
-                },
+                _ => tv_system.ticks_to_duration(1),
             },
         }
     }

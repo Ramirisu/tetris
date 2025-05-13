@@ -44,6 +44,7 @@ impl PlayerData {
             soft_drop_timer: SoftDropTimer::new(
                 config.start_level,
                 config.linecap,
+                config.linecap_level,
                 config.gravity,
                 config.tv_system,
                 true,

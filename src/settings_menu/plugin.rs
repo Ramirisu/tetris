@@ -65,6 +65,7 @@ enum SelectedMainSetting {
     Tetris,
     Transition,
     Linecap,
+    LinecapLevel,
     Gravity,
     Seeding,
     Seed,
@@ -85,6 +86,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::Tetris => "TETRIS".into(),
             SelectedMainSetting::Transition => t!("tetris.game_option.transition"),
             SelectedMainSetting::Linecap => t!("tetris.game_option.linecap"),
+            SelectedMainSetting::LinecapLevel => t!("tetris.game_option.linecap_level"),
             SelectedMainSetting::Gravity => t!("tetris.game_option.gravity"),
             SelectedMainSetting::Seeding => t!("tetris.game_option.seeding"),
             SelectedMainSetting::Seed => t!("tetris.game_option.seed"),
@@ -187,7 +189,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     for selected_main_setting in SelectedMainSetting::iter() {
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(40.0),
+                            TextFont::from_font_size(35.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 0),
@@ -200,13 +202,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             })
                             .with_child((
                                 Text::new(selected_main_setting.name()),
-                                TextFont::from_font_size(40.0),
+                                TextFont::from_font_size(35.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             ));
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(40.0),
+                            TextFont::from_font_size(35.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 1),
@@ -219,14 +221,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             })
                             .with_child((
                                 Text::default(),
-                                TextFont::from_font_size(40.0),
+                                TextFont::from_font_size(35.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                                 SelectedMainSettingEntityMarker(selected_main_setting, 2),
                             ));
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(40.0),
+                            TextFont::from_font_size(35.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 3),
@@ -324,6 +326,19 @@ fn handle_input_system(
                 if let Some(e) = game_config.linecap.enum_prev() {
                     game_config.linecap = e;
                     option_changed = true;
+                }
+            }
+        }
+        SelectedMainSetting::LinecapLevel => {
+            if game_config.linecap != crate::game::linecap::Linecap::Off {
+                if player_inputs.right.just_pressed {
+                    game_config.linecap_level += 1;
+                    option_changed = true;
+                } else if player_inputs.left.just_pressed {
+                    if game_config.linecap_level > 0 {
+                        game_config.linecap_level -= 1;
+                        option_changed = true;
+                    }
                 }
             }
         }
@@ -576,6 +591,22 @@ fn update_ui_system(
             (SelectedMainSetting::Linecap, 3) => {
                 fmt_rarrow(&mut tw, game_config.linecap.enum_next().is_some())
             }
+            (SelectedMainSetting::LinecapLevel, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::LinecapLevel, 1) => fmt_larrow(
+                &mut tw,
+                game_config.linecap != crate::game::linecap::Linecap::Off
+                    && game_config.linecap_level > 0,
+            ),
+            (SelectedMainSetting::LinecapLevel, 2) => match game_config.linecap {
+                crate::game::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
+                crate::game::linecap::Linecap::KillScreenX2 => {
+                    fmt_desc(&mut tw, format!("{}", game_config.linecap_level))
+                }
+            },
+            (SelectedMainSetting::LinecapLevel, 3) => fmt_rarrow(
+                &mut tw,
+                game_config.linecap != crate::game::linecap::Linecap::Off,
+            ),
             (SelectedMainSetting::Gravity, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Gravity, 1) => {
                 fmt_larrow(&mut tw, game_config.gravity.enum_prev().is_some())

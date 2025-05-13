@@ -11,6 +11,10 @@ tetris.game_option.linecap:
   en: LINECAP
   zh-TW: 終局模式
   zh-CN: 终局模式
+tetris.game_option.linecap_level:
+  en: LINECAP LEVEL
+  zh-TW: 終局等級
+  zh-CN: 终局等级
 tetris.game_option.gravity:
   en: GRAVITY
   zh-TW: 重力設定

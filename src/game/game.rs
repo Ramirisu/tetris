@@ -18,6 +18,7 @@ pub struct GameConfig {
     pub start_level: usize,
     pub transition: Transition,
     pub linecap: Linecap,
+    pub linecap_level: usize,
     pub gravity: Gravity,
     pub seeding: Seeding,
     pub seed: Seed,
@@ -31,8 +32,9 @@ impl Default for GameConfig {
     fn default() -> Self {
         Self {
             start_level: 0,
-            linecap: Linecap::default(),
             transition: Transition::default(),
+            linecap: Linecap::default(),
+            linecap_level: 39,
             gravity: Gravity::default(),
             seeding: Seeding::default(),
             seed: Seed::default(),
