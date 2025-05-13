@@ -21,7 +21,10 @@ mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use settings_menu::{
+    scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    show_fps::ShowFPS,
+};
 
 #[macro_use]
 extern crate rust_i18n;
@@ -60,7 +63,7 @@ fn main() {
     .add_plugins(FpsOverlayPlugin {
         config: FpsOverlayConfig {
             text_color: GREEN.into(),
-            enabled: cfg!(debug_assertions),
+            enabled: ShowFPS::default().is_enabled(),
             ..default()
         },
     })

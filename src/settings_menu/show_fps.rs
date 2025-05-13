@@ -6,9 +6,8 @@ use crate::enum_advance;
 
 #[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
 pub enum ShowFPS {
-    Off,
     #[default]
-    Auto,
+    Off,
     On,
 }
 
@@ -18,7 +17,6 @@ impl ShowFPS {
     pub fn is_enabled(&self) -> bool {
         match self {
             ShowFPS::Off => false,
-            ShowFPS::Auto => cfg!(debug_assertions),
             ShowFPS::On => true,
         }
     }

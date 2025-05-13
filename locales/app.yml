@@ -143,10 +143,6 @@ tetris.game_option.show_fps.off:
   en: OFF
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.game_option.show_fps.auto:
-  en: AUTO
-  zh-TW: 自動
-  zh-CN: 自动
 tetris.game_option.show_fps.on:
   en: ON
   zh-TW: 開啟

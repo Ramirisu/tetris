@@ -115,7 +115,6 @@ impl SettingName for ShowFPS {
     fn name(&self) -> String {
         match self {
             ShowFPS::Off => t!("tetris.game_option.show_fps.off"),
-            ShowFPS::Auto => t!("tetris.game_option.show_fps.auto"),
             ShowFPS::On => t!("tetris.game_option.show_fps.on"),
         }
         .into()
