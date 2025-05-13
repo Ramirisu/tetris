@@ -270,7 +270,7 @@ fn handle_input_system(
         }
     } else if player_inputs.b.just_pressed {
         play_sound.write(PlaySoundEvent::StartGame);
-        app_state.set(AppState::GameModeMenu);
+        app_state.set(AppState::SettingsMenu);
     }
 }
 

@@ -10,18 +10,18 @@ mod audio;
 mod enum_advance;
 mod enum_advance_cycle;
 mod game;
-mod game_option_menu;
 mod init;
 mod input;
 mod language_menu;
 mod level_menu;
 mod logo;
+mod settings_menu;
 mod splash;
 mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use game_option_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH};
 
 #[macro_use]
 extern crate rust_i18n;
@@ -73,7 +73,7 @@ fn main() {
         init::plugin::setup,
         language_menu::plugin::setup,
         splash::plugin::setup,
-        game_option_menu::plugin::setup,
+        settings_menu::plugin::setup,
         level_menu::plugin::setup,
         game::plugin::setup,
     ));

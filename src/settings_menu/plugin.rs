@@ -20,7 +20,7 @@ use crate::{
     utility::despawn_all,
 };
 
-use super::{game_option::GameOption, scale_factor::ScaleFactor, show_fps::ShowFPS};
+use super::{scale_factor::ScaleFactor, setting_name::SettingName, show_fps::ShowFPS};
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
 use super::fps_limiter::FPSLimiter;
@@ -31,18 +31,18 @@ pub fn setup(app: &mut App) {
         app.add_plugins(bevy_framepace::FramepacePlugin)
             .add_systems(Startup, init_bevy_framepace_settings);
     }
-    app.insert_resource(GameOptionMenuData::default())
+    app.insert_resource(SettingsMenuData::default())
         .insert_resource(ScaleFactor::default())
-        .add_systems(OnEnter(AppState::GameModeMenu), setup_screen)
+        .add_systems(OnEnter(AppState::SettingsMenu), setup_screen)
         .add_systems(
             Update,
             (handle_input_system, update_ui_system)
                 .chain()
-                .run_if(in_state(AppState::GameModeMenu)),
+                .run_if(in_state(AppState::SettingsMenu)),
         )
         .add_systems(
-            OnExit(AppState::GameModeMenu),
-            despawn_all::<GameOptionMenuEntityMarker>,
+            OnExit(AppState::SettingsMenu),
+            despawn_all::<SettingsMenuEntityMarker>,
         );
 }
 
@@ -54,13 +54,13 @@ fn init_bevy_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::Fr
 }
 
 #[derive(Component)]
-struct GameOptionMenuEntityMarker;
+struct SettingsMenuEntityMarker;
 
 #[derive(Component)]
-struct GameOptionEntityMarker(GameOptionMenuSelection, usize);
+struct SelectedMainSettingEntityMarker(SelectedMainSetting, usize);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
-enum GameOptionMenuSelection {
+enum SelectedMainSetting {
     #[default]
     Tetris,
     Transition,
@@ -79,57 +79,58 @@ enum GameOptionMenuSelection {
     ScaleFactor,
 }
 
-impl GameOptionMenuSelection {
+impl SelectedMainSetting {
     pub fn name(&self) -> std::borrow::Cow<'_, str> {
         match *self {
-            GameOptionMenuSelection::Tetris => "TETRIS".into(),
-            GameOptionMenuSelection::Transition => t!("tetris.game_option.transition"),
-            GameOptionMenuSelection::Linecap => t!("tetris.game_option.linecap"),
-            GameOptionMenuSelection::Gravity => t!("tetris.game_option.gravity"),
-            GameOptionMenuSelection::Seeding => t!("tetris.game_option.seeding"),
-            GameOptionMenuSelection::Seed => t!("tetris.game_option.seed"),
-            GameOptionMenuSelection::Scoring => t!("tetris.game_option.scoring"),
-            GameOptionMenuSelection::TVSystem => t!("tetris.game_option.tv_system"),
-            GameOptionMenuSelection::NextPieceHint => t!("tetris.game_option.next_piece_hint"),
-            GameOptionMenuSelection::Invisible => t!("tetris.game_option.invisible"),
+            SelectedMainSetting::Tetris => "TETRIS".into(),
+            SelectedMainSetting::Transition => t!("tetris.game_option.transition"),
+            SelectedMainSetting::Linecap => t!("tetris.game_option.linecap"),
+            SelectedMainSetting::Gravity => t!("tetris.game_option.gravity"),
+            SelectedMainSetting::Seeding => t!("tetris.game_option.seeding"),
+            SelectedMainSetting::Seed => t!("tetris.game_option.seed"),
+            SelectedMainSetting::Scoring => t!("tetris.game_option.scoring"),
+            SelectedMainSetting::TVSystem => t!("tetris.game_option.tv_system"),
+            SelectedMainSetting::NextPieceHint => t!("tetris.game_option.next_piece_hint"),
+            SelectedMainSetting::Invisible => t!("tetris.game_option.invisible"),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            GameOptionMenuSelection::FPSLimiter => t!("tetris.game_option.fps_limiter"),
-            GameOptionMenuSelection::ShowFPS => t!("tetris.game_option.show_fps"),
-            GameOptionMenuSelection::ControllerMapping => {
+            SelectedMainSetting::FPSLimiter => t!("tetris.game_option.fps_limiter"),
+            SelectedMainSetting::ShowFPS => t!("tetris.game_option.show_fps"),
+            SelectedMainSetting::ControllerMapping => {
                 t!("tetris.game_option.controller_mapping")
             }
-            GameOptionMenuSelection::ScaleFactor => t!("tetris.game_option.scale_factor"),
+            SelectedMainSetting::ScaleFactor => t!("tetris.game_option.scale_factor"),
         }
     }
 }
 
-enum_advance::enum_advance_derive!(GameOptionMenuSelection);
-enum_advance_cycle::enum_advance_cycle_derive!(GameOptionMenuSelection);
+enum_advance::enum_advance_derive!(SelectedMainSetting);
+enum_advance_cycle::enum_advance_cycle_derive!(SelectedMainSetting);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
-enum GameOptionMenuSeedSelection {
+enum SelectedSeedSetting {
     #[default]
     None,
     Index(usize),
 }
 
-const GAME_OPTION_MENU_SEED_FIRST: usize = 0;
-const GAME_OPTION_MENU_SEED_LAST: usize = SEED_BYTES_USED * 2 - 1;
+const SEED_LEN: usize = SEED_BYTES_USED * 2;
+const SEED_FIRST: usize = 0;
+const SEED_LAST: usize = SEED_LEN - 1;
 
 #[derive(Resource)]
-struct GameOptionMenuData {
-    selection: GameOptionMenuSelection,
-    seed_selection: GameOptionMenuSeedSelection,
+struct SettingsMenuData {
+    selected_main_setting: SelectedMainSetting,
+    selected_seed_setting: SelectedSeedSetting,
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
     fps_limiter: FPSLimiter,
     show_fps: ShowFPS,
 }
 
-impl GameOptionMenuData {
+impl SettingsMenuData {
     pub fn new() -> Self {
         Self {
-            selection: GameOptionMenuSelection::default(),
-            seed_selection: GameOptionMenuSeedSelection::default(),
+            selected_main_setting: SelectedMainSetting::default(),
+            selected_seed_setting: SelectedSeedSetting::default(),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             fps_limiter: FPSLimiter::default(),
             show_fps: ShowFPS::default(),
@@ -137,7 +138,7 @@ impl GameOptionMenuData {
     }
 }
 
-impl Default for GameOptionMenuData {
+impl Default for SettingsMenuData {
     fn default() -> Self {
         Self::new()
     }
@@ -158,7 +159,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 overflow: Overflow::clip(),
                 ..default()
             },
-            GameOptionMenuEntityMarker,
+            SettingsMenuEntityMarker,
         ))
         .with_children(|parent| {
             parent
@@ -199,13 +200,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     BorderColor::from(BLUE),
                 ))
                 .with_children(|parent| {
-                    for selection in GameOptionMenuSelection::iter() {
+                    for selected_main_setting in SelectedMainSetting::iter() {
                         parent.spawn((
                             Text::default(),
                             TextFont::from_font_size(40.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            GameOptionEntityMarker(selection, 0),
+                            SelectedMainSettingEntityMarker(selected_main_setting, 0),
                         ));
                         parent
                             .spawn(Node {
@@ -214,7 +215,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 ..default()
                             })
                             .with_child((
-                                Text::new(selection.name()),
+                                Text::new(selected_main_setting.name()),
                                 TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
@@ -224,7 +225,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             TextFont::from_font_size(40.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            GameOptionEntityMarker(selection, 1),
+                            SelectedMainSettingEntityMarker(selected_main_setting, 1),
                         ));
                         parent
                             .spawn(Node {
@@ -237,14 +238,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 TextFont::from_font_size(40.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                                GameOptionEntityMarker(selection, 2),
+                                SelectedMainSettingEntityMarker(selected_main_setting, 2),
                             ));
                         parent.spawn((
                             Text::default(),
                             TextFont::from_font_size(40.0),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            GameOptionEntityMarker(selection, 3),
+                            SelectedMainSettingEntityMarker(selected_main_setting, 3),
                         ));
                     }
                 });
@@ -255,7 +256,7 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     mut controller_mapping: ResMut<ControllerMapping>,
-    mut game_option_menu_data: ResMut<GameOptionMenuData>,
+    mut settings_menu_data: ResMut<SettingsMenuData>,
     mut game_config: ResMut<GameConfig>,
     mut app_state: ResMut<NextState<AppState>>,
     mut play_sound: EventWriter<PlaySoundEvent>,
@@ -281,22 +282,24 @@ fn handle_input_system(
         return;
     }
 
-    if game_option_menu_data.selection != GameOptionMenuSelection::Seed
+    if settings_menu_data.selected_main_setting != SelectedMainSetting::Seed
         || game_config.seeding == Seeding::System
-        || game_option_menu_data.seed_selection == GameOptionMenuSeedSelection::None
+        || settings_menu_data.selected_seed_setting == SelectedSeedSetting::None
     {
         match (
             player_inputs.up.just_pressed,
             player_inputs.down.just_pressed,
         ) {
             (true, false) => {
-                game_option_menu_data.selection = game_option_menu_data.selection.enum_prev_cycle();
+                settings_menu_data.selected_main_setting =
+                    settings_menu_data.selected_main_setting.enum_prev_cycle();
                 play_sound.write(PlaySoundEvent::MoveCursor);
 
                 return;
             }
             (false, true) => {
-                game_option_menu_data.selection = game_option_menu_data.selection.enum_next_cycle();
+                settings_menu_data.selected_main_setting =
+                    settings_menu_data.selected_main_setting.enum_next_cycle();
                 play_sound.write(PlaySoundEvent::MoveCursor);
                 return;
             }
@@ -307,14 +310,14 @@ fn handle_input_system(
     let mut option_changed = false;
     let mut scale_changed = false;
 
-    match game_option_menu_data.selection {
-        GameOptionMenuSelection::Tetris => {
+    match settings_menu_data.selected_main_setting {
+        SelectedMainSetting::Tetris => {
             if player_inputs.start.just_pressed {
                 play_sound.write(PlaySoundEvent::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
         }
-        GameOptionMenuSelection::Transition => {
+        SelectedMainSetting::Transition => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.transition.enum_next() {
                     game_config.transition = e;
@@ -327,7 +330,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Linecap => {
+        SelectedMainSetting::Linecap => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.linecap.enum_next() {
                     game_config.linecap = e;
@@ -340,7 +343,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Gravity => {
+        SelectedMainSetting::Gravity => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.gravity.enum_next() {
                     game_config.gravity = e;
@@ -353,7 +356,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Seeding => {
+        SelectedMainSetting::Seeding => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.seeding.enum_next() {
                     game_config.seeding = e;
@@ -366,59 +369,59 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Seed => {
+        SelectedMainSetting::Seed => {
             if player_inputs.start.just_pressed {
-                match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::None => {
-                        game_option_menu_data.seed_selection =
-                            GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_LAST);
+                match settings_menu_data.selected_seed_setting {
+                    SelectedSeedSetting::None => {
+                        settings_menu_data.selected_seed_setting =
+                            SelectedSeedSetting::Index(SEED_LAST);
                     }
-                    GameOptionMenuSeedSelection::Index(_) => {
-                        game_option_menu_data.seed_selection = GameOptionMenuSeedSelection::None;
+                    SelectedSeedSetting::Index(_) => {
+                        settings_menu_data.selected_seed_setting = SelectedSeedSetting::None;
                     }
                 }
                 option_changed = true;
             } else if player_inputs.right.just_pressed {
-                match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_FIRST) => (),
-                    GameOptionMenuSeedSelection::Index(index) => {
-                        game_option_menu_data.seed_selection =
-                            GameOptionMenuSeedSelection::Index(index - 1);
+                match settings_menu_data.selected_seed_setting {
+                    SelectedSeedSetting::Index(SEED_FIRST) => (),
+                    SelectedSeedSetting::Index(index) => {
+                        settings_menu_data.selected_seed_setting =
+                            SelectedSeedSetting::Index(index - 1);
                         option_changed = true;
                     }
-                    GameOptionMenuSeedSelection::None => (),
+                    SelectedSeedSetting::None => (),
                 }
             } else if player_inputs.left.just_pressed {
-                match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(GAME_OPTION_MENU_SEED_LAST) => (),
-                    GameOptionMenuSeedSelection::Index(index) => {
-                        game_option_menu_data.seed_selection =
-                            GameOptionMenuSeedSelection::Index(index + 1);
+                match settings_menu_data.selected_seed_setting {
+                    SelectedSeedSetting::Index(SEED_LAST) => (),
+                    SelectedSeedSetting::Index(index) => {
+                        settings_menu_data.selected_seed_setting =
+                            SelectedSeedSetting::Index(index + 1);
                         option_changed = true;
                     }
-                    GameOptionMenuSeedSelection::None => (),
+                    SelectedSeedSetting::None => (),
                 }
             } else if player_inputs.up.just_pressed {
-                match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(index) => {
+                match settings_menu_data.selected_seed_setting {
+                    SelectedSeedSetting::Index(index) => {
                         game_config.seed.increment(index);
                         option_changed = true;
                     }
-                    GameOptionMenuSeedSelection::None => (),
+                    SelectedSeedSetting::None => (),
                 }
             } else if player_inputs.down.just_pressed {
-                match game_option_menu_data.seed_selection {
-                    GameOptionMenuSeedSelection::Index(index) => {
+                match settings_menu_data.selected_seed_setting {
+                    SelectedSeedSetting::Index(index) => {
                         game_config.seed.decrement(index);
                         option_changed = true;
                     }
-                    GameOptionMenuSeedSelection::None => (),
+                    SelectedSeedSetting::None => (),
                 }
             } else if player_inputs.select.just_pressed {
                 game_config.seed = Seed::new();
             }
         }
-        GameOptionMenuSelection::Scoring => {
+        SelectedMainSetting::Scoring => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.scoring.enum_next() {
                     game_config.scoring = e;
@@ -431,7 +434,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::TVSystem => {
+        SelectedMainSetting::TVSystem => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.tv_system.enum_next() {
                     game_config.tv_system = e;
@@ -444,7 +447,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::NextPieceHint => {
+        SelectedMainSetting::NextPieceHint => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.next_piece_hint.enum_next() {
                     game_config.next_piece_hint = e;
@@ -457,7 +460,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::Invisible => {
+        SelectedMainSetting::Invisible => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.invisible.enum_next() {
                     game_config.invisible = e;
@@ -471,37 +474,37 @@ fn handle_input_system(
             }
         }
         #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-        GameOptionMenuSelection::FPSLimiter => {
+        SelectedMainSetting::FPSLimiter => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_option_menu_data.fps_limiter.enum_next() {
-                    game_option_menu_data.fps_limiter = e;
-                    framepace_settins.limiter = game_option_menu_data.fps_limiter.into();
+                if let Some(e) = settings_menu_data.fps_limiter.enum_next() {
+                    settings_menu_data.fps_limiter = e;
+                    framepace_settins.limiter = settings_menu_data.fps_limiter.into();
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_option_menu_data.fps_limiter.enum_prev() {
-                    game_option_menu_data.fps_limiter = e;
-                    framepace_settins.limiter = game_option_menu_data.fps_limiter.into();
+                if let Some(e) = settings_menu_data.fps_limiter.enum_prev() {
+                    settings_menu_data.fps_limiter = e;
+                    framepace_settins.limiter = settings_menu_data.fps_limiter.into();
                     option_changed = true;
                 }
             }
         }
-        GameOptionMenuSelection::ShowFPS => {
+        SelectedMainSetting::ShowFPS => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_option_menu_data.show_fps.enum_next() {
-                    game_option_menu_data.show_fps = e;
-                    fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
+                if let Some(e) = settings_menu_data.show_fps.enum_next() {
+                    settings_menu_data.show_fps = e;
+                    fps_overlay_config.enabled = settings_menu_data.show_fps.is_enabled();
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_option_menu_data.show_fps.enum_prev() {
-                    game_option_menu_data.show_fps = e;
-                    fps_overlay_config.enabled = game_option_menu_data.show_fps.is_enabled();
+                if let Some(e) = settings_menu_data.show_fps.enum_prev() {
+                    settings_menu_data.show_fps = e;
+                    fps_overlay_config.enabled = settings_menu_data.show_fps.is_enabled();
                     option_changed = true;
                 }
             }
         }
-        GameOptionMenuSelection::ControllerMapping => {
+        SelectedMainSetting::ControllerMapping => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = controller_mapping.enum_next() {
                     *controller_mapping = e;
@@ -514,7 +517,7 @@ fn handle_input_system(
                 }
             }
         }
-        GameOptionMenuSelection::ScaleFactor => {
+        SelectedMainSetting::ScaleFactor => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = scale_factor.enum_next() {
                     *scale_factor = e;
@@ -543,16 +546,16 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
-    mut query: Query<(Entity, &GameOptionEntityMarker)>,
+    mut query: Query<(Entity, &SelectedMainSettingEntityMarker)>,
     mut tw: TextUiWriter,
-    game_option_menu_data: Res<GameOptionMenuData>,
+    settings_menu_data: Res<SettingsMenuData>,
     game_config: Res<GameConfig>,
     controller_mapping: Res<ControllerMapping>,
     scale_factor: Res<ScaleFactor>,
 ) {
     query.iter_mut().for_each(|(entity, marker)| {
         let fmt_selected = |tw: &mut TextUiWriter| {
-            *tw.text(entity, 0) = (if marker.0 == game_option_menu_data.selection {
+            *tw.text(entity, 0) = (if marker.0 == settings_menu_data.selected_main_setting {
                 ">>"
             } else {
                 "  "
@@ -567,133 +570,127 @@ fn update_ui_system(
         };
         let fmt_desc = |tw: &mut TextUiWriter, desc: String| *tw.text(entity, 0) = desc;
         match (marker.0, marker.1) {
-            (GameOptionMenuSelection::Tetris, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Tetris, 1) => (),
-            (GameOptionMenuSelection::Tetris, 2) => (),
-            (GameOptionMenuSelection::Tetris, 3) => (),
-            (GameOptionMenuSelection::Transition, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Transition, 1) => {
+            (SelectedMainSetting::Tetris, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Tetris, 1) => (),
+            (SelectedMainSetting::Tetris, 2) => (),
+            (SelectedMainSetting::Tetris, 3) => (),
+            (SelectedMainSetting::Transition, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Transition, 1) => {
                 fmt_larrow(&mut tw, game_config.transition.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Transition, 2) => {
-                fmt_desc(&mut tw, game_config.transition.desc())
+            (SelectedMainSetting::Transition, 2) => {
+                fmt_desc(&mut tw, game_config.transition.name())
             }
-            (GameOptionMenuSelection::Transition, 3) => {
+            (SelectedMainSetting::Transition, 3) => {
                 fmt_rarrow(&mut tw, game_config.transition.enum_next().is_some())
             }
-            (GameOptionMenuSelection::Linecap, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Linecap, 1) => {
+            (SelectedMainSetting::Linecap, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Linecap, 1) => {
                 fmt_larrow(&mut tw, game_config.linecap.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Linecap, 2) => fmt_desc(&mut tw, game_config.linecap.desc()),
-            (GameOptionMenuSelection::Linecap, 3) => {
+            (SelectedMainSetting::Linecap, 2) => fmt_desc(&mut tw, game_config.linecap.name()),
+            (SelectedMainSetting::Linecap, 3) => {
                 fmt_rarrow(&mut tw, game_config.linecap.enum_next().is_some())
             }
-            (GameOptionMenuSelection::Gravity, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Gravity, 1) => {
+            (SelectedMainSetting::Gravity, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Gravity, 1) => {
                 fmt_larrow(&mut tw, game_config.gravity.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Gravity, 2) => fmt_desc(&mut tw, game_config.gravity.desc()),
-            (GameOptionMenuSelection::Gravity, 3) => {
+            (SelectedMainSetting::Gravity, 2) => fmt_desc(&mut tw, game_config.gravity.name()),
+            (SelectedMainSetting::Gravity, 3) => {
                 fmt_rarrow(&mut tw, game_config.gravity.enum_next().is_some())
             }
-            (GameOptionMenuSelection::Seeding, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Seeding, 1) => {
+            (SelectedMainSetting::Seeding, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Seeding, 1) => {
                 fmt_larrow(&mut tw, game_config.seeding.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Seeding, 2) => fmt_desc(&mut tw, game_config.seeding.desc()),
-            (GameOptionMenuSelection::Seeding, 3) => {
+            (SelectedMainSetting::Seeding, 2) => fmt_desc(&mut tw, game_config.seeding.name()),
+            (SelectedMainSetting::Seeding, 3) => {
                 fmt_rarrow(&mut tw, game_config.seeding.enum_next().is_some())
             }
-            (GameOptionMenuSelection::Seed, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Seed, 1) => fmt_larrow(&mut tw, false),
-            (GameOptionMenuSelection::Seed, 2) => match game_config.seeding {
+            (SelectedMainSetting::Seed, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Seed, 1) => fmt_larrow(&mut tw, false),
+            (SelectedMainSetting::Seed, 2) => match game_config.seeding {
                 Seeding::System => fmt_desc(&mut tw, "".into()),
                 Seeding::Custom => fmt_desc(&mut tw, game_config.seed.to_string()),
             },
-            (GameOptionMenuSelection::Seed, 3) => fmt_rarrow(&mut tw, false),
-            (GameOptionMenuSelection::Scoring, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Scoring, 1) => {
+            (SelectedMainSetting::Seed, 3) => fmt_rarrow(&mut tw, false),
+            (SelectedMainSetting::Scoring, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Scoring, 1) => {
                 fmt_larrow(&mut tw, game_config.scoring.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Scoring, 2) => fmt_desc(&mut tw, game_config.scoring.desc()),
-            (GameOptionMenuSelection::Scoring, 3) => {
+            (SelectedMainSetting::Scoring, 2) => fmt_desc(&mut tw, game_config.scoring.name()),
+            (SelectedMainSetting::Scoring, 3) => {
                 fmt_rarrow(&mut tw, game_config.scoring.enum_next().is_some())
             }
-            (GameOptionMenuSelection::TVSystem, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::TVSystem, 1) => {
+            (SelectedMainSetting::TVSystem, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::TVSystem, 1) => {
                 fmt_larrow(&mut tw, game_config.tv_system.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::TVSystem, 2) => {
-                fmt_desc(&mut tw, game_config.tv_system.desc())
-            }
-            (GameOptionMenuSelection::TVSystem, 3) => {
+            (SelectedMainSetting::TVSystem, 2) => fmt_desc(&mut tw, game_config.tv_system.name()),
+            (SelectedMainSetting::TVSystem, 3) => {
                 fmt_rarrow(&mut tw, game_config.tv_system.enum_next().is_some())
             }
-            (GameOptionMenuSelection::NextPieceHint, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::NextPieceHint, 1) => {
+            (SelectedMainSetting::NextPieceHint, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::NextPieceHint, 1) => {
                 fmt_larrow(&mut tw, game_config.next_piece_hint.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::NextPieceHint, 2) => {
-                fmt_desc(&mut tw, game_config.next_piece_hint.desc())
+            (SelectedMainSetting::NextPieceHint, 2) => {
+                fmt_desc(&mut tw, game_config.next_piece_hint.name())
             }
-            (GameOptionMenuSelection::NextPieceHint, 3) => {
+            (SelectedMainSetting::NextPieceHint, 3) => {
                 fmt_rarrow(&mut tw, game_config.next_piece_hint.enum_next().is_some())
             }
-            (GameOptionMenuSelection::Invisible, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::Invisible, 1) => {
+            (SelectedMainSetting::Invisible, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Invisible, 1) => {
                 fmt_larrow(&mut tw, game_config.invisible.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::Invisible, 2) => {
-                fmt_desc(&mut tw, game_config.invisible.desc())
-            }
-            (GameOptionMenuSelection::Invisible, 3) => {
+            (SelectedMainSetting::Invisible, 2) => fmt_desc(&mut tw, game_config.invisible.name()),
+            (SelectedMainSetting::Invisible, 3) => {
                 fmt_rarrow(&mut tw, game_config.invisible.enum_next().is_some())
             }
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (GameOptionMenuSelection::FPSLimiter, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::FPSLimiter, 0) => fmt_selected(&mut tw),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (GameOptionMenuSelection::FPSLimiter, 1) => fmt_larrow(
+            (SelectedMainSetting::FPSLimiter, 1) => fmt_larrow(
                 &mut tw,
-                game_option_menu_data.fps_limiter.enum_prev().is_some(),
+                settings_menu_data.fps_limiter.enum_prev().is_some(),
             ),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (GameOptionMenuSelection::FPSLimiter, 2) => {
-                fmt_desc(&mut tw, game_option_menu_data.fps_limiter.desc())
+            (SelectedMainSetting::FPSLimiter, 2) => {
+                fmt_desc(&mut tw, settings_menu_data.fps_limiter.name())
             }
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (GameOptionMenuSelection::FPSLimiter, 3) => fmt_rarrow(
+            (SelectedMainSetting::FPSLimiter, 3) => fmt_rarrow(
                 &mut tw,
-                game_option_menu_data.fps_limiter.enum_next().is_some(),
+                settings_menu_data.fps_limiter.enum_next().is_some(),
             ),
-            (GameOptionMenuSelection::ShowFPS, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::ShowFPS, 1) => fmt_larrow(
-                &mut tw,
-                game_option_menu_data.show_fps.enum_prev().is_some(),
-            ),
-            (GameOptionMenuSelection::ShowFPS, 2) => {
-                fmt_desc(&mut tw, game_option_menu_data.show_fps.desc())
+            (SelectedMainSetting::ShowFPS, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::ShowFPS, 1) => {
+                fmt_larrow(&mut tw, settings_menu_data.show_fps.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::ShowFPS, 3) => fmt_rarrow(
-                &mut tw,
-                game_option_menu_data.show_fps.enum_next().is_some(),
-            ),
-            (GameOptionMenuSelection::ControllerMapping, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::ControllerMapping, 1) => {
+            (SelectedMainSetting::ShowFPS, 2) => {
+                fmt_desc(&mut tw, settings_menu_data.show_fps.name())
+            }
+            (SelectedMainSetting::ShowFPS, 3) => {
+                fmt_rarrow(&mut tw, settings_menu_data.show_fps.enum_next().is_some())
+            }
+            (SelectedMainSetting::ControllerMapping, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::ControllerMapping, 1) => {
                 fmt_larrow(&mut tw, controller_mapping.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::ControllerMapping, 2) => {
-                fmt_desc(&mut tw, controller_mapping.desc())
+            (SelectedMainSetting::ControllerMapping, 2) => {
+                fmt_desc(&mut tw, controller_mapping.name())
             }
-            (GameOptionMenuSelection::ControllerMapping, 3) => {
+            (SelectedMainSetting::ControllerMapping, 3) => {
                 fmt_rarrow(&mut tw, controller_mapping.enum_next().is_some())
             }
-            (GameOptionMenuSelection::ScaleFactor, 0) => fmt_selected(&mut tw),
-            (GameOptionMenuSelection::ScaleFactor, 1) => {
+            (SelectedMainSetting::ScaleFactor, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::ScaleFactor, 1) => {
                 fmt_larrow(&mut tw, scale_factor.enum_prev().is_some())
             }
-            (GameOptionMenuSelection::ScaleFactor, 2) => fmt_desc(&mut tw, scale_factor.desc()),
-            (GameOptionMenuSelection::ScaleFactor, 3) => {
+            (SelectedMainSetting::ScaleFactor, 2) => fmt_desc(&mut tw, scale_factor.name()),
+            (SelectedMainSetting::ScaleFactor, 3) => {
                 fmt_rarrow(&mut tw, scale_factor.enum_next().is_some())
             }
             _ => unreachable!(),

@@ -92,7 +92,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.start.just_pressed {
-        app_state.set(AppState::GameModeMenu);
+        app_state.set(AppState::SettingsMenu);
     }
 }
 

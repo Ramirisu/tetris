@@ -6,7 +6,7 @@ pub enum AppState {
     Init,
     LanguageMenu,
     Splash,
-    GameModeMenu,
+    SettingsMenu,
     LevelMenu,
     Game,
 }
