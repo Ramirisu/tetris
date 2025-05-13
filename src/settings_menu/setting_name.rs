@@ -18,10 +18,10 @@ pub trait SettingName {
 impl SettingName for Transition {
     fn name(&self) -> String {
         match self {
-            Transition::Classic => t!("tetris.game_option.transition.classic"),
-            Transition::Fixed => t!("tetris.game_option.transition.fixed"),
-            Transition::Every10Lines => t!("tetris.game_option.transition.every10lines"),
-            Transition::Every4Lines => t!("tetris.game_option.transition.every4lines"),
+            Transition::Classic => t!("tetris.settings.transition.classic"),
+            Transition::Fixed => t!("tetris.settings.transition.fixed"),
+            Transition::Every10Lines => t!("tetris.settings.transition.every10lines"),
+            Transition::Every4Lines => t!("tetris.settings.transition.every4lines"),
         }
         .into()
     }
@@ -30,8 +30,8 @@ impl SettingName for Transition {
 impl SettingName for Linecap {
     fn name(&self) -> String {
         match self {
-            Linecap::Off => t!("tetris.game_option.linecap.off"),
-            Linecap::KillScreenX2 => t!("tetris.game_option.linecap.killscreenx2"),
+            Linecap::Off => t!("tetris.settings.linecap.off"),
+            Linecap::KillScreenX2 => t!("tetris.settings.linecap.killscreenx2"),
         }
         .into()
     }
@@ -40,8 +40,8 @@ impl SettingName for Linecap {
 impl SettingName for Gravity {
     fn name(&self) -> String {
         match self {
-            Gravity::Level => t!("tetris.game_option.gravity.level"),
-            Gravity::Locked => t!("tetris.game_option.gravity.locked"),
+            Gravity::Level => t!("tetris.settings.gravity.level"),
+            Gravity::Locked => t!("tetris.settings.gravity.locked"),
         }
         .into()
     }
@@ -50,8 +50,8 @@ impl SettingName for Gravity {
 impl SettingName for Seeding {
     fn name(&self) -> String {
         match self {
-            Seeding::System => t!("tetris.game_option.seeding.system"),
-            Seeding::Custom => t!("tetris.game_option.seeding.custom"),
+            Seeding::System => t!("tetris.settings.seeding.system"),
+            Seeding::Custom => t!("tetris.settings.seeding.custom"),
         }
         .into()
     }
@@ -60,9 +60,9 @@ impl SettingName for Seeding {
 impl SettingName for Scoring {
     fn name(&self) -> String {
         match self {
-            Scoring::Decimal => t!("tetris.game_option.scoring.decimal"),
-            Scoring::Classic => t!("tetris.game_option.scoring.classic"),
-            Scoring::Base36 => t!("tetris.game_option.scoring.base36"),
+            Scoring::Decimal => t!("tetris.settings.scoring.decimal"),
+            Scoring::Classic => t!("tetris.settings.scoring.classic"),
+            Scoring::Base36 => t!("tetris.settings.scoring.base36"),
         }
         .into()
     }
@@ -81,9 +81,9 @@ impl SettingName for TVSystem {
 impl SettingName for NextPieceHint {
     fn name(&self) -> String {
         match self {
-            NextPieceHint::Off => t!("tetris.game_option.next_piece_hint.off"),
-            NextPieceHint::Classic => t!("tetris.game_option.next_piece_hint.classic"),
-            NextPieceHint::Modern => t!("tetris.game_option.next_piece_hint.modern"),
+            NextPieceHint::Off => t!("tetris.settings.next_piece_hint.off"),
+            NextPieceHint::Classic => t!("tetris.settings.next_piece_hint.classic"),
+            NextPieceHint::Modern => t!("tetris.settings.next_piece_hint.modern"),
         }
         .into()
     }
@@ -92,8 +92,8 @@ impl SettingName for NextPieceHint {
 impl SettingName for Invisible {
     fn name(&self) -> String {
         match self {
-            Invisible::Off => t!("tetris.game_option.invisible.off"),
-            Invisible::On => t!("tetris.game_option.invisible.on"),
+            Invisible::Off => t!("tetris.settings.invisible.off"),
+            Invisible::On => t!("tetris.settings.invisible.on"),
         }
         .into()
     }
@@ -103,9 +103,9 @@ impl SettingName for Invisible {
 impl SettingName for FPSLimiter {
     fn name(&self) -> String {
         match self {
-            FPSLimiter::Unlimited => t!("tetris.game_option.fps_limiter.unlimited"),
-            FPSLimiter::F240 => t!("tetris.game_option.fps_limiter.240fps"),
-            FPSLimiter::F480 => t!("tetris.game_option.fps_limiter.480fps"),
+            FPSLimiter::Unlimited => t!("tetris.settings.fps_limiter.unlimited"),
+            FPSLimiter::F240 => t!("tetris.settings.fps_limiter.240fps"),
+            FPSLimiter::F480 => t!("tetris.settings.fps_limiter.480fps"),
         }
         .into()
     }
@@ -114,8 +114,8 @@ impl SettingName for FPSLimiter {
 impl SettingName for ShowFPS {
     fn name(&self) -> String {
         match self {
-            ShowFPS::Off => t!("tetris.game_option.show_fps.off"),
-            ShowFPS::On => t!("tetris.game_option.show_fps.on"),
+            ShowFPS::Off => t!("tetris.settings.show_fps.off"),
+            ShowFPS::On => t!("tetris.settings.show_fps.on"),
         }
         .into()
     }
@@ -124,8 +124,8 @@ impl SettingName for ShowFPS {
 impl SettingName for ControllerMapping {
     fn name(&self) -> String {
         match self {
-            ControllerMapping::MappingA => t!("tetris.game_option.controller_mapping.mapping_a"),
-            ControllerMapping::MappingB => t!("tetris.game_option.controller_mapping.mapping_b"),
+            ControllerMapping::MappingA => t!("tetris.settings.controller_mapping.mapping_a"),
+            ControllerMapping::MappingB => t!("tetris.settings.controller_mapping.mapping_b"),
         }
         .into()
     }

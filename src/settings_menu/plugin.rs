@@ -84,23 +84,23 @@ impl SelectedMainSetting {
     pub fn name(&self) -> std::borrow::Cow<'_, str> {
         match *self {
             SelectedMainSetting::Tetris => "TETRIS".into(),
-            SelectedMainSetting::Transition => t!("tetris.game_option.transition"),
-            SelectedMainSetting::Linecap => t!("tetris.game_option.linecap"),
-            SelectedMainSetting::LinecapLevel => t!("tetris.game_option.linecap_level"),
-            SelectedMainSetting::Gravity => t!("tetris.game_option.gravity"),
-            SelectedMainSetting::Seeding => t!("tetris.game_option.seeding"),
-            SelectedMainSetting::Seed => t!("tetris.game_option.seed"),
-            SelectedMainSetting::Scoring => t!("tetris.game_option.scoring"),
-            SelectedMainSetting::TVSystem => t!("tetris.game_option.tv_system"),
-            SelectedMainSetting::NextPieceHint => t!("tetris.game_option.next_piece_hint"),
-            SelectedMainSetting::Invisible => t!("tetris.game_option.invisible"),
+            SelectedMainSetting::Transition => t!("tetris.settings.transition"),
+            SelectedMainSetting::Linecap => t!("tetris.settings.linecap"),
+            SelectedMainSetting::LinecapLevel => t!("tetris.settings.linecap_level"),
+            SelectedMainSetting::Gravity => t!("tetris.settings.gravity"),
+            SelectedMainSetting::Seeding => t!("tetris.settings.seeding"),
+            SelectedMainSetting::Seed => t!("tetris.settings.seed"),
+            SelectedMainSetting::Scoring => t!("tetris.settings.scoring"),
+            SelectedMainSetting::TVSystem => t!("tetris.settings.tv_system"),
+            SelectedMainSetting::NextPieceHint => t!("tetris.settings.next_piece_hint"),
+            SelectedMainSetting::Invisible => t!("tetris.settings.invisible"),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            SelectedMainSetting::FPSLimiter => t!("tetris.game_option.fps_limiter"),
-            SelectedMainSetting::ShowFPS => t!("tetris.game_option.show_fps"),
+            SelectedMainSetting::FPSLimiter => t!("tetris.settings.fps_limiter"),
+            SelectedMainSetting::ShowFPS => t!("tetris.settings.show_fps"),
             SelectedMainSetting::ControllerMapping => {
-                t!("tetris.game_option.controller_mapping")
+                t!("tetris.settings.controller_mapping")
             }
-            SelectedMainSetting::ScaleFactor => t!("tetris.game_option.scale_factor"),
+            SelectedMainSetting::ScaleFactor => t!("tetris.settings.scale_factor"),
         }
     }
 }

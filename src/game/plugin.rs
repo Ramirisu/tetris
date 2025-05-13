@@ -1001,7 +1001,7 @@ fn update_board(
     for (mut img, marker) in query {
         if curr_piece_pos
             .iter()
-            .any(|square| square.0 == marker.0 as i32 && square.1 == marker.1 as i32)
+            .any(|sqr| sqr.0 == marker.0 as i32 && sqr.1 == marker.1 as i32)
         {
             img.image = square_image_assets
                 .get_image(SquareImageSize::Standard, *player_data.board.curr_piece());
@@ -1053,7 +1053,7 @@ fn update_next_piece(
         if piece
             .to_squares()
             .iter()
-            .any(|square| square.0 == marker.x && square.1 == marker.y)
+            .any(|sqr| sqr.0 == marker.x && sqr.1 == marker.y)
         {
             *vis = Visibility::Inherited;
             img.image = square_image_assets.get_image(SquareImageSize::Standard, piece);
@@ -1073,7 +1073,7 @@ fn update_piece_count(
             .piece
             .to_squares()
             .iter()
-            .any(|square| square.0 == marker.x && square.1 == marker.y)
+            .any(|sqr| sqr.0 == marker.x && sqr.1 == marker.y)
         {
             img.image = square_image_assets.get_image(SquareImageSize::Small, marker.piece);
         }
