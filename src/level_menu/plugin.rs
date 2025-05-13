@@ -11,7 +11,7 @@ use crate::{
         player::{PlayerData, PlayerPhase},
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    logo::{TETRIS_BITMAP, load_logo_images},
+    logo::logo,
     utility::despawn_all,
 };
 
@@ -70,8 +70,6 @@ const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    let logo_images = load_logo_images(&mut image_assets);
-
     commands
         .spawn((
             Node {
@@ -88,25 +86,10 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
         .with_children(|parent| {
             parent
                 .spawn(Node {
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::auto(); TETRIS_BITMAP[0].len()],
                     margin: UiRect::all(Val::Px(30.0)),
                     ..default()
                 })
-                .with_children(|parent| {
-                    TETRIS_BITMAP.iter().for_each(|rows| {
-                        rows.iter().for_each(|sqr| {
-                            parent.spawn((
-                                Node {
-                                    width: Val::Px(30.0),
-                                    height: Val::Px(30.0),
-                                    ..default()
-                                },
-                                ImageNode::new(logo_images[(*sqr) as usize].clone()),
-                            ));
-                        })
-                    });
-                });
+                .with_child(logo(Val::Px(30.0), &mut image_assets));
 
             parent
                 .spawn((
