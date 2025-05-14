@@ -555,9 +555,9 @@ fn update_ui_system(
     query.iter_mut().for_each(|(entity, marker)| {
         let fmt_selected = |tw: &mut TextUiWriter| {
             *tw.text(entity, 0) = (if marker.0 == settings_menu_data.selected_main_setting {
-                ">>"
+                "▶"
             } else {
-                "  "
+                " "
             })
             .into()
         };

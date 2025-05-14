@@ -169,7 +169,7 @@ fn update_ui_system(
 ) {
     for (entity, marker) in query {
         *tw.text(entity, 0) = (if lang_menu_data.language_selection == marker.0 {
-            ">>"
+            "▶"
         } else {
             ""
         })
