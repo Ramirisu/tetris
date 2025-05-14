@@ -70,6 +70,7 @@ enum SelectedMainSetting {
     Seeding,
     Seed,
     Scoring,
+    Leveling,
     TVSystem,
     NextPieceHint,
     Invisible,
@@ -91,6 +92,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::Seeding => t!("tetris.settings.seeding"),
             SelectedMainSetting::Seed => t!("tetris.settings.seed"),
             SelectedMainSetting::Scoring => t!("tetris.settings.scoring"),
+            SelectedMainSetting::Leveling => t!("tetris.settings.leveling"),
             SelectedMainSetting::TVSystem => t!("tetris.settings.tv_system"),
             SelectedMainSetting::NextPieceHint => t!("tetris.settings.next_piece_hint"),
             SelectedMainSetting::Invisible => t!("tetris.settings.invisible"),
@@ -186,10 +188,11 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     BorderColor::from(BLUE),
                 ))
                 .with_children(|parent| {
+                    let text_font: TextFont = TextFont::from_font_size(30.0);
                     for selected_main_setting in SelectedMainSetting::iter() {
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(35.0),
+                            text_font.clone(),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 0),
@@ -202,13 +205,13 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             })
                             .with_child((
                                 Text::new(selected_main_setting.name()),
-                                TextFont::from_font_size(35.0),
+                                text_font.clone(),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             ));
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(35.0),
+                            text_font.clone(),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 1),
@@ -221,14 +224,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                             })
                             .with_child((
                                 Text::default(),
-                                TextFont::from_font_size(35.0),
+                                text_font.clone(),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                                 SelectedMainSettingEntityMarker(selected_main_setting, 2),
                             ));
                         parent.spawn((
                             Text::default(),
-                            TextFont::from_font_size(35.0),
+                            text_font.clone(),
                             TextColor::from(WHITE),
                             TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
                             SelectedMainSettingEntityMarker(selected_main_setting, 3),
@@ -433,6 +436,20 @@ fn handle_input_system(
                 }
             }
         }
+
+        SelectedMainSetting::Leveling => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_config.leveling.enum_next() {
+                    game_config.leveling = e;
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_config.leveling.enum_prev() {
+                    game_config.leveling = e;
+                    option_changed = true;
+                }
+            }
+        }
         SelectedMainSetting::TVSystem => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.tv_system.enum_next() {
@@ -600,7 +617,7 @@ fn update_ui_system(
             (SelectedMainSetting::LinecapLevel, 2) => match game_config.linecap {
                 crate::game::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
                 crate::game::linecap::Linecap::KillScreenX2 => {
-                    fmt_desc(&mut tw, format!("{}", game_config.linecap_level))
+                    fmt_desc(&mut tw, format!("{:02}", game_config.linecap_level.0))
                 }
             },
             (SelectedMainSetting::LinecapLevel, 3) => fmt_rarrow(
@@ -637,6 +654,14 @@ fn update_ui_system(
             (SelectedMainSetting::Scoring, 2) => fmt_desc(&mut tw, game_config.scoring.name()),
             (SelectedMainSetting::Scoring, 3) => {
                 fmt_rarrow(&mut tw, game_config.scoring.enum_next().is_some())
+            }
+            (SelectedMainSetting::Leveling, 0) => fmt_selected(&mut tw),
+            (SelectedMainSetting::Leveling, 1) => {
+                fmt_larrow(&mut tw, game_config.leveling.enum_prev().is_some())
+            }
+            (SelectedMainSetting::Leveling, 2) => fmt_desc(&mut tw, game_config.leveling.name()),
+            (SelectedMainSetting::Leveling, 3) => {
+                fmt_rarrow(&mut tw, game_config.leveling.enum_next().is_some())
             }
             (SelectedMainSetting::TVSystem, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::TVSystem, 1) => {

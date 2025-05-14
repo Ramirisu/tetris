@@ -684,7 +684,7 @@ fn setup_screen(
                                         ))
                                         .with_children(|parent| {
                                             let options = [
-                                                ("SLV", format!("{:3}", game_config.start_level)),
+                                                ("SLV", format!("{:3}", game_config.start_level.0)),
                                                 ("CAP", game_config.linecap.to_str_abbr()),
                                                 ("TRS", game_config.transition.to_str_abbr()),
                                                 ("GRV", game_config.gravity.to_str_abbr()),
@@ -934,7 +934,9 @@ fn update_statistics_system(
         *tw.text(entity, 0) = game_config.scoring.format(player_data.board.score());
     }
     if let Ok(entity) = query.p2().single_mut() {
-        *tw.text(entity, 0) = format!("{:02}", player_data.board.level());
+        *tw.text(entity, 0) = game_config
+            .leveling
+            .format_string(player_data.board.level());
     }
     for (entity, marker) in query.p3() {
         match marker.0 {

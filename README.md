@@ -82,6 +82,15 @@ The *SCORING* option determines how the score is displayed.
 | Classic | Display the score in decimal up to `999999`.                      | `000123` |  `999999` |  `999999` |   `999999` |
 |  Base36 | Apply `base36` encoding for the 6th digit and above of the score. | `000123` |  `C34567` | `1104567` |  `AZ04567` |
 
+**LEVELING**
+
+The *LEVELING* option determines how the level is displayed.
+
+| Options |                                                                                                            |
+| ------: | :--------------------------------------------------------------------------------------------------------- |
+| Decimal | Levels are always displayed in decimal.                                                                    |
+| Classic | Levels above 29 will be displayed in any hex numbers. ex: level 31 will be `0A` and level 33 will be `1E`. |
+
 **TV SYSTEM**
 
 The *TV SYSTEM* option determines which version of NES Tetris releases is used. This affects DAS, gravity and the level of linecap.
@@ -105,7 +114,7 @@ The *NEXT PIECE HINT* option determines how many NEXT pieces are displayed.
 
 **INVISIBLE**
 
-The *INVISIBLE* option determines the visibility of the locked squres. 
+The *INVISIBLE* option determines the visibility of the locked squares. 
 
 | Options |                               |
 | ------: | :---------------------------- |

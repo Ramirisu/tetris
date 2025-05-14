@@ -4,6 +4,7 @@ pub mod game;
 pub mod gravity;
 pub mod invisible;
 pub mod level;
+pub mod leveling;
 pub mod linecap;
 pub mod next_piece_hint;
 pub mod palette;

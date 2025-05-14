@@ -33,9 +33,3 @@ impl PartialOrd<usize> for Level {
         self.0.partial_cmp(other)
     }
 }
-
-impl std::fmt::Display for Level {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}

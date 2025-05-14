@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
-    gravity::Gravity, invisible::Invisible, level::Level, linecap::Linecap,
+    gravity::Gravity, invisible::Invisible, level::Level, leveling::Leveling, linecap::Linecap,
     next_piece_hint::NextPieceHint, scoring::Scoring, seed::Seed, seeding::Seeding,
     transition::Transition, tv_system::TVSystem,
 };
@@ -24,6 +24,7 @@ pub struct GameConfig {
     pub seeding: Seeding,
     pub seed: Seed,
     pub scoring: Scoring,
+    pub leveling: Leveling,
     pub tv_system: TVSystem,
     pub next_piece_hint: NextPieceHint,
     pub invisible: Invisible,
@@ -40,6 +41,7 @@ impl Default for GameConfig {
             seeding: Seeding::default(),
             seed: Seed::default(),
             scoring: Scoring::default(),
+            leveling: Leveling::default(),
             tv_system: TVSystem::default(),
             next_piece_hint: NextPieceHint::default(),
             invisible: Invisible::default(),
