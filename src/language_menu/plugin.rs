@@ -93,7 +93,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             parent
                 .spawn((
                     Node {
-                        width: Val::Px(400.0),
+                        width: Val::Px(300.0),
                         height: Val::Auto,
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); 2],

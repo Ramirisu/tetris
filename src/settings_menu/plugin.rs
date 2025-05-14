@@ -199,7 +199,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         ));
                         parent
                             .spawn(Node {
-                                width: Val::Px(500.0),
+                                width: Val::Px(300.0),
                                 height: Val::Auto,
                                 ..default()
                             })
@@ -218,7 +218,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         ));
                         parent
                             .spawn(Node {
-                                width: Val::Px(500.0),
+                                width: Val::Px(300.0),
                                 height: Val::Auto,
                                 ..default()
                             })
