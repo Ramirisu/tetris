@@ -3,7 +3,7 @@ mod board;
 pub mod game;
 pub mod gravity;
 pub mod invisible;
-mod level;
+pub mod level;
 pub mod linecap;
 pub mod next_piece_hint;
 pub mod palette;

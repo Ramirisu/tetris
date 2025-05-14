@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use rand::SeedableRng;
 
 use super::{
+    level::Level,
     piece::{Piece, Square},
     seed::Seed,
     seeding::Seeding,
@@ -10,7 +11,7 @@ use super::{
 };
 
 pub struct Board {
-    start_level: usize,
+    start_level: Level,
     transition: Transition,
     seed: Seed,
     rng: rand_chacha::ChaCha20Rng,
@@ -33,7 +34,7 @@ impl Board {
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
-    pub fn new(start_level: usize, transition: Transition, seeding: Seeding, seed: Seed) -> Self {
+    pub fn new(start_level: Level, transition: Transition, seeding: Seeding, seed: Seed) -> Self {
         let seed = match seeding {
             Seeding::System => Seed::new(),
             Seeding::Custom => seed,
@@ -65,7 +66,7 @@ impl Board {
         board
     }
 
-    pub fn level(&self) -> usize {
+    pub fn level(&self) -> Level {
         self.transition
             .transform_level(self.start_level, self.lines)
     }
@@ -284,8 +285,8 @@ impl Board {
         x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0 && y < Self::INTERNAL_BOARD_ROWS as i32
     }
 
-    fn transform_score(lines: usize, level: usize) -> usize {
-        (level + 1)
+    fn transform_score(lines: usize, level: Level) -> usize {
+        (level.0 + 1)
             * match lines {
                 1 => 40,
                 2 => 100,
@@ -298,7 +299,12 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self::new(0, Transition::default(), Seeding::System, Seed::default())
+        Self::new(
+            Level(0),
+            Transition::default(),
+            Seeding::System,
+            Seed::default(),
+        )
     }
 }
 

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
+    level::Level,
     palette::{SquareImageSize, get_square_image},
     piece::Piece,
 };
@@ -12,7 +13,7 @@ pub struct SquareImageAssets {
 }
 
 impl SquareImageAssets {
-    pub fn new(image_assets: &mut Assets<Image>, level: usize) -> Self {
+    pub fn new(image_assets: &mut Assets<Image>, level: Level) -> Self {
         Self {
             standard: Piece::iter()
                 .map(|piece| {

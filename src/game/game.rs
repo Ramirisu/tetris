@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
 use super::{
-    gravity::Gravity, invisible::Invisible, linecap::Linecap, next_piece_hint::NextPieceHint,
-    scoring::Scoring, seed::Seed, seeding::Seeding, transition::Transition, tv_system::TVSystem,
+    gravity::Gravity, invisible::Invisible, level::Level, linecap::Linecap,
+    next_piece_hint::NextPieceHint, scoring::Scoring, seed::Seed, seeding::Seeding,
+    transition::Transition, tv_system::TVSystem,
 };
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
@@ -15,10 +16,10 @@ pub enum GameState {
 
 #[derive(Clone, Copy, Eq, PartialEq, Resource)]
 pub struct GameConfig {
-    pub start_level: usize,
+    pub start_level: Level,
     pub transition: Transition,
     pub linecap: Linecap,
-    pub linecap_level: usize,
+    pub linecap_level: Level,
     pub gravity: Gravity,
     pub seeding: Seeding,
     pub seed: Seed,
@@ -31,10 +32,10 @@ pub struct GameConfig {
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
-            start_level: 0,
+            start_level: Level(0),
             transition: Transition::default(),
             linecap: Linecap::default(),
-            linecap_level: 39,
+            linecap_level: Level(39),
             gravity: Gravity::default(),
             seeding: Seeding::default(),
             seed: Seed::default(),

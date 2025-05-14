@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use super::{gravity::Gravity, linecap::Linecap, tv_system::TVSystem};
+use super::{gravity::Gravity, level::Level, linecap::Linecap, tv_system::TVSystem};
 
 #[derive(Clone, Copy)]
 pub struct SoftDropTimer {
     elapsed: Duration,
     threshold: Duration,
     linecap: Linecap,
-    linecap_level: usize,
+    linecap_level: Level,
     gravity: Gravity,
     tv_system: TVSystem,
     initial_entry_delay: bool,
@@ -15,9 +15,9 @@ pub struct SoftDropTimer {
 
 impl SoftDropTimer {
     pub fn new(
-        start_level: usize,
+        start_level: Level,
         linecap: Linecap,
-        linecap_level: usize,
+        linecap_level: Level,
         gravity: Gravity,
         tv_system: TVSystem,
         initial_entry_delay: bool,
@@ -33,7 +33,7 @@ impl SoftDropTimer {
         }
     }
 
-    pub fn set_level(&mut self, level: usize) {
+    pub fn set_level(&mut self, level: Level) {
         self.elapsed = Duration::ZERO;
         match self.gravity {
             Gravity::Level => {
@@ -74,8 +74,8 @@ impl SoftDropTimer {
     }
 
     fn level_to_duration(
-        level: usize,
-        linecap_level: usize,
+        level: Level,
+        linecap_level: Level,
         linecap: Linecap,
         tv_system: TVSystem,
     ) -> Duration {
@@ -84,7 +84,7 @@ impl SoftDropTimer {
         }
 
         match tv_system {
-            TVSystem::NTSC => match level {
+            TVSystem::NTSC => match level.0 {
                 0 => tv_system.ticks_to_duration(48),
                 1 => tv_system.ticks_to_duration(43),
                 2 => tv_system.ticks_to_duration(38),
@@ -101,7 +101,7 @@ impl SoftDropTimer {
                 19..29 => tv_system.ticks_to_duration(2),
                 _ => tv_system.ticks_to_duration(1),
             },
-            TVSystem::PAL => match level {
+            TVSystem::PAL => match level.0 {
                 0 => tv_system.ticks_to_duration(36),
                 1 => tv_system.ticks_to_duration(32),
                 2 => tv_system.ticks_to_duration(29),

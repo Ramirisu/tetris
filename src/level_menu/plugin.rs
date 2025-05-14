@@ -8,6 +8,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     game::{
         game::{GameConfig, GameState},
+        level::Level,
         player::{PlayerData, PlayerPhase},
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
@@ -243,7 +244,7 @@ fn handle_input_system(
         if let Some(level) = LEVELS[level_menu_data.selected_level.1 as usize]
             [level_menu_data.selected_level.0 as usize]
         {
-            game_config.start_level = level;
+            game_config.start_level = Level(level);
 
             *player_data = PlayerData::new(*game_config);
             play_sound.write(PlaySoundEvent::StartGame);
