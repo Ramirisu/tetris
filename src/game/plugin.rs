@@ -902,7 +902,7 @@ fn setup_screen(
             GameEntityMarker,
         ))
         .with_child((
-            Text::new("GAME PAUSE\nPRESS START TO CONTINUE"),
+            Text::new(t!("tetris.game.pause_screen")),
             TextFont::from_font_size(60.0),
             TextColor::from(WHITE),
             TextLayout::new_with_justify(JustifyText::Center),

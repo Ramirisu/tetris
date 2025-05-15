@@ -211,3 +211,13 @@ tetris.game.time:
   en: TIME
   zh-TW: 時間
   zh-CN: 时间
+tetris.game.pause_screen:
+  en: |-
+    GAME PAUSE
+    PRESS START TO CONTINUE
+  zh-TW: |-
+    遊戲暫停
+    按開始繼續
+  zh-CN: |-
+    游戏暂停
+    按开始继续
