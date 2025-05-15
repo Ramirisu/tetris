@@ -53,16 +53,17 @@ fn play_sound_system(
 ) {
     for event in event_reader.read() {
         let audio = match event {
-            PlaySoundEvent::MoveCursor => audio_assets.move_cursor.clone(),
-            PlaySoundEvent::StartGame => audio_assets.start_game.clone(),
-            PlaySoundEvent::MoveCurrPiece => audio_assets.move_curr_piece.clone(),
-            PlaySoundEvent::RotateCurrPiece => audio_assets.rotate_curr_piece.clone(),
-            PlaySoundEvent::LockCurrPiece => audio_assets.lock_curr_piece.clone(),
-            PlaySoundEvent::LineClear => audio_assets.line_clear.clone(),
-            PlaySoundEvent::TetrisClear => audio_assets.tetris_clear.clone(),
-            PlaySoundEvent::LevelUp => audio_assets.level_up.clone(),
-            PlaySoundEvent::GameOver => audio_assets.game_over.clone(),
-        };
+            PlaySoundEvent::MoveCursor => &audio_assets.move_cursor,
+            PlaySoundEvent::StartGame => &audio_assets.start_game,
+            PlaySoundEvent::MoveCurrPiece => &audio_assets.move_curr_piece,
+            PlaySoundEvent::RotateCurrPiece => &audio_assets.rotate_curr_piece,
+            PlaySoundEvent::LockCurrPiece => &audio_assets.lock_curr_piece,
+            PlaySoundEvent::LineClear => &audio_assets.line_clear,
+            PlaySoundEvent::TetrisClear => &audio_assets.tetris_clear,
+            PlaySoundEvent::LevelUp => &audio_assets.level_up,
+            PlaySoundEvent::GameOver => &audio_assets.game_over,
+        }
+        .clone();
         commands.spawn((AudioPlayer(audio), PlaybackSettings::DESPAWN));
     }
 }

@@ -112,7 +112,7 @@ fn get_level_palette(level: Level) -> &'static [Srgba; 4] {
         189 | 253 => &[BLACK, DARK_BLUE, DARK_BLUE, NAVY],
         190 | 254 => &[BLACK, INDIGO, PURPLE, PURPLE],
         191 | 255 => &[BLACK, DARK_RED, DARK_RED, DARK_RED],
-        256.. => &[BLACK, BLACK, BLACK, BLACK],
+        _ => unreachable!(),
     }
 }
 

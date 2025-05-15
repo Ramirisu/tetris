@@ -171,31 +171,31 @@ impl Piece {
         8
     }
 
-    pub fn new_t() -> Self {
+    pub fn t() -> Self {
         Piece::T(PieceT::default())
     }
 
-    pub fn new_j() -> Self {
+    pub fn j() -> Self {
         Piece::J(PieceJ::default())
     }
 
-    pub fn new_z() -> Self {
+    pub fn z() -> Self {
         Piece::Z(PieceZ::default())
     }
 
-    pub fn new_o() -> Self {
+    pub fn o() -> Self {
         Piece::O(PieceO::default())
     }
 
-    pub fn new_s() -> Self {
+    pub fn s() -> Self {
         Piece::S(PieceS::default())
     }
 
-    pub fn new_l() -> Self {
+    pub fn l() -> Self {
         Piece::L(PieceL::default())
     }
 
-    pub fn new_i() -> Self {
+    pub fn i() -> Self {
         Piece::I(PieceI::default())
     }
 
@@ -273,13 +273,13 @@ impl Piece {
 impl From<usize> for Piece {
     fn from(value: usize) -> Self {
         match value {
-            0 => Piece::new_t(),
-            1 => Piece::new_j(),
-            2 => Piece::new_z(),
-            3 => Piece::new_o(),
-            4 => Piece::new_s(),
-            5 => Piece::new_l(),
-            6 => Piece::new_i(),
+            0 => Piece::t(),
+            1 => Piece::j(),
+            2 => Piece::z(),
+            3 => Piece::o(),
+            4 => Piece::s(),
+            5 => Piece::l(),
+            6 => Piece::i(),
             7 => Piece::X,
             _ => panic!("value exceeds range"),
         }

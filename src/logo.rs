@@ -38,32 +38,32 @@ fn load_logo_images(image_assets: &mut Assets<Image>) -> [Handle<Image>; 7] {
         image_assets.add(get_square_image(SquareImageSize::Small, Piece::X, Level(0))),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_j(),
+            Piece::j(),
             Level(8),
         )),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_t(),
+            Piece::t(),
             Level(2),
         )),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_z(),
+            Piece::z(),
             Level(8),
         )),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_z(),
+            Piece::z(),
             Level(9),
         )),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_z(),
+            Piece::z(),
             Level(0),
         )),
         image_assets.add(get_square_image(
             SquareImageSize::Small,
-            Piece::new_z(),
+            Piece::z(),
             Level(1),
         )),
     ]

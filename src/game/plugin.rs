@@ -1174,7 +1174,8 @@ mod state_player_dropping {
             }
         });
 
-        let (moved, lr_moved, rotated) = handle_input(&player_inputs, &time, &mut player_data);
+        let (moved, horizontally_moved, rotated) =
+            handle_input(&player_inputs, &time, &mut player_data);
         if moved {
             update_board(
                 query.p0(),
@@ -1185,7 +1186,7 @@ mod state_player_dropping {
                 None,
             );
         }
-        if lr_moved {
+        if horizontally_moved {
             play_sound.write(PlaySoundEvent::MoveCurrPiece);
         }
         if rotated {
@@ -1199,7 +1200,7 @@ mod state_player_dropping {
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
         let mut down_moved = false;
-        let mut lr_moved = false;
+        let mut horizontally_moved = false;
         let mut rotated = false;
 
         if player_data.can_press_down {
@@ -1225,8 +1226,8 @@ mod state_player_dropping {
             if inputs.left.just_pressed || inputs.right.just_pressed {
                 player_data.das_timer.reset();
                 match (inputs.left.just_pressed, inputs.right.just_pressed) {
-                    (true, false) => lr_moved |= player_data.board.move_piece_left(),
-                    (false, true) => lr_moved |= player_data.board.move_piece_right(),
+                    (true, false) => horizontally_moved |= player_data.board.move_piece_left(),
+                    (false, true) => horizontally_moved |= player_data.board.move_piece_right(),
                     _ => (),
                 }
             } else {
@@ -1238,14 +1239,14 @@ mod state_player_dropping {
                         if !player_data.board.is_left_movable() {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(time.delta()).consume() {
-                            lr_moved |= player_data.board.move_piece_left();
+                            horizontally_moved |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
                         if !player_data.board.is_right_movable() {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(time.delta()).consume() {
-                            lr_moved |= player_data.board.move_piece_right();
+                            horizontally_moved |= player_data.board.move_piece_right();
                         }
                     }
                     _ => (),
@@ -1260,7 +1261,11 @@ mod state_player_dropping {
             rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
-        (down_moved | lr_moved | rotated, lr_moved, rotated)
+        (
+            down_moved | horizontally_moved | rotated,
+            horizontally_moved,
+            rotated,
+        )
     }
 
     pub(super) fn curr_piece_fall_system(
@@ -1272,7 +1277,7 @@ mod state_player_dropping {
         mut player_data: ResMut<PlayerData>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
-        let lock = {
+        let lock_curr_piece = {
             if std::mem::replace(&mut player_data.lock_curr_piece_immediately, false) {
                 player_data.soft_drop_timer.reset();
                 true
@@ -1281,7 +1286,7 @@ mod state_player_dropping {
             }
         };
 
-        if lock {
+        if lock_curr_piece {
             let new_level = player_data.board.level();
             player_data.soft_drop_timer.set_level(new_level);
 
@@ -1330,17 +1335,12 @@ mod state_player_dropping {
                 );
 
                 match lines.len() {
-                    0 => {
-                        play_sound.write(PlaySoundEvent::LockCurrPiece);
-                    }
-                    1 | 2 | 3 => {
-                        play_sound.write(PlaySoundEvent::LineClear);
-                    }
-                    4 => {
-                        play_sound.write(PlaySoundEvent::TetrisClear);
-                    }
+                    0 => play_sound.write(PlaySoundEvent::LockCurrPiece),
+                    1 | 2 | 3 => play_sound.write(PlaySoundEvent::LineClear),
+                    4 => play_sound.write(PlaySoundEvent::TetrisClear),
                     _ => unreachable!(),
-                }
+                };
+
                 if lines.len() > 0 {
                     player_data.line_clear_rows = lines;
                     player_data.line_clear_phase = LineClearPhase::new(game_config.tv_system);
