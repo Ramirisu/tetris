@@ -8,6 +8,7 @@ pub enum Linecap {
     #[default]
     Off,
     KillScreenX2,
+    Halt,
 }
 
 enum_advance::enum_advance_derive!(Linecap);
@@ -17,6 +18,7 @@ impl Linecap {
         match self {
             Linecap::Off => "OFF",
             Linecap::KillScreenX2 => "KSx2",
+            Linecap::Halt => "HLT",
         }
         .into()
     }

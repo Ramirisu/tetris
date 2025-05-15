@@ -16,6 +16,7 @@ use super::{
     board::Board,
     game::{GameConfig, GameState},
     invisible::Invisible,
+    linecap::Linecap,
     palette::SquareImageSize,
     piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
@@ -1082,6 +1083,16 @@ fn update_piece_count(
     }
 }
 
+fn handle_game_over(
+    play_sound: &mut EventWriter<PlaySoundEvent>,
+    game_state: &mut NextState<GameState>,
+    player_phase: &mut NextState<PlayerPhase>,
+) {
+    play_sound.write(PlaySoundEvent::GameOver);
+    game_state.set(GameState::Over);
+    player_phase.set(PlayerPhase::Over);
+}
+
 mod state_player_init {
     use super::*;
 
@@ -1309,9 +1320,7 @@ mod state_player_dropping {
                     None,
                 );
 
-                play_sound.write(PlaySoundEvent::GameOver);
-                game_state.set(GameState::Over);
-                player_phase.set(PlayerPhase::Over);
+                handle_game_over(&mut play_sound, &mut game_state, &mut player_phase);
             } else {
                 player_data.can_press_down = false; // keep pressing down will not affect next piece
 
@@ -1395,6 +1404,7 @@ mod state_player_line_clear {
                     }
                 }
             }
+
             if to_next_state {
                 let old_level = player_data.board.level();
                 player_data.board.clear_lines();
@@ -1430,6 +1440,8 @@ mod state_player_entry_delay {
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
+        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut game_state: ResMut<NextState<GameState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
         if player_data.entry_delay_timer.tick(time.delta()).consume() {
@@ -1450,7 +1462,13 @@ mod state_player_entry_delay {
             update_next_piece(query.p2(), &player_data, &square_image_assets);
             update_piece_count(query.p3(), &square_image_assets);
 
-            player_phase.set(PlayerPhase::Dropping);
+            if game_config.linecap == Linecap::Halt
+                && player_data.board.level() >= game_config.linecap_level
+            {
+                handle_game_over(&mut play_sound, &mut game_state, &mut player_phase);
+            } else {
+                player_phase.set(PlayerPhase::Dropping);
+            }
         }
     }
 }

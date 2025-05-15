@@ -33,6 +33,7 @@ impl SettingName for Linecap {
         match self {
             Linecap::Off => t!("tetris.settings.linecap.off"),
             Linecap::KillScreenX2 => t!("tetris.settings.linecap.killscreenx2"),
+            Linecap::Halt => t!("tetris.settings.linecap.halt"),
         }
         .into()
     }

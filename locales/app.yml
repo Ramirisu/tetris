@@ -87,6 +87,10 @@ tetris.settings.linecap.killscreenx2:
   en: KILL SCREEN X2
   zh-TW: 兩倍死亡重力
   zh-CN: 双倍死亡重力
+tetris.settings.linecap.halt:
+  en: HALT
+  zh-TW: 立刻終止
+  zh-CN: 立刻终止
 tetris.settings.gravity.level:
   en: LEVEL
   zh-TW: 跟隨等級

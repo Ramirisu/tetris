@@ -616,7 +616,8 @@ fn update_ui_system(
             ),
             (SelectedMainSetting::LinecapLevel, 2) => match game_config.linecap {
                 crate::game::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
-                crate::game::linecap::Linecap::KillScreenX2 => {
+                crate::game::linecap::Linecap::KillScreenX2
+                | crate::game::linecap::Linecap::Halt => {
                     fmt_desc(&mut tw, format!("{:02}", game_config.linecap_level.0))
                 }
             },
