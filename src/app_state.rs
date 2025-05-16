@@ -5,8 +5,8 @@ pub enum AppState {
     #[default]
     Init,
     LoadingScreen,
-    LanguageMenu,
     SplashScreen,
+    LanguageMenu,
     SettingsMenu,
     LevelMenu,
     Game,

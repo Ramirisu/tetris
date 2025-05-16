@@ -67,7 +67,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.start.just_pressed {
-        app_state.set(AppState::LanguageMenu);
+        app_state.set(AppState::SplashScreen);
     }
 }
 
@@ -87,7 +87,7 @@ fn update_ui_system(
             4.0..6.0 => img.color.set_alpha(1.0),
             6.0..8.0 => img.color.set_alpha((8.0 - t) / 2.0),
             8.0..9.0 => img.color.set_alpha(0.0),
-            _ => app_state.set(AppState::LanguageMenu),
+            _ => app_state.set(AppState::SplashScreen),
         }
     }
 }

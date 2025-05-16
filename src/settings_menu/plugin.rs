@@ -266,8 +266,8 @@ fn handle_input_system(
     }
 
     if player_inputs.b.just_pressed {
-        app_state.set(AppState::SplashScreen);
         play_sound.write(PlaySoundEvent::StartGame);
+        app_state.set(AppState::LanguageMenu);
         return;
     }
 

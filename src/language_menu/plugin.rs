@@ -142,6 +142,12 @@ fn handle_input_system(
     if player_inputs.start.just_pressed {
         rust_i18n::set_locale(lang_menu_data.language_selection.locale());
         play_sound.write(PlaySoundEvent::StartGame);
+        app_state.set(AppState::SettingsMenu);
+        return;
+    }
+
+    if player_inputs.soft_reset || player_inputs.b.just_pressed {
+        play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::SplashScreen);
         return;
     }
