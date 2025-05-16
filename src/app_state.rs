@@ -4,8 +4,9 @@ use bevy::prelude::*;
 pub enum AppState {
     #[default]
     Init,
+    LoadingScreen,
     LanguageMenu,
-    Splash,
+    SplashScreen,
     SettingsMenu,
     LevelMenu,
     Game,

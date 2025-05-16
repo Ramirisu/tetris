@@ -87,10 +87,10 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
         .with_children(|parent| {
             parent
                 .spawn(Node {
-                    margin: UiRect::all(Val::Px(30.0)),
+                    margin: UiRect::all(Val::Px(40.0)),
                     ..default()
                 })
-                .with_child(logo(Val::Px(30.0), &mut image_assets));
+                .with_child(logo(Val::Px(20.0), &mut image_assets));
 
             parent
                 .spawn((
@@ -194,7 +194,7 @@ fn handle_input_system(
 
     if player_inputs.soft_reset {
         play_sound.write(PlaySoundEvent::StartGame);
-        app_state.set(AppState::Splash);
+        app_state.set(AppState::SplashScreen);
         return;
     }
 

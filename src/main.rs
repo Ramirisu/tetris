@@ -14,9 +14,10 @@ mod init;
 mod input;
 mod language_menu;
 mod level_menu;
+mod loading_screen;
 mod logo;
 mod settings_menu;
-mod splash;
+mod splash_screen;
 mod utility;
 
 use app_state::AppState;
@@ -74,8 +75,9 @@ fn main() {
         input::plugin::setup,
         audio::plugin::setup,
         init::plugin::setup,
+        loading_screen::plugin::setup,
         language_menu::plugin::setup,
-        splash::plugin::setup,
+        splash_screen::plugin::setup,
         settings_menu::plugin::setup,
         level_menu::plugin::setup,
         game::plugin::setup,

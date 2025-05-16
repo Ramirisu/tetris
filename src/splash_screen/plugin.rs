@@ -11,16 +11,19 @@ use crate::{
 
 pub fn setup(app: &mut App) {
     app.insert_resource(PressStartTimeDuration::default())
-        .add_systems(OnEnter(AppState::Splash), setup_screen)
+        .add_systems(OnEnter(AppState::SplashScreen), setup_screen)
         .add_systems(
             Update,
-            (handle_input_system, update_ui_system).run_if(in_state(AppState::Splash)),
+            (handle_input_system, update_ui_system).run_if(in_state(AppState::SplashScreen)),
         )
-        .add_systems(OnExit(AppState::Splash), despawn_all::<SplashEntityMarker>);
+        .add_systems(
+            OnExit(AppState::SplashScreen),
+            despawn_all::<SplashScreenEntityMarker>,
+        );
 }
 
 #[derive(Component)]
-struct SplashEntityMarker;
+struct SplashScreenEntityMarker;
 
 #[derive(Component)]
 struct PressStartEntityMarker;
@@ -40,7 +43,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 justify_content: JustifyContent::Center,
                 ..default()
             },
-            SplashEntityMarker,
+            SplashScreenEntityMarker,
         ))
         .with_children(|parent| {
             parent

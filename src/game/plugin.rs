@@ -1157,7 +1157,7 @@ mod state_player_dropping {
 
         if player_inputs.soft_reset {
             play_sound.write(PlaySoundEvent::StartGame);
-            app_state.set(AppState::Splash);
+            app_state.set(AppState::SplashScreen);
             return;
         }
 
@@ -1490,7 +1490,7 @@ mod state_game_pause {
 
         if player_inputs.soft_reset {
             play_sound.write(PlaySoundEvent::StartGame);
-            app_state.set(AppState::Splash);
+            app_state.set(AppState::SplashScreen);
             return;
         }
 
@@ -1518,7 +1518,7 @@ mod state_game_over {
 
         if player_inputs.soft_reset {
             play_sound.write(PlaySoundEvent::StartGame);
-            app_state.set(AppState::Splash);
+            app_state.set(AppState::SplashScreen);
             return;
         }
 
