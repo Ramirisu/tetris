@@ -2,7 +2,7 @@ use bevy::{
     asset::load_internal_binary_asset,
     color::palettes::css::GREEN,
     prelude::*,
-    window::{CursorOptions, PresentMode, WindowResolution},
+    window::{PresentMode, WindowResolution},
 };
 
 mod app_state;
@@ -41,18 +41,8 @@ fn main() {
                 primary_window: Some(Window {
                     resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT)
                         .with_scale_factor_override(1.0),
-                    resize_constraints: WindowResizeConstraints {
-                        min_width: 960.0,
-                        min_height: 720.0,
-                        max_width: f32::INFINITY,
-                        max_height: f32::INFINITY,
-                    },
                     present_mode: PresentMode::AutoNoVsync,
-                    position: WindowPosition::Automatic,
-                    cursor_options: CursorOptions {
-                        visible: false,
-                        ..default()
-                    },
+                    position: WindowPosition::Centered(MonitorSelection::Primary),
                     fit_canvas_to_parent: true,
                     title: "TETRIS".into(),
                     ..default()
