@@ -43,7 +43,6 @@ fn main() {
                         .with_scale_factor_override(1.0),
                     present_mode: PresentMode::AutoNoVsync,
                     position: WindowPosition::Centered(MonitorSelection::Primary),
-                    fit_canvas_to_parent: true,
                     title: "TETRIS".into(),
                     ..default()
                 }),
