@@ -1,4 +1,3 @@
-
 use bevy::prelude::Visibility;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
@@ -13,16 +12,6 @@ pub enum Invisible {
 }
 
 enum_advance::enum_advance_derive!(Invisible);
-
-impl Invisible {
-    pub fn to_str_abbr(&self) -> String {
-        match self {
-            Invisible::Off => "OFF",
-            Invisible::On => "ON",
-        }
-        .into()
-    }
-}
 
 impl Into<Visibility> for Invisible {
     fn into(self) -> Visibility {

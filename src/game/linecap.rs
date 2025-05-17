@@ -12,14 +12,3 @@ pub enum Linecap {
 }
 
 enum_advance::enum_advance_derive!(Linecap);
-
-impl Linecap {
-    pub fn to_str_abbr(&self) -> String {
-        match self {
-            Linecap::Off => "OFF",
-            Linecap::KillScreenX2 => "KSx2",
-            Linecap::Halt => "HLT",
-        }
-        .into()
-    }
-}

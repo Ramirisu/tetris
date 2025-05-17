@@ -17,16 +17,6 @@ pub enum Transition {
 enum_advance::enum_advance_derive!(Transition);
 
 impl Transition {
-    pub fn to_str_abbr(&self) -> String {
-        match self {
-            Transition::Classic => "CLS",
-            Transition::Fixed => "FIX",
-            Transition::Every10Lines => "10L",
-            Transition::Every4Lines => "4L",
-        }
-        .into()
-    }
-
     pub fn transform_level(&self, start_level: Level, lines: usize) -> Level {
         match self {
             Transition::Classic => Self::tf_lv_classic(start_level, lines),

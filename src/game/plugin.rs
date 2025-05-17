@@ -257,7 +257,6 @@ fn setup_screen(
                                     let titles = [
                                         t!("tetris.game.brn"),
                                         t!("tetris.game.tetris"),
-                                        t!("tetris.game.tetris"),
                                         t!("tetris.game.drt"),
                                     ];
                                     for (idx, title) in titles.iter().enumerate() {
@@ -404,8 +403,8 @@ fn setup_screen(
                                             for x in 0..Board::BOARD_COLS {
                                                 parent.spawn((
                                                     Node {
-                                                        width: Val::Px(40.0),
-                                                        height: Val::Px(40.0),
+                                                        width: Val::Px(36.0),
+                                                        height: Val::Px(36.0),
                                                         ..default()
                                                     },
                                                     ImageNode {
@@ -513,11 +512,12 @@ fn setup_screen(
                                                 parent.spawn((
                                                     Node {
                                                         width: Val::Px(12.0),
-                                                        height: Val::Px(30.0),
+                                                        height: Val::Px(36.0),
                                                         border: UiRect::all(Val::Px(1.0)),
                                                         ..default()
                                                     },
                                                     BorderColor::from(WHITE),
+                                                    BorderRadius::right(Val::Px(12.0)),
                                                     DASCounterBarEntityMarker(idx),
                                                 ));
                                             }
@@ -615,102 +615,42 @@ fn setup_screen(
                                     ));
                                 });
 
-                            // placeholder
-                            parent.spawn(Node {
-                                width: Val::Auto,
-                                height: Val::Px(100.0),
-                                ..default()
-                            });
-
                             parent
                                 .spawn(Node {
                                     display: Display::Flex,
-                                    flex_direction: FlexDirection::Row,
+                                    flex_direction: FlexDirection::Column,
                                     justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::End,
-                                    column_gap: Val::Px(20.0),
-                                    margin: UiRect::all(Val::Px(10.0)),
+                                    align_items: AlignItems::Start,
+                                    margin: UiRect {
+                                        left: Val::Px(10.0),
+                                        right: Val::Px(10.0),
+                                        top: Val::Px(110.0),
+                                        bottom: Val::Px(10.0),
+                                    },
                                     ..default()
                                 })
                                 .with_children(|parent| {
                                     parent
                                         .spawn(Node {
-                                            display: Display::Flex,
-                                            flex_direction: FlexDirection::Column,
-                                            justify_content: JustifyContent::Center,
-                                            align_items: AlignItems::Start,
+                                            width: Val::Auto,
+                                            height: Val::Auto,
+                                            margin: UiRect::all(Val::Px(10.0)),
                                             ..default()
                                         })
-                                        .with_children(|parent| {
-                                            parent
-                                                .spawn(Node {
-                                                    width: Val::Auto,
-                                                    height: Val::Auto,
-                                                    margin: UiRect::all(Val::Px(10.0)),
-                                                    ..default()
-                                                })
-                                                .with_child((
-                                                    Text::new(t!("tetris.game.next")),
-                                                    TextFont::from_font_size(40.0),
-                                                    TextColor::from(WHITE),
-                                                    TextLayout::new_with_justify(JustifyText::Left),
-                                                ));
-                                            // NEXT PIECE (0)
-                                            spawn_next_piece(
-                                                parent,
-                                                0,
-                                                1.0,
-                                                Visibility::Inherited,
-                                                game_config.next_piece_hint.as_visibility(0),
-                                            );
-                                        });
-
-                                    // GAME MODE
-                                    parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Auto,
-                                                height: Val::Auto,
-                                                display: Display::Grid,
-                                                grid_template_columns: vec![GridTrack::auto(); 2],
-                                                column_gap: Val::Px(10.0),
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                border: UiRect::all(Val::Px(1.0)),
-                                                padding: UiRect::all(Val::Px(10.0)),
-                                                ..default()
-                                            },
-                                            BorderColor::from(WHITE),
-                                            Visibility::Hidden,
-                                        ))
-                                        .with_children(|parent| {
-                                            let options = [
-                                                ("SLV", format!("{:3}", game_config.start_level.0)),
-                                                ("CAP", game_config.linecap.to_str_abbr()),
-                                                ("TRS", game_config.transition.to_str_abbr()),
-                                                ("GRV", game_config.gravity.to_str_abbr()),
-                                                ("TVS", game_config.tv_system.to_str_abbr()),
-                                                ("INV", game_config.invisible.to_str_abbr()),
-                                                ("SDG", game_config.seeding.to_str_abbr()),
-                                                ("SED", format!("{}", player_data.board.seed())),
-                                            ];
-                                            for (name, value) in options.iter() {
-                                                parent.spawn((
-                                                    Text::new(*name),
-                                                    TextFont::from_font_size(30.0),
-                                                    TextColor::from(WHITE),
-                                                    TextLayout::new_with_justify(
-                                                        JustifyText::Right,
-                                                    ),
-                                                ));
-                                                parent.spawn((
-                                                    Text::new(value.clone()),
-                                                    TextFont::from_font_size(30.0),
-                                                    TextColor::from(WHITE),
-                                                    TextLayout::new_with_justify(JustifyText::Left),
-                                                ));
-                                            }
-                                        });
+                                        .with_child((
+                                            Text::new(t!("tetris.game.next")),
+                                            TextFont::from_font_size(40.0),
+                                            TextColor::from(WHITE),
+                                            TextLayout::new_with_justify(JustifyText::Left),
+                                        ));
+                                    // NEXT PIECE (0)
+                                    spawn_next_piece(
+                                        parent,
+                                        0,
+                                        1.0,
+                                        Visibility::Inherited,
+                                        game_config.next_piece_hint.as_visibility(0),
+                                    );
                                 });
 
                             // NEXT PIECE (1..)
@@ -942,8 +882,7 @@ fn update_statistics_system(
     for (entity, marker) in query.p3() {
         match marker.0 {
             0 => *tw.text(entity, 0) = format!("{:4}", player_data.board.burned_lines()),
-            1 => *tw.text(entity, 0) = format!("{:4}", player_data.board.tetris_clear()),
-            2 => {
+            1 => {
                 let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
                 *tw.text(entity, 0) = format!("{:3}%", rate);
                 match rate {
@@ -952,7 +891,7 @@ fn update_statistics_system(
                     _ => *tw.color(entity, 0) = GREEN.into(),
                 }
             }
-            3 => {
+            2 => {
                 let drought = player_data.board.drought();
                 *tw.text(entity, 0) = format!("{:4}", drought);
                 match drought {

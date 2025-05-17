@@ -119,6 +119,7 @@ impl Board {
         self.max_drought
     }
 
+    #[allow(dead_code)]
     pub fn seed(&self) -> Seed {
         self.seed
     }
