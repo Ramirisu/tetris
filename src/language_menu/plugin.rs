@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub fn setup(app: &mut App) {
-    app.insert_resource(LanguageMunuData::default())
+    app.insert_resource(LanguageMenuData::default())
         .add_systems(OnEnter(AppState::LanguageMenu), setup_screen)
         .add_systems(
             Update,
@@ -34,7 +34,7 @@ struct LanguageMenuEntityMarker;
 struct LanguageSelectionEntityMarker(Language);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
-enum Language {
+pub enum Language {
     #[default]
     English,
     TraditionalChinese,
@@ -63,8 +63,8 @@ impl Language {
 }
 
 #[derive(Default, Resource)]
-struct LanguageMunuData {
-    language_selection: Language,
+pub struct LanguageMenuData {
+    pub language_selection: Language,
 }
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
@@ -132,7 +132,7 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
-    mut lang_menu_data: ResMut<LanguageMunuData>,
+    mut lang_menu_data: ResMut<LanguageMenuData>,
     mut play_sound: EventWriter<PlaySoundEvent>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
@@ -171,7 +171,7 @@ fn handle_input_system(
 fn update_ui_system(
     query: Query<(Entity, &LanguageSelectionEntityMarker)>,
     mut tw: TextUiWriter,
-    lang_menu_data: Res<LanguageMunuData>,
+    lang_menu_data: Res<LanguageMenuData>,
 ) {
     for (entity, marker) in query {
         *tw.text(entity, 0) = (if lang_menu_data.language_selection == marker.0 {
