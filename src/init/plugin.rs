@@ -21,7 +21,7 @@ fn init_locale_system(mut lang_menu_data: ResMut<LanguageMenuData>) {
         rust_i18n::set_locale(&locale);
         for lang in Language::iter() {
             if lang.locale() == locale {
-                lang_menu_data.language_selection = lang;
+                lang_menu_data.selected_lang = lang;
             }
         }
     } else {

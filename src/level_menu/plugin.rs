@@ -1,5 +1,6 @@
 use bevy::{
     color::palettes::css::{BLACK, BLUE, CRIMSON, GOLD, GREEN, WHITE},
+    ecs::spawn::SpawnWith,
     prelude::*,
 };
 
@@ -71,95 +72,83 @@ const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands
-        .spawn((
-            Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            LevelMenuEntityMarker,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
+    commands.spawn((
+        Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        LevelMenuEntityMarker,
+        Children::spawn((
+            Spawn((
+                Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                })
-                .with_child(logo(Val::Px(20.0), &mut image_assets));
-
-            parent
-                .spawn((
-                    Node {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Column,
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(10.0)),
-                        padding: UiRect::all(Val::Px(10.0)),
-                        border: UiRect::all(Val::Px(5.0)),
-                        ..default()
-                    },
-                    BorderColor::from(BLUE),
-                ))
-                .with_children(|parent| {
-                    parent
-                        .spawn(Node {
+                },
+                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+            )),
+            Spawn((
+                Node {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(10.0)),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    border: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+                BorderColor::from(BLUE),
+                Children::spawn((
+                    Spawn((
+                        Node {
                             margin: UiRect::all(Val::Px(20.0)),
                             ..default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                Text::new(t!("tetris.level_option.level")),
-                                TextFont::from_font_size(40.0),
-                                TextColor::from(WHITE),
-                            ));
-                        });
-
-                    parent
-                        .spawn((
-                            Node {
-                                display: Display::Grid,
-                                grid_template_columns: vec![GridTrack::auto(); 5],
-                                row_gap: Val::Px(5.0),
-                                column_gap: Val::Px(5.0),
-                                border: UiRect::all(Val::Px(5.0)),
-                                ..default()
-                            },
-                            BackgroundColor::from(GREEN),
-                            BorderColor::from(GREEN),
-                        ))
-                        .with_children(|parent| {
+                        },
+                        Text::new(t!("tetris.level_option.level")),
+                        TextFont::from_font_size(40.0),
+                        TextColor::from(WHITE),
+                    )),
+                    Spawn((
+                        Node {
+                            display: Display::Grid,
+                            grid_template_columns: vec![GridTrack::auto(); 5],
+                            row_gap: Val::Px(5.0),
+                            column_gap: Val::Px(5.0),
+                            border: UiRect::all(Val::Px(5.0)),
+                            ..default()
+                        },
+                        BackgroundColor::from(GREEN),
+                        BorderColor::from(GREEN),
+                        Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
                             for (y, rows) in LEVELS.iter().enumerate() {
                                 for (x, col) in rows.iter().enumerate() {
                                     if let Some(level) = col {
-                                        parent
-                                            .spawn((
-                                                Node {
-                                                    width: Val::Px(60.0),
-                                                    height: Val::Px(60.0),
-                                                    align_items: AlignItems::Center,
-                                                    justify_content: JustifyContent::Center,
-                                                    ..default()
-                                                },
-                                                BackgroundColor::from(BLUE),
-                                                LevelButtonEntityMarker {
-                                                    cordinate: (x as i32, y as i32),
-                                                },
-                                            ))
-                                            .with_children(|parent| {
-                                                parent.spawn((
-                                                    Text::new(format!("{}", level)),
-                                                    TextFont::from_font_size(40.0),
-                                                    TextColor::from(CRIMSON),
-                                                ));
-                                            });
+                                        p.spawn((
+                                            Node {
+                                                width: Val::Px(60.0),
+                                                height: Val::Px(60.0),
+                                                display: Display::Flex,
+                                                flex_direction: FlexDirection::Row,
+                                                justify_content: JustifyContent::Center,
+                                                align_items: AlignItems::Center,
+                                                ..default()
+                                            },
+                                            BackgroundColor::from(BLUE),
+                                            Text::new(format!("{}", level)),
+                                            TextFont::from_font_size(40.0),
+                                            TextColor::from(CRIMSON),
+                                            TextLayout::new_with_justify(JustifyText::Center),
+                                            LevelButtonEntityMarker {
+                                                cordinate: (x as i32, y as i32),
+                                            },
+                                        ));
                                     } else {
-                                        parent.spawn((
+                                        p.spawn((
                                             Node {
                                                 width: Val::Px(60.0),
                                                 height: Val::Px(60.0),
@@ -172,9 +161,12 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                     }
                                 }
                             }
-                        });
-                });
-        });
+                        })),
+                    )),
+                )),
+            )),
+        )),
+    ));
 }
 
 fn handle_input_system(

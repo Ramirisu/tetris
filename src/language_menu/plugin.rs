@@ -1,5 +1,6 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
+    ecs::spawn::SpawnWith,
     prelude::*,
 };
 use strum::{EnumCount, IntoEnumIterator};
@@ -64,68 +65,66 @@ impl Language {
 
 #[derive(Default, Resource)]
 pub struct LanguageMenuData {
-    pub language_selection: Language,
+    pub selected_lang: Language,
 }
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                overflow: Overflow::clip(),
-                ..default()
-            },
-            LanguageMenuEntityMarker,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            overflow: Overflow::clip(),
+            ..default()
+        },
+        LanguageMenuEntityMarker,
+        Children::spawn((
+            Spawn((
+                Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                })
-                .with_child(logo(Val::Px(20.0), &mut image_assets));
-
-            parent
-                .spawn((
-                    Node {
-                        width: Val::Px(300.0),
-                        height: Val::Auto,
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); 2],
-                        column_gap: Val::Px(20.0),
-                        row_gap: Val::Px(5.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(20.0)),
-                        padding: UiRect::all(Val::Px(20.0)),
-                        border: UiRect::all(Val::Px(5.0)),
-                        ..default()
-                    },
-                    BorderColor::from(BLUE),
-                ))
-                .with_children(|parent| {
+                },
+                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+            )),
+            Spawn((
+                Node {
+                    width: Val::Px(300.0),
+                    height: Val::Auto,
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); 2],
+                    column_gap: Val::Px(20.0),
+                    row_gap: Val::Px(5.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(20.0)),
+                    padding: UiRect::all(Val::Px(20.0)),
+                    border: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+                BorderColor::from(BLUE),
+                Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
                     for lang in Language::iter() {
-                        parent.spawn((
+                        p.spawn((
                             Text::default(),
                             TextFont::from_font_size(40.0),
                             TextColor::from(WHITE),
                             TextLayout::new_with_justify(JustifyText::Center),
                             LanguageSelectionEntityMarker(lang),
                         ));
-                        parent.spawn((
+                        p.spawn((
                             Text::new(lang.name()),
                             TextFont::from_font_size(40.0),
                             TextColor::from(WHITE),
                             TextLayout::new_with_justify(JustifyText::Left),
                         ));
                     }
-                });
-        });
+                })),
+            )),
+        )),
+    ));
 }
 
 fn handle_input_system(
@@ -140,7 +139,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.start.just_pressed {
-        rust_i18n::set_locale(lang_menu_data.language_selection.locale());
+        rust_i18n::set_locale(lang_menu_data.selected_lang.locale());
         play_sound.write(PlaySoundEvent::StartGame);
         app_state.set(AppState::SettingsMenu);
         return;
@@ -157,11 +156,11 @@ fn handle_input_system(
         player_inputs.down.just_pressed,
     ) {
         (false, true) => {
-            lang_menu_data.language_selection = lang_menu_data.language_selection.enum_next_cycle();
+            lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_next_cycle();
             play_sound.write(PlaySoundEvent::MoveCursor);
         }
         (true, false) => {
-            lang_menu_data.language_selection = lang_menu_data.language_selection.enum_prev_cycle();
+            lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_prev_cycle();
             play_sound.write(PlaySoundEvent::MoveCursor);
         }
         _ => (),
@@ -174,7 +173,7 @@ fn update_ui_system(
     lang_menu_data: Res<LanguageMenuData>,
 ) {
     for (entity, marker) in query {
-        *tw.text(entity, 0) = (if lang_menu_data.language_selection == marker.0 {
+        *tw.text(entity, 0) = (if lang_menu_data.selected_lang == marker.0 {
             "▶"
         } else {
             ""

@@ -1,5 +1,6 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
+    ecs::spawn::SpawnWith,
     prelude::*,
 };
 use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
@@ -59,7 +60,7 @@ struct SettingsMenuEntityMarker;
 #[derive(Component)]
 struct SelectedMainSettingEntityMarker(SelectedMainSetting, usize);
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 enum SelectedMainSetting {
     #[default]
     Tetris,
@@ -149,96 +150,69 @@ impl Default for SettingsMenuData {
 }
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands
-        .spawn((
-            Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                overflow: Overflow::clip(),
-                ..default()
-            },
-            SettingsMenuEntityMarker,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
+    commands.spawn((
+        Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            overflow: Overflow::clip(),
+            ..default()
+        },
+        SettingsMenuEntityMarker,
+        Children::spawn((
+            Spawn((
+                Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                })
-                .with_child(logo(Val::Px(20.0), &mut image_assets));
-
-            parent
-                .spawn((
-                    Node {
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); 5],
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        column_gap: Val::Px(20.0),
-                        row_gap: Val::Px(5.0),
-                        margin: UiRect::all(Val::Px(20.0)),
-                        padding: UiRect::all(Val::Px(20.0)),
-                        border: UiRect::all(Val::Px(5.0)),
-                        ..default()
-                    },
-                    BorderColor::from(BLUE),
-                ))
-                .with_children(|parent| {
-                    let text_font: TextFont = TextFont::from_font_size(30.0);
+                },
+                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+            )),
+            Spawn((
+                Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); 5],
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(20.0),
+                    row_gap: Val::Px(5.0),
+                    margin: UiRect::all(Val::Px(20.0)),
+                    padding: UiRect::all(Val::Px(20.0)),
+                    border: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+                BorderColor::from(BLUE),
+                Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
                     for selected_main_setting in SelectedMainSetting::iter() {
-                        parent.spawn((
-                            Text::default(),
-                            text_font.clone(),
-                            TextColor::from(WHITE),
-                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            SelectedMainSettingEntityMarker(selected_main_setting, 0),
-                        ));
-                        parent
-                            .spawn(Node {
-                                width: Val::Px(300.0),
-                                height: Val::Auto,
-                                ..default()
-                            })
-                            .with_child((
-                                Text::new(selected_main_setting.name()),
-                                text_font.clone(),
+                        let cols: [(String, Val); 5] = [
+                            ("".into(), Val::Auto),
+                            (selected_main_setting.name().into(), Val::Px(300.0)),
+                            ("".into(), Val::Auto),
+                            ("".into(), Val::Px(300.0)),
+                            ("".into(), Val::Auto),
+                        ];
+
+                        for (idx, (name, width)) in cols.iter().enumerate() {
+                            p.spawn((
+                                Node {
+                                    width: *width,
+                                    height: Val::Auto,
+                                    ..default()
+                                },
+                                Text::new(name),
+                                TextFont::from_font_size(30.0),
                                 TextColor::from(WHITE),
                                 TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                SelectedMainSettingEntityMarker(selected_main_setting, idx),
                             ));
-                        parent.spawn((
-                            Text::default(),
-                            text_font.clone(),
-                            TextColor::from(WHITE),
-                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            SelectedMainSettingEntityMarker(selected_main_setting, 1),
-                        ));
-                        parent
-                            .spawn(Node {
-                                width: Val::Px(300.0),
-                                height: Val::Auto,
-                                ..default()
-                            })
-                            .with_child((
-                                Text::default(),
-                                text_font.clone(),
-                                TextColor::from(WHITE),
-                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                                SelectedMainSettingEntityMarker(selected_main_setting, 2),
-                            ));
-                        parent.spawn((
-                            Text::default(),
-                            text_font.clone(),
-                            TextColor::from(WHITE),
-                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                            SelectedMainSettingEntityMarker(selected_main_setting, 3),
-                        ));
+                        }
                     }
-                });
-        });
+                })),
+            )),
+        )),
+    ));
 }
 
 fn handle_input_system(
@@ -587,154 +561,155 @@ fn update_ui_system(
         let fmt_desc = |tw: &mut TextUiWriter, desc: String| *tw.text(entity, 0) = desc;
         match (marker.0, marker.1) {
             (SelectedMainSetting::Tetris, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Tetris, 1) => (),
             (SelectedMainSetting::Tetris, 2) => (),
             (SelectedMainSetting::Tetris, 3) => (),
+            (SelectedMainSetting::Tetris, 4) => (),
             (SelectedMainSetting::Transition, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Transition, 1) => {
+            (SelectedMainSetting::Transition, 2) => {
                 fmt_larrow(&mut tw, game_config.transition.enum_prev().is_some())
             }
-            (SelectedMainSetting::Transition, 2) => {
+            (SelectedMainSetting::Transition, 3) => {
                 fmt_desc(&mut tw, game_config.transition.name())
             }
-            (SelectedMainSetting::Transition, 3) => {
+            (SelectedMainSetting::Transition, 4) => {
                 fmt_rarrow(&mut tw, game_config.transition.enum_next().is_some())
             }
             (SelectedMainSetting::Linecap, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Linecap, 1) => {
+            (SelectedMainSetting::Linecap, 2) => {
                 fmt_larrow(&mut tw, game_config.linecap.enum_prev().is_some())
             }
-            (SelectedMainSetting::Linecap, 2) => fmt_desc(&mut tw, game_config.linecap.name()),
-            (SelectedMainSetting::Linecap, 3) => {
+            (SelectedMainSetting::Linecap, 3) => fmt_desc(&mut tw, game_config.linecap.name()),
+            (SelectedMainSetting::Linecap, 4) => {
                 fmt_rarrow(&mut tw, game_config.linecap.enum_next().is_some())
             }
             (SelectedMainSetting::LinecapLevel, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::LinecapLevel, 1) => fmt_larrow(
+            (SelectedMainSetting::LinecapLevel, 2) => fmt_larrow(
                 &mut tw,
                 game_config.linecap != crate::game::linecap::Linecap::Off
                     && game_config.linecap_level > 0,
             ),
-            (SelectedMainSetting::LinecapLevel, 2) => match game_config.linecap {
+            (SelectedMainSetting::LinecapLevel, 3) => match game_config.linecap {
                 crate::game::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
                 crate::game::linecap::Linecap::KillScreenX2
                 | crate::game::linecap::Linecap::Halt => {
                     fmt_desc(&mut tw, format!("{:02}", game_config.linecap_level.0))
                 }
             },
-            (SelectedMainSetting::LinecapLevel, 3) => fmt_rarrow(
+            (SelectedMainSetting::LinecapLevel, 4) => fmt_rarrow(
                 &mut tw,
                 game_config.linecap != crate::game::linecap::Linecap::Off,
             ),
             (SelectedMainSetting::Gravity, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Gravity, 1) => {
+            (SelectedMainSetting::Gravity, 2) => {
                 fmt_larrow(&mut tw, game_config.gravity.enum_prev().is_some())
             }
-            (SelectedMainSetting::Gravity, 2) => fmt_desc(&mut tw, game_config.gravity.name()),
-            (SelectedMainSetting::Gravity, 3) => {
+            (SelectedMainSetting::Gravity, 3) => fmt_desc(&mut tw, game_config.gravity.name()),
+            (SelectedMainSetting::Gravity, 4) => {
                 fmt_rarrow(&mut tw, game_config.gravity.enum_next().is_some())
             }
             (SelectedMainSetting::Seeding, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Seeding, 1) => {
+            (SelectedMainSetting::Seeding, 2) => {
                 fmt_larrow(&mut tw, game_config.seeding.enum_prev().is_some())
             }
-            (SelectedMainSetting::Seeding, 2) => fmt_desc(&mut tw, game_config.seeding.name()),
-            (SelectedMainSetting::Seeding, 3) => {
+            (SelectedMainSetting::Seeding, 3) => fmt_desc(&mut tw, game_config.seeding.name()),
+            (SelectedMainSetting::Seeding, 4) => {
                 fmt_rarrow(&mut tw, game_config.seeding.enum_next().is_some())
             }
             (SelectedMainSetting::Seed, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Seed, 1) => fmt_larrow(&mut tw, false),
-            (SelectedMainSetting::Seed, 2) => match game_config.seeding {
+            (SelectedMainSetting::Seed, 2) => fmt_larrow(&mut tw, false),
+            (SelectedMainSetting::Seed, 3) => match game_config.seeding {
                 Seeding::System => fmt_desc(&mut tw, "".into()),
                 Seeding::Custom => fmt_desc(&mut tw, game_config.seed.to_string()),
             },
-            (SelectedMainSetting::Seed, 3) => fmt_rarrow(&mut tw, false),
+            (SelectedMainSetting::Seed, 4) => fmt_rarrow(&mut tw, false),
             (SelectedMainSetting::Scoring, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Scoring, 1) => {
+            (SelectedMainSetting::Scoring, 2) => {
                 fmt_larrow(&mut tw, game_config.scoring.enum_prev().is_some())
             }
-            (SelectedMainSetting::Scoring, 2) => fmt_desc(&mut tw, game_config.scoring.name()),
-            (SelectedMainSetting::Scoring, 3) => {
+            (SelectedMainSetting::Scoring, 3) => fmt_desc(&mut tw, game_config.scoring.name()),
+            (SelectedMainSetting::Scoring, 4) => {
                 fmt_rarrow(&mut tw, game_config.scoring.enum_next().is_some())
             }
             (SelectedMainSetting::Leveling, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Leveling, 1) => {
+            (SelectedMainSetting::Leveling, 2) => {
                 fmt_larrow(&mut tw, game_config.leveling.enum_prev().is_some())
             }
-            (SelectedMainSetting::Leveling, 2) => fmt_desc(&mut tw, game_config.leveling.name()),
-            (SelectedMainSetting::Leveling, 3) => {
+            (SelectedMainSetting::Leveling, 3) => fmt_desc(&mut tw, game_config.leveling.name()),
+            (SelectedMainSetting::Leveling, 4) => {
                 fmt_rarrow(&mut tw, game_config.leveling.enum_next().is_some())
             }
             (SelectedMainSetting::TVSystem, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::TVSystem, 1) => {
+            (SelectedMainSetting::TVSystem, 2) => {
                 fmt_larrow(&mut tw, game_config.tv_system.enum_prev().is_some())
             }
-            (SelectedMainSetting::TVSystem, 2) => fmt_desc(&mut tw, game_config.tv_system.name()),
-            (SelectedMainSetting::TVSystem, 3) => {
+            (SelectedMainSetting::TVSystem, 3) => fmt_desc(&mut tw, game_config.tv_system.name()),
+            (SelectedMainSetting::TVSystem, 4) => {
                 fmt_rarrow(&mut tw, game_config.tv_system.enum_next().is_some())
             }
             (SelectedMainSetting::NextPieceHint, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::NextPieceHint, 1) => {
+            (SelectedMainSetting::NextPieceHint, 2) => {
                 fmt_larrow(&mut tw, game_config.next_piece_hint.enum_prev().is_some())
             }
-            (SelectedMainSetting::NextPieceHint, 2) => {
+            (SelectedMainSetting::NextPieceHint, 3) => {
                 fmt_desc(&mut tw, game_config.next_piece_hint.name())
             }
-            (SelectedMainSetting::NextPieceHint, 3) => {
+            (SelectedMainSetting::NextPieceHint, 4) => {
                 fmt_rarrow(&mut tw, game_config.next_piece_hint.enum_next().is_some())
             }
             (SelectedMainSetting::Invisible, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::Invisible, 1) => {
+            (SelectedMainSetting::Invisible, 2) => {
                 fmt_larrow(&mut tw, game_config.invisible.enum_prev().is_some())
             }
-            (SelectedMainSetting::Invisible, 2) => fmt_desc(&mut tw, game_config.invisible.name()),
-            (SelectedMainSetting::Invisible, 3) => {
+            (SelectedMainSetting::Invisible, 3) => fmt_desc(&mut tw, game_config.invisible.name()),
+            (SelectedMainSetting::Invisible, 4) => {
                 fmt_rarrow(&mut tw, game_config.invisible.enum_next().is_some())
             }
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             (SelectedMainSetting::FPSLimiter, 0) => fmt_selected(&mut tw),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (SelectedMainSetting::FPSLimiter, 1) => fmt_larrow(
+            (SelectedMainSetting::FPSLimiter, 2) => fmt_larrow(
                 &mut tw,
                 settings_menu_data.fps_limiter.enum_prev().is_some(),
             ),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (SelectedMainSetting::FPSLimiter, 2) => {
+            (SelectedMainSetting::FPSLimiter, 3) => {
                 fmt_desc(&mut tw, settings_menu_data.fps_limiter.name())
             }
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (SelectedMainSetting::FPSLimiter, 3) => fmt_rarrow(
+            (SelectedMainSetting::FPSLimiter, 4) => fmt_rarrow(
                 &mut tw,
                 settings_menu_data.fps_limiter.enum_next().is_some(),
             ),
             (SelectedMainSetting::ShowFPS, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::ShowFPS, 1) => {
+            (SelectedMainSetting::ShowFPS, 2) => {
                 fmt_larrow(&mut tw, settings_menu_data.show_fps.enum_prev().is_some())
             }
-            (SelectedMainSetting::ShowFPS, 2) => {
+            (SelectedMainSetting::ShowFPS, 3) => {
                 fmt_desc(&mut tw, settings_menu_data.show_fps.name())
             }
-            (SelectedMainSetting::ShowFPS, 3) => {
+            (SelectedMainSetting::ShowFPS, 4) => {
                 fmt_rarrow(&mut tw, settings_menu_data.show_fps.enum_next().is_some())
             }
             (SelectedMainSetting::ControllerMapping, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::ControllerMapping, 1) => {
+            (SelectedMainSetting::ControllerMapping, 2) => {
                 fmt_larrow(&mut tw, controller_mapping.enum_prev().is_some())
             }
-            (SelectedMainSetting::ControllerMapping, 2) => {
+            (SelectedMainSetting::ControllerMapping, 3) => {
                 fmt_desc(&mut tw, controller_mapping.name())
             }
-            (SelectedMainSetting::ControllerMapping, 3) => {
+            (SelectedMainSetting::ControllerMapping, 4) => {
                 fmt_rarrow(&mut tw, controller_mapping.enum_next().is_some())
             }
             (SelectedMainSetting::ScaleFactor, 0) => fmt_selected(&mut tw),
-            (SelectedMainSetting::ScaleFactor, 1) => {
+            (SelectedMainSetting::ScaleFactor, 2) => {
                 fmt_larrow(&mut tw, scale_factor.enum_prev().is_some())
             }
-            (SelectedMainSetting::ScaleFactor, 2) => fmt_desc(&mut tw, scale_factor.name()),
-            (SelectedMainSetting::ScaleFactor, 3) => {
+            (SelectedMainSetting::ScaleFactor, 3) => fmt_desc(&mut tw, scale_factor.name()),
+            (SelectedMainSetting::ScaleFactor, 4) => {
                 fmt_rarrow(&mut tw, scale_factor.enum_next().is_some())
             }
-            _ => unreachable!(),
+            (_, 1) => (),
+            (select, idx) => unreachable!("unimplemented option: ({:?}, {})", select, idx),
         }
     });
 }

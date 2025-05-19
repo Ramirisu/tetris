@@ -1,6 +1,5 @@
 use bevy::{
     color::palettes::css::{BLACK, GREEN, RED, WHITE, YELLOW},
-    ecs::relationship::RelatedSpawnerCommands,
     prelude::*,
 };
 
@@ -139,7 +138,7 @@ impl NextPieceEntityMarker {
 }
 
 #[derive(Component)]
-enum PlayerInputsDisplayEntityMarker {
+enum PlayerInputsEntityMarker {
     Left,
     Right,
     Up,
@@ -167,7 +166,6 @@ fn setup_screen(
     mut commands: Commands,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
-    square_image_assets: Res<SquareImageAssets>,
 ) {
     commands
         .spawn((
@@ -185,642 +183,24 @@ fn setup_screen(
             BackgroundFlickeringEntityMarker,
             GameEntityMarker,
         ))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
-                    display: Display::Grid,
-                    grid_template_columns: vec![
-                        GridTrack::px(450.0),
-                        GridTrack::auto(),
-                        GridTrack::px(450.0),
-                    ],
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Start,
-                    padding: UiRect::all(Val::Px(10.0)),
-                    ..default()
-                })
-                .with_children(|parent| {
-                    // left
-                    parent
-                        .spawn(Node {
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            justify_content: JustifyContent::Start,
-                            align_items: AlignItems::End,
-                            ..default()
-                        })
-                        .with_children(|parent| {
-                            // LINES
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Stretch,
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new(t!("tetris.game.lines")),
-                                        TextFont::from_font_size(40.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Right),
-                                    ));
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(80.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Right),
-                                        LinesEntityMarker,
-                                    ));
-                                });
-
-                            // GAME STATISTICS
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(250.0),
-                                    height: Val::Auto,
-                                    display: Display::Grid,
-                                    grid_template_columns: vec![GridTrack::fr(1.0); 2],
-                                    column_gap: Val::Px(10.0),
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Stretch,
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    let titles = [
-                                        t!("tetris.game.brn"),
-                                        t!("tetris.game.tetris"),
-                                        t!("tetris.game.drt"),
-                                    ];
-                                    for (idx, title) in titles.iter().enumerate() {
-                                        parent.spawn((
-                                            Text::new((*title).to_string()),
-                                            TextFont::from_font_size(30.0),
-                                            TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Right),
-                                        ));
-                                        parent.spawn((
-                                            Text::default(),
-                                            TextFont::from_font_size(40.0),
-                                            TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Right),
-                                            GameStatisticsEntityMarker(idx),
-                                        ));
-                                    }
-                                });
-
-                            // PIECE STATISTICS
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Grid,
-                                    grid_template_columns: vec![GridTrack::auto(); 2],
-                                    column_gap: Val::Px(10.0),
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    Piece::iter().filter(|piece| **piece != Piece::X).for_each(
-                                        |piece| {
-                                            parent
-                                                .spawn(Node {
-                                                    display: Display::Grid,
-                                                    grid_template_columns: vec![
-                                                        GridTrack::auto();
-                                                        4
-                                                    ],
-                                                    justify_content: JustifyContent::Center,
-                                                    align_items: AlignItems::Center,
-                                                    margin: UiRect::all(Val::Px(10.0)),
-                                                    ..default()
-                                                })
-                                                .with_children(|parent| {
-                                                    for y in (-1..1).rev() {
-                                                        for x in -2..2 {
-                                                            parent.spawn((
-                                                                Node {
-                                                                    width: Val::Px(25.0),
-                                                                    height: Val::Px(25.0),
-                                                                    ..default()
-                                                                },
-                                                                ImageNode {
-                                                                    image: square_image_assets
-                                                                        .get_image(
-                                                                        SquareImageSize::Standard,
-                                                                        Piece::X,
-                                                                    ),
-                                                                    ..default()
-                                                                },
-                                                                PieceStatisticsEntityMarker::new(
-                                                                    *piece, x, y,
-                                                                ),
-                                                            ));
-                                                        }
-                                                    }
-                                                });
-                                            parent.spawn((
-                                                Text::default(),
-                                                TextFont::from_font_size(40.0),
-                                                TextColor::from(WHITE),
-                                                TextLayout::new_with_justify(JustifyText::Left),
-                                                PieceStatisticsCounterEntityMarker(*piece),
-                                            ));
-                                        },
-                                    );
-                                });
-
-                            // TIME
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Stretch,
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new(t!("tetris.game.time")),
-                                        TextFont::from_font_size(20.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Right),
-                                    ));
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(30.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Right),
-                                        GameStopwatchEntityMarker,
-                                    ));
-                                });
-                        });
-
-                    // center
-                    parent
-                        .spawn(Node {
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            margin: UiRect::all(Val::Px(20.0)),
-                            ..default()
-                        })
-                        .with_children(|parent| {
-                            // BOARD
-                            parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(420.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Column,
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    BackgroundColor::from(BLACK),
-                                ))
-                                .with_children(|parent| {
-                                    let spawn_row =
-                                        |parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-                                         y: usize| {
-                                            for x in 0..Board::BOARD_COLS {
-                                                parent.spawn((
-                                                    Node {
-                                                        width: Val::Px(36.0),
-                                                        height: Val::Px(36.0),
-                                                        ..default()
-                                                    },
-                                                    ImageNode {
-                                                        image: square_image_assets.get_image(
-                                                            SquareImageSize::Standard,
-                                                            Piece::X,
-                                                        ),
-                                                        ..default()
-                                                    },
-                                                    BoardSquareEntityMarker(x, y),
-                                                ));
-                                            }
-                                        };
-
-                                    parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Auto,
-                                                height: Val::Auto,
-                                                display: Display::Grid,
-                                                grid_template_columns: vec![
-                                                    GridTrack::auto();
-                                                    Board::BOARD_COLS
-                                                ],
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                border: UiRect::horizontal(Val::Px(1.0)),
-                                                ..default()
-                                            },
-                                            BorderColor::from(BLACK),
-                                            BackgroundColor::from(BLACK),
-                                        ))
-                                        .with_children(|parent| {
-                                            for y in (Board::BOARD_ROWS..Board::INTERNAL_BOARD_ROWS)
-                                                .rev()
-                                            {
-                                                spawn_row(parent, y);
-                                            }
-                                        });
-
-                                    parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Auto,
-                                                height: Val::Auto,
-                                                display: Display::Grid,
-                                                grid_template_columns: vec![
-                                                    GridTrack::auto();
-                                                    Board::BOARD_COLS
-                                                ],
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                border: UiRect {
-                                                    left: Val::Px(1.0),
-                                                    right: Val::Px(1.0),
-                                                    top: Val::Px(0.0),
-                                                    bottom: Val::Px(1.0),
-                                                },
-                                                ..default()
-                                            },
-                                            BorderColor::from(WHITE),
-                                            BackgroundColor::from(BLACK),
-                                        ))
-                                        .with_children(|parent| {
-                                            for y in (0..Board::BOARD_ROWS).rev() {
-                                                spawn_row(parent, y);
-                                            }
-                                        });
-                                });
-
-                            // DAS
-                            parent
-                                .spawn(Node {
-                                    width: Val::Auto,
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Row,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    column_gap: Val::Px(20.0),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new("DAS"),
-                                        TextFont::from_font_size(40.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
-                                    ));
-                                    parent
-                                        .spawn(Node {
-                                            width: Val::Auto,
-                                            height: Val::Auto,
-                                            display: Display::Flex,
-                                            flex_direction: FlexDirection::Row,
-                                            justify_content: JustifyContent::Center,
-                                            align_items: AlignItems::Center,
-                                            column_gap: Val::Px(0.0),
-                                            ..default()
-                                        })
-                                        .with_children(|parent| {
-                                            for idx in
-                                                0..player_data.das_timer.get_threshold_ticks()
-                                            {
-                                                parent.spawn((
-                                                    Node {
-                                                        width: Val::Px(12.0),
-                                                        height: Val::Px(36.0),
-                                                        border: UiRect::all(Val::Px(1.0)),
-                                                        ..default()
-                                                    },
-                                                    BorderColor::from(WHITE),
-                                                    BorderRadius::right(Val::Px(12.0)),
-                                                    DASCounterBarEntityMarker(idx),
-                                                ));
-                                            }
-                                        });
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(40.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
-                                        DASCounterEntityMarker,
-                                    ));
-                                });
-                        });
-
-                    let spawn_next_piece =
-                        |parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-                         idx: usize,
-                         scale: f32,
-                         block_vis: Visibility,
-                         piece_vis: Visibility| {
-                            parent
-                                .spawn((
-                                    Node {
-                                        display: Display::Grid,
-                                        grid_template_columns: vec![GridTrack::auto(); 4],
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        padding: UiRect::all(Val::Px(10.0 * scale)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                    block_vis,
-                                ))
-                                .with_children(|parent| {
-                                    for y in (-2..2).rev() {
-                                        for x in -2..2 {
-                                            parent.spawn((
-                                                Node {
-                                                    width: Val::Px(SQUARE_SIZE * scale),
-                                                    height: Val::Px(SQUARE_SIZE * scale),
-                                                    ..default()
-                                                },
-                                                ImageNode {
-                                                    image: square_image_assets.get_image(
-                                                        SquareImageSize::Standard,
-                                                        Piece::X,
-                                                    ),
-                                                    ..default()
-                                                },
-                                                piece_vis,
-                                                NextPieceEntityMarker::new(idx, x, y, scale),
-                                            ));
-                                        }
-                                    }
-                                });
-                        };
-
-                    // right
-                    parent
-                        .spawn(Node {
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            justify_content: JustifyContent::Start,
-                            align_items: AlignItems::Start,
-                            ..default()
-                        })
-                        .with_children(|parent| {
-                            // SCORE
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Stretch,
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new(t!("tetris.game.score")),
-                                        TextFont::from_font_size(40.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Left),
-                                    ));
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(80.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Left),
-                                        ScoreEntityMarker,
-                                    ));
-                                });
-
-                            parent
-                                .spawn(Node {
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Start,
-                                    margin: UiRect {
-                                        left: Val::Px(10.0),
-                                        right: Val::Px(10.0),
-                                        top: Val::Px(110.0),
-                                        bottom: Val::Px(10.0),
-                                    },
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent
-                                        .spawn(Node {
-                                            width: Val::Auto,
-                                            height: Val::Auto,
-                                            margin: UiRect::all(Val::Px(10.0)),
-                                            ..default()
-                                        })
-                                        .with_child((
-                                            Text::new(t!("tetris.game.next")),
-                                            TextFont::from_font_size(40.0),
-                                            TextColor::from(WHITE),
-                                            TextLayout::new_with_justify(JustifyText::Left),
-                                        ));
-                                    // NEXT PIECE (0)
-                                    spawn_next_piece(
-                                        parent,
-                                        0,
-                                        1.0,
-                                        Visibility::Inherited,
-                                        game_config.next_piece_hint.as_visibility(0),
-                                    );
-                                });
-
-                            // NEXT PIECE (1..)
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Row,
-                                    justify_content: JustifyContent::Start,
-                                    align_items: AlignItems::Center,
-                                    column_gap: Val::Px(10.0),
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    for idx in 1..5 {
-                                        spawn_next_piece(
-                                            parent,
-                                            idx,
-                                            0.5,
-                                            game_config.next_piece_hint.as_visibility(idx),
-                                            game_config.next_piece_hint.as_visibility(idx),
-                                        );
-                                    }
-                                });
-
-                            // LEVEL
-                            parent
-                                .spawn(Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Auto,
-                                    display: Display::Flex,
-                                    flex_direction: FlexDirection::Row,
-                                    justify_content: JustifyContent::Start,
-                                    align_items: AlignItems::Center,
-                                    column_gap: Val::Px(40.0),
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new(t!("tetris.game.level")),
-                                        TextFont::from_font_size(40.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
-                                    ));
-                                    parent.spawn((
-                                        Text::default(),
-                                        TextFont::from_font_size(80.0),
-                                        TextColor::from(WHITE),
-                                        TextLayout::new_with_justify(JustifyText::Center),
-                                        LevelEntityMarker,
-                                    ));
-                                });
-
-                            // PLAYER INPUTS
-                            parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Px(300.0),
-                                        height: Val::Auto,
-                                        display: Display::Flex,
-                                        flex_direction: FlexDirection::Row,
-                                        justify_content: JustifyContent::SpaceBetween,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(1.0)),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        padding: UiRect::all(Val::Px(5.0)),
-                                        ..default()
-                                    },
-                                    BorderColor::from(WHITE),
-                                ))
-                                .with_children(|parent| {
-                                    // ARROW BUTTONS
-                                    parent
-                                        .spawn((
-                                            Node {
-                                                display: Display::Grid,
-                                                grid_template_columns: vec![GridTrack::auto(); 3],
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                border: UiRect::all(Val::Px(1.0)),
-                                                margin: UiRect::all(Val::Px(10.0)),
-                                                padding: UiRect::all(Val::Px(10.0)),
-                                                ..default()
-                                            },
-                                            BorderColor::from(WHITE),
-                                        ))
-                                        .with_children(|parent| {
-                                            let buttons = vec![
-                                                None,
-                                                Some(PlayerInputsDisplayEntityMarker::Up),
-                                                None,
-                                                Some(PlayerInputsDisplayEntityMarker::Left),
-                                                None,
-                                                Some(PlayerInputsDisplayEntityMarker::Right),
-                                                None,
-                                                Some(PlayerInputsDisplayEntityMarker::Down),
-                                                None,
-                                            ];
-                                            for button in buttons {
-                                                if let Some(marker) = button {
-                                                    parent.spawn((
-                                                        Node {
-                                                            width: Val::Px(20.0),
-                                                            height: Val::Px(20.0),
-                                                            ..default()
-                                                        },
-                                                        BackgroundColor::from(WHITE),
-                                                        marker,
-                                                    ));
-                                                } else {
-                                                    parent.spawn(Node {
-                                                        width: Val::Px(20.0),
-                                                        height: Val::Px(20.0),
-                                                        ..default()
-                                                    });
-                                                }
-                                            }
-                                        });
-
-                                    // A & B BUTTONS
-                                    parent
-                                        .spawn(Node {
-                                            display: Display::Flex,
-                                            flex_direction: FlexDirection::Row,
-                                            justify_content: JustifyContent::Center,
-                                            align_items: AlignItems::Center,
-                                            margin: UiRect::top(Val::Auto),
-                                            padding: UiRect::all(Val::Px(10.0)),
-                                            ..default()
-                                        })
-                                        .with_children(|parent| {
-                                            let buttons = vec![
-                                                PlayerInputsDisplayEntityMarker::B,
-                                                PlayerInputsDisplayEntityMarker::A,
-                                            ];
-
-                                            for button in buttons {
-                                                parent
-                                                    .spawn((
-                                                        Node {
-                                                            width: Val::Auto,
-                                                            height: Val::Auto,
-                                                            border: UiRect::all(Val::Px(1.0)),
-                                                            margin: UiRect::horizontal(Val::Px(
-                                                                5.0,
-                                                            )),
-                                                            ..default()
-                                                        },
-                                                        BorderColor::from(WHITE),
-                                                    ))
-                                                    .with_child((
-                                                        Node {
-                                                            width: Val::Px(30.0),
-                                                            height: Val::Px(30.0),
-                                                            margin: UiRect::all(Val::Px(10.0)),
-                                                            ..default()
-                                                        },
-                                                        BackgroundColor::from(WHITE),
-                                                        BorderRadius::all(Val::Px(15.0)),
-                                                        button,
-                                                    ));
-                                            }
-                                        });
-                                });
-                        });
-                });
+        .with_children(|p| {
+            p.spawn(Node {
+                display: Display::Grid,
+                grid_template_columns: vec![
+                    GridTrack::px(450.0),
+                    GridTrack::auto(),
+                    GridTrack::px(450.0),
+                ],
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Start,
+                padding: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_children(|p| {
+                setup_left_panel(p);
+                setup_central_panel(p, &player_data);
+                setup_right_panel(p, &game_config);
+            });
         });
 
     commands
@@ -847,6 +227,560 @@ fn setup_screen(
             TextColor::from(WHITE),
             TextLayout::new_with_justify(JustifyText::Center),
         ));
+}
+
+fn setup_left_panel(p: &mut ChildSpawnerCommands) {
+    p.spawn(Node {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::Start,
+        align_items: AlignItems::End,
+        ..default()
+    })
+    .with_children(|p| {
+        // LINES
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Stretch,
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn((
+                Text::new(t!("tetris.game.lines")),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Right),
+            ));
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(80.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Right),
+                LinesEntityMarker,
+            ));
+        });
+
+        // GAME STATISTICS
+        p.spawn(Node {
+            width: Val::Px(250.0),
+            height: Val::Auto,
+            display: Display::Grid,
+            grid_template_columns: vec![GridTrack::fr(1.0); 2],
+            column_gap: Val::Px(10.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Stretch,
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            let titles = [
+                t!("tetris.game.brn"),
+                t!("tetris.game.tetris"),
+                t!("tetris.game.drt"),
+            ];
+            for (idx, title) in titles.iter().enumerate() {
+                p.spawn((
+                    Text::new((*title).to_string()),
+                    TextFont::from_font_size(30.0),
+                    TextColor::from(WHITE),
+                    TextLayout::new_with_justify(JustifyText::Right),
+                ));
+                p.spawn((
+                    Text::default(),
+                    TextFont::from_font_size(40.0),
+                    TextColor::from(WHITE),
+                    TextLayout::new_with_justify(JustifyText::Right),
+                    GameStatisticsEntityMarker(idx),
+                ));
+            }
+        });
+
+        // PIECE STATISTICS
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Grid,
+            grid_template_columns: vec![GridTrack::auto(); 2],
+            column_gap: Val::Px(10.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            margin: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            Piece::iter()
+                .filter(|piece| **piece != Piece::X)
+                .for_each(|piece| {
+                    p.spawn(Node {
+                        display: Display::Grid,
+                        grid_template_columns: vec![GridTrack::auto(); 4],
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        margin: UiRect::all(Val::Px(10.0)),
+                        ..default()
+                    })
+                    .with_children(|p| {
+                        for y in (-1..1).rev() {
+                            for x in -2..2 {
+                                p.spawn((
+                                    Node {
+                                        width: Val::Px(25.0),
+                                        height: Val::Px(25.0),
+                                        ..default()
+                                    },
+                                    ImageNode::default(),
+                                    PieceStatisticsEntityMarker::new(*piece, x, y),
+                                ));
+                            }
+                        }
+                    });
+                    p.spawn((
+                        Text::default(),
+                        TextFont::from_font_size(40.0),
+                        TextColor::from(WHITE),
+                        TextLayout::new_with_justify(JustifyText::Left),
+                        PieceStatisticsCounterEntityMarker(*piece),
+                    ));
+                });
+        });
+
+        // TIME
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Stretch,
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn((
+                Text::new(t!("tetris.game.time")),
+                TextFont::from_font_size(20.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Right),
+            ));
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(30.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Right),
+                GameStopwatchEntityMarker,
+            ));
+        });
+    });
+}
+
+fn setup_central_panel(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
+    p.spawn(Node {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        margin: UiRect::all(Val::Px(20.0)),
+        ..default()
+    })
+    .with_children(|p| {
+        // BOARD
+        p.spawn((
+            Node {
+                width: Val::Px(420.0),
+                height: Val::Auto,
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            BackgroundColor::from(BLACK),
+        ))
+        .with_children(|p| {
+            fn spawn_row(p: &mut ChildSpawnerCommands, y: usize) {
+                for x in 0..Board::BOARD_COLS {
+                    p.spawn((
+                        Node {
+                            width: Val::Px(36.0),
+                            height: Val::Px(36.0),
+                            ..default()
+                        },
+                        ImageNode::default(),
+                        BoardSquareEntityMarker(x, y),
+                    ));
+                }
+            }
+
+            p.spawn((
+                Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    border: UiRect::horizontal(Val::Px(1.0)),
+                    ..default()
+                },
+                BorderColor::from(BLACK),
+                BackgroundColor::from(BLACK),
+            ))
+            .with_children(|p| {
+                for y in (Board::BOARD_ROWS..Board::INTERNAL_BOARD_ROWS).rev() {
+                    spawn_row(p, y);
+                }
+            });
+
+            p.spawn((
+                Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    border: UiRect {
+                        left: Val::Px(1.0),
+                        right: Val::Px(1.0),
+                        top: Val::Px(0.0),
+                        bottom: Val::Px(1.0),
+                    },
+                    ..default()
+                },
+                BorderColor::from(WHITE),
+                BackgroundColor::from(BLACK),
+            ))
+            .with_children(|p| {
+                for y in (0..Board::BOARD_ROWS).rev() {
+                    spawn_row(p, y);
+                }
+            });
+        });
+
+        // DAS
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(20.0),
+            margin: UiRect::all(Val::Px(20.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn((
+                Text::new("DAS"),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+            ));
+            p.spawn(Node {
+                width: Val::Auto,
+                height: Val::Auto,
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(0.0),
+                ..default()
+            })
+            .with_children(|p| {
+                for idx in 0..player_data.das_timer.get_threshold_ticks() {
+                    p.spawn((
+                        Node {
+                            width: Val::Px(12.0),
+                            height: Val::Px(36.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BorderColor::from(WHITE),
+                        BorderRadius::right(Val::Px(12.0)),
+                        DASCounterBarEntityMarker(idx),
+                    ));
+                }
+            });
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                DASCounterEntityMarker,
+            ));
+        });
+    });
+}
+
+fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
+    p.spawn(Node {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::Start,
+        align_items: AlignItems::Start,
+        ..default()
+    })
+    .with_children(|p| {
+        // SCORE
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Stretch,
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn((
+                Text::new(t!("tetris.game.score")),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Left),
+            ));
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(80.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Left),
+                ScoreEntityMarker,
+            ));
+        });
+
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Start,
+            margin: UiRect {
+                left: Val::Px(10.0),
+                right: Val::Px(10.0),
+                top: Val::Px(110.0),
+                bottom: Val::Px(10.0),
+            },
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn(Node {
+                width: Val::Auto,
+                height: Val::Auto,
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_child((
+                Text::new(t!("tetris.game.next")),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Left),
+            ));
+            // NEXT PIECE (0)
+            spawn_next_piece(
+                p,
+                0,
+                1.0,
+                Visibility::Inherited,
+                game_config.next_piece_hint.as_visibility(0),
+            );
+        });
+
+        // NEXT PIECE (1..)
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Start,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(10.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            for idx in 1..5 {
+                spawn_next_piece(
+                    p,
+                    idx,
+                    0.5,
+                    game_config.next_piece_hint.as_visibility(idx),
+                    game_config.next_piece_hint.as_visibility(idx),
+                );
+            }
+        });
+
+        // LEVEL
+        p.spawn(Node {
+            width: Val::Px(300.0),
+            height: Val::Auto,
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Start,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(40.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn((
+                Text::new(t!("tetris.game.level")),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+            ));
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(80.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                LevelEntityMarker,
+            ));
+        });
+
+        // PLAYER INPUTS
+        p.spawn((
+            Node {
+                width: Val::Px(300.0),
+                height: Val::Auto,
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::SpaceBetween,
+                align_items: AlignItems::Center,
+                border: UiRect::all(Val::Px(1.0)),
+                margin: UiRect::all(Val::Px(10.0)),
+                padding: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+            BorderColor::from(WHITE),
+        ))
+        .with_children(|p| {
+            // ARROW BUTTONS
+            p.spawn((
+                Node {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTrack::auto(); 3],
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    border: UiRect::all(Val::Px(1.0)),
+                    margin: UiRect::all(Val::Px(10.0)),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    ..default()
+                },
+                BorderColor::from(WHITE),
+            ))
+            .with_children(|p| {
+                let buttons = vec![
+                    None,
+                    Some(PlayerInputsEntityMarker::Up),
+                    None,
+                    Some(PlayerInputsEntityMarker::Left),
+                    None,
+                    Some(PlayerInputsEntityMarker::Right),
+                    None,
+                    Some(PlayerInputsEntityMarker::Down),
+                    None,
+                ];
+                for button in buttons {
+                    if let Some(marker) = button {
+                        p.spawn((
+                            Node {
+                                width: Val::Px(20.0),
+                                height: Val::Px(20.0),
+                                ..default()
+                            },
+                            BackgroundColor::from(WHITE),
+                            marker,
+                        ));
+                    } else {
+                        p.spawn(Node {
+                            width: Val::Px(20.0),
+                            height: Val::Px(20.0),
+                            ..default()
+                        });
+                    }
+                }
+            });
+
+            // A & B BUTTONS
+            p.spawn(Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::top(Val::Auto),
+                padding: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_children(|p| {
+                let buttons = vec![PlayerInputsEntityMarker::B, PlayerInputsEntityMarker::A];
+
+                for button in buttons {
+                    p.spawn((
+                        Node {
+                            width: Val::Auto,
+                            height: Val::Auto,
+                            border: UiRect::all(Val::Px(1.0)),
+                            margin: UiRect::horizontal(Val::Px(5.0)),
+                            ..default()
+                        },
+                        BorderColor::from(WHITE),
+                    ))
+                    .with_child((
+                        Node {
+                            width: Val::Px(30.0),
+                            height: Val::Px(30.0),
+                            margin: UiRect::all(Val::Px(10.0)),
+                            ..default()
+                        },
+                        BackgroundColor::from(WHITE),
+                        BorderRadius::all(Val::Px(15.0)),
+                        button,
+                    ));
+                }
+            });
+        });
+    });
+}
+
+fn spawn_next_piece(
+    p: &mut ChildSpawnerCommands,
+    idx: usize,
+    scale: f32,
+    block_vis: Visibility,
+    piece_vis: Visibility,
+) {
+    p.spawn((
+        Node {
+            display: Display::Grid,
+            grid_template_columns: vec![GridTrack::auto(); 4],
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            border: UiRect::all(Val::Px(1.0)),
+            padding: UiRect::all(Val::Px(10.0 * scale)),
+            ..default()
+        },
+        BorderColor::from(WHITE),
+        block_vis,
+    ))
+    .with_children(|p| {
+        for y in (-2..2).rev() {
+            for x in -2..2 {
+                p.spawn((
+                    Node {
+                        width: Val::Px(SQUARE_SIZE * scale),
+                        height: Val::Px(SQUARE_SIZE * scale),
+                        ..default()
+                    },
+                    ImageNode::default(),
+                    piece_vis,
+                    NextPieceEntityMarker::new(idx, x, y, scale),
+                ));
+            }
+        }
+    });
 }
 
 fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
@@ -1082,7 +1016,7 @@ mod state_player_dropping {
         mut query: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<PauseScreenEntityMarker>>,
-            Query<(&mut BackgroundColor, &PlayerInputsDisplayEntityMarker)>,
+            Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
@@ -1110,12 +1044,12 @@ mod state_player_dropping {
 
         query.p2().iter_mut().for_each(|(mut bg_color, marker)| {
             let pressed = match marker {
-                PlayerInputsDisplayEntityMarker::Left => player_inputs.left.pressed,
-                PlayerInputsDisplayEntityMarker::Right => player_inputs.right.pressed,
-                PlayerInputsDisplayEntityMarker::Up => player_inputs.up.pressed,
-                PlayerInputsDisplayEntityMarker::Down => player_inputs.down.pressed,
-                PlayerInputsDisplayEntityMarker::A => player_inputs.a.pressed,
-                PlayerInputsDisplayEntityMarker::B => player_inputs.b.pressed,
+                PlayerInputsEntityMarker::Left => player_inputs.left.pressed,
+                PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
+                PlayerInputsEntityMarker::Up => player_inputs.up.pressed,
+                PlayerInputsEntityMarker::Down => player_inputs.down.pressed,
+                PlayerInputsEntityMarker::A => player_inputs.a.pressed,
+                PlayerInputsEntityMarker::B => player_inputs.b.pressed,
             };
             if pressed {
                 *bg_color = RED.into();

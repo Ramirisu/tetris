@@ -32,41 +32,39 @@ struct PressStartEntityMarker;
 struct PressStartTimeDuration(Duration);
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            SplashScreenEntityMarker,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },
+        SplashScreenEntityMarker,
+        Children::spawn((
+            Spawn((
+                Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                })
-                .with_child(logo(Val::Px(40.0), &mut image_assets));
-
-            parent
-                .spawn(Node {
+                },
+                Children::spawn(Spawn(logo(Val::Px(40.0), &mut image_assets))),
+            )),
+            Spawn((
+                Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        Text::new(t!("tetris.splash.press_start")),
-                        TextFont::from_font_size(40.0),
-                        TextColor::from(WHITE),
-                        PressStartEntityMarker,
-                    ));
-                });
-        });
+                },
+                Children::spawn(Spawn((
+                    Text::new(t!("tetris.splash.press_start")),
+                    TextFont::from_font_size(40.0),
+                    TextColor::from(WHITE),
+                    PressStartEntityMarker,
+                ))),
+            )),
+        )),
+    ));
 }
 
 fn handle_input_system(

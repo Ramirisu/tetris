@@ -31,30 +31,27 @@ struct LoadingScreenIconEntityMarker;
 struct LoadingScreenIconTimeDuration(Duration);
 
 fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn((
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },
+        LoadingScreenEntityMarker,
+        Children::spawn(Spawn((
             Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
+                margin: UiRect::all(Val::Px(40.0)),
                 ..default()
             },
-            LoadingScreenEntityMarker,
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Node {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                },
-                ImageNode::new(asset_server.load("images/bevy_logo_dark.png"))
-                    .with_color(Srgba::new(1.0, 1.0, 1.0, 0.0).into()),
-                LoadingScreenIconEntityMarker,
-            ));
-        });
+            ImageNode::new(asset_server.load("images/bevy_logo_dark.png"))
+                .with_color(Srgba::new(1.0, 1.0, 1.0, 0.0).into()),
+            LoadingScreenIconEntityMarker,
+        ))),
+    ));
 }
 
 fn handle_input_system(
