@@ -108,20 +108,10 @@ struct GameStatisticsEntityMarker(usize);
 const SQUARE_SIZE: f32 = 40.0;
 
 #[derive(Component)]
-struct PieceStatisticsEntityMarker {
-    pub piece: Piece,
-    pub x: i32,
-    pub y: i32,
-}
-
-impl PieceStatisticsEntityMarker {
-    pub fn new(piece: Piece, x: i32, y: i32) -> Self {
-        Self { piece, x, y }
-    }
-}
+struct PieceDistributionIconEntityMarker(Piece);
 
 #[derive(Component)]
-struct PieceStatisticsCounterEntityMarker(Piece);
+struct PieceDistributionTextEntityMarker(Piece);
 
 #[derive(Component)]
 struct NextPieceEntityMarker {
@@ -302,51 +292,29 @@ fn setup_left_panel(p: &mut ChildSpawnerCommands) {
             }
         });
 
-        // PIECE STATISTICS
+        // PIECE DISTRIBUTION
         p.spawn(Node {
             width: Val::Px(300.0),
             height: Val::Auto,
             display: Display::Grid,
             grid_template_columns: vec![GridTrack::auto(); 2],
-            column_gap: Val::Px(10.0),
+            column_gap: Val::Px(20.0),
+            row_gap: Val::Px(20.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            margin: UiRect::all(Val::Px(10.0)),
             ..default()
         })
         .with_children(|p| {
             Piece::iter()
                 .filter(|piece| **piece != Piece::X)
                 .for_each(|piece| {
-                    p.spawn(Node {
-                        display: Display::Grid,
-                        grid_template_columns: vec![GridTrack::auto(); 4],
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(10.0)),
-                        ..default()
-                    })
-                    .with_children(|p| {
-                        for y in (-1..1).rev() {
-                            for x in -2..2 {
-                                p.spawn((
-                                    Node {
-                                        width: Val::Px(25.0),
-                                        height: Val::Px(25.0),
-                                        ..default()
-                                    },
-                                    ImageNode::default(),
-                                    PieceStatisticsEntityMarker::new(*piece, x, y),
-                                ));
-                            }
-                        }
-                    });
+                    spawn_piece_distribution_icon(p, *piece);
                     p.spawn((
                         Text::default(),
                         TextFont::from_font_size(40.0),
                         TextColor::from(WHITE),
                         TextLayout::new_with_justify(JustifyText::Left),
-                        PieceStatisticsCounterEntityMarker(*piece),
+                        PieceDistributionTextEntityMarker(*piece),
                     ));
                 });
         });
@@ -745,6 +713,46 @@ fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
     });
 }
 
+fn spawn_piece_distribution_icon(p: &mut ChildSpawnerCommands, piece: Piece) {
+    let sqrs = piece.to_squares();
+    let (min_x, max_x, min_y, max_y) =
+        sqrs.iter()
+            .fold((10, -10, 10, -10), |(min_x, max_x, min_y, max_y), sqr| {
+                (
+                    min_x.min(sqr.0),
+                    max_x.max(sqr.0),
+                    min_y.min(sqr.1),
+                    max_y.max(sqr.1),
+                )
+            });
+    let cols = (max_x - min_x + 1) as usize;
+
+    p.spawn(Node {
+        display: Display::Grid,
+        grid_template_columns: vec![GridTrack::auto(); cols],
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
+    })
+    .with_children(|p| {
+        for y in (min_y..=max_y).rev() {
+            for x in min_x..=max_x {
+                p.spawn((
+                    Node {
+                        width: Val::Px(25.0),
+                        height: Val::Px(25.0),
+                        ..default()
+                    },
+                    ImageNode::default(),
+                ))
+                .insert_if(PieceDistributionIconEntityMarker(piece), || {
+                    sqrs.iter().any(|sqr| sqr.0 == x && sqr.1 == y)
+                });
+            }
+        }
+    });
+}
+
 fn spawn_next_piece(
     p: &mut ChildSpawnerCommands,
     idx: usize,
@@ -793,7 +801,7 @@ fn update_statistics_system(
         Query<Entity, With<ScoreEntityMarker>>,
         Query<Entity, With<LevelEntityMarker>>,
         Query<(Entity, &GameStatisticsEntityMarker)>,
-        Query<(Entity, &PieceStatisticsCounterEntityMarker)>,
+        Query<(Entity, &PieceDistributionTextEntityMarker)>,
         Query<Entity, With<GameStopwatchEntityMarker>>,
         Query<Entity, With<DASCounterEntityMarker>>,
         Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
@@ -941,18 +949,11 @@ fn update_next_piece(
 }
 
 fn update_piece_count(
-    mut query: Query<(&mut ImageNode, &PieceStatisticsEntityMarker)>,
+    mut query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
     square_image_assets: &SquareImageAssets,
 ) {
     for (mut img, marker) in query.iter_mut() {
-        if marker
-            .piece
-            .to_squares()
-            .iter()
-            .any(|sqr| sqr.0 == marker.x && sqr.1 == marker.y)
-        {
-            img.image = square_image_assets.get_image(SquareImageSize::Small, marker.piece);
-        }
+        img.image = square_image_assets.get_image(SquareImageSize::Small, marker.0);
     }
 }
 
@@ -978,7 +979,7 @@ mod state_player_init {
                 &mut Visibility,
                 &NextPieceEntityMarker,
             )>,
-            Query<(&mut ImageNode, &PieceStatisticsEntityMarker)>,
+            Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
         )>,
         player_data: Res<PlayerData>,
         game_config: Res<GameConfig>,
@@ -1308,7 +1309,7 @@ mod state_player_entry_delay {
                 &mut Visibility,
                 &NextPieceEntityMarker,
             )>,
-            Query<(&mut ImageNode, &PieceStatisticsEntityMarker)>,
+            Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
         )>,
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
