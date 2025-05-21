@@ -7,11 +7,12 @@ use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
+    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     utility::{despawn_all, format_hhmmss},
 };
 
 use super::{
-    asset::SquareImageAssets,
+    asset::{SquareImageAssets, SquareImageDisplayLevel},
     board::Board,
     game::{GameConfig, GameState},
     invisible::Invisible,
@@ -102,16 +103,46 @@ struct DASCounterBarEntityMarker(u64);
 #[derive(Component)]
 struct GameStopwatchEntityMarker;
 
-#[derive(Component)]
-struct GameStatisticsEntityMarker(usize);
+#[derive(Debug, Component)]
+enum GameStatisticsEntityMarker {
+    Burned,
+    #[allow(dead_code)] // TODO:
+    TetrisCount,
+    TetrisRate,
+    Drought,
+    #[allow(dead_code)] // TODO:
+    MaxDrought,
+}
 
 const SQUARE_SIZE: f32 = 40.0;
+const BORDER_WIDTH: f32 = 4.0;
 
-#[derive(Component)]
+#[derive(Clone, Copy, Component)]
 struct PieceDistributionIconEntityMarker(Piece);
+
+impl From<Piece> for PieceDistributionIconEntityMarker {
+    fn from(value: Piece) -> Self {
+        PieceDistributionIconEntityMarker(value)
+    }
+}
 
 #[derive(Component)]
 struct PieceDistributionTextEntityMarker(Piece);
+
+#[derive(Clone, Copy, Component)]
+struct BurnedIconEntityMarker;
+
+#[derive(Clone, Copy, Component)]
+struct TetrisStatsIconEntityMarker(Piece);
+
+impl From<Piece> for TetrisStatsIconEntityMarker {
+    fn from(value: Piece) -> Self {
+        TetrisStatsIconEntityMarker(value)
+    }
+}
+
+#[derive(Clone, Copy, Component)]
+struct DroughtIconEntityMarker;
 
 #[derive(Component)]
 struct NextPieceEntityMarker {
@@ -175,21 +206,61 @@ fn setup_screen(
         ))
         .with_children(|p| {
             p.spawn(Node {
+                width: Val::Px(WINDOW_WIDTH),
+                height: Val::Px(WINDOW_HEIGHT),
                 display: Display::Grid,
-                grid_template_columns: vec![
-                    GridTrack::px(450.0),
-                    GridTrack::auto(),
-                    GridTrack::px(450.0),
-                ],
+                grid_template_columns: vec![GridTrack::auto(); 3],
                 justify_content: JustifyContent::Center,
-                align_items: AlignItems::Start,
-                padding: UiRect::all(Val::Px(10.0)),
+                align_items: AlignItems::Center,
                 ..default()
             })
             .with_children(|p| {
-                setup_left_panel(p);
-                setup_central_panel(p, &player_data);
-                setup_right_panel(p, &game_config);
+                const PANEL_PADDING: UiRect = UiRect::axes(Val::Px(10.0), Val::Px(50.0));
+
+                setup_left_panel(
+                    p.spawn(Node {
+                        width: Val::Px(500.0),
+                        height: Val::Px(WINDOW_HEIGHT),
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Start,
+                        align_items: AlignItems::End,
+                        padding: PANEL_PADDING,
+                        border: UiRect::all(Val::Px(1.0)), // cfg!(debug_assertions)
+                        ..default()
+                    })
+                    .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
+                );
+                setup_central_panel(
+                    p.spawn(Node {
+                        width: Val::Px(420.0),
+                        height: Val::Px(WINDOW_HEIGHT),
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        padding: PANEL_PADDING,
+                        border: UiRect::all(Val::Px(1.0)), // cfg!(debug_assertions)
+                        ..default()
+                    })
+                    .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
+                    &player_data,
+                );
+                setup_right_panel(
+                    p.spawn(Node {
+                        width: Val::Px(500.0),
+                        height: Val::Px(WINDOW_HEIGHT),
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Start,
+                        align_items: AlignItems::Start,
+                        padding: PANEL_PADDING,
+                        border: UiRect::all(Val::Px(1.0)), // cfg!(debug_assertions)
+                        ..default()
+                    })
+                    .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
+                    &game_config,
+                );
             });
         });
 
@@ -219,25 +290,15 @@ fn setup_screen(
         ));
 }
 
-fn setup_left_panel(p: &mut ChildSpawnerCommands) {
-    p.spawn(Node {
-        display: Display::Flex,
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Start,
-        align_items: AlignItems::End,
-        ..default()
-    })
-    .with_children(|p| {
+fn setup_left_panel(p: &mut EntityCommands) {
+    p.with_children(|p| {
         // LINES
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
-            align_items: AlignItems::Stretch,
+            align_items: AlignItems::Center,
             margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(10.0)),
             ..default()
         })
         .with_children(|p| {
@@ -256,59 +317,27 @@ fn setup_left_panel(p: &mut ChildSpawnerCommands) {
             ));
         });
 
-        // GAME STATISTICS
-        p.spawn(Node {
-            width: Val::Px(250.0),
-            height: Val::Auto,
-            display: Display::Grid,
-            grid_template_columns: vec![GridTrack::fr(1.0); 2],
-            column_gap: Val::Px(10.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Stretch,
-            margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(10.0)),
-            ..default()
-        })
-        .with_children(|p| {
-            let titles = [
-                t!("tetris.game.brn"),
-                t!("tetris.game.tetris"),
-                t!("tetris.game.drt"),
-            ];
-            for (idx, title) in titles.iter().enumerate() {
-                p.spawn((
-                    Text::new((*title).to_string()),
-                    TextFont::from_font_size(30.0),
-                    TextColor::from(WHITE),
-                    TextLayout::new_with_justify(JustifyText::Right),
-                ));
-                p.spawn((
-                    Text::default(),
-                    TextFont::from_font_size(40.0),
-                    TextColor::from(WHITE),
-                    TextLayout::new_with_justify(JustifyText::Right),
-                    GameStatisticsEntityMarker(idx),
-                ));
-            }
-        });
-
         // PIECE DISTRIBUTION
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Grid,
             grid_template_columns: vec![GridTrack::auto(); 2],
             column_gap: Val::Px(20.0),
             row_gap: Val::Px(20.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
+            margin: UiRect::axes(Val::Px(20.0), Val::Px(50.0)),
             ..default()
         })
         .with_children(|p| {
             Piece::iter()
                 .filter(|piece| **piece != Piece::X)
                 .for_each(|piece| {
-                    spawn_piece_distribution_icon(p, *piece);
+                    spawn_piece_icon(
+                        p,
+                        *piece,
+                        Val::Px(25.0),
+                        PieceDistributionIconEntityMarker::from(*piece),
+                    );
                     p.spawn((
                         Text::default(),
                         TextFont::from_font_size(40.0),
@@ -319,16 +348,84 @@ fn setup_left_panel(p: &mut ChildSpawnerCommands) {
                 });
         });
 
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        })
+        .with_children(|p| {
+            fn spawn_info_block<Marker: Component + Copy>(
+                p: &mut ChildSpawnerCommands,
+                piece: Piece,
+                text_marker: GameStatisticsEntityMarker,
+                icon_marker: Marker,
+            ) {
+                p.spawn((
+                    Node {
+                        width: Val::Auto,
+                        height: Val::Percent(100.0),
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::SpaceEvenly,
+                        align_items: AlignItems::Center,
+                        margin: UiRect::all(Val::Px(10.0)),
+                        padding: UiRect::all(Val::Px(10.0)),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BorderColor::from(WHITE),
+                ))
+                .with_children(|p| {
+                    spawn_piece_icon(p, piece, Val::Px(20.0), icon_marker);
+
+                    p.spawn((
+                        Node {
+                            margin: UiRect::all(Val::Px(5.0)),
+                            ..default()
+                        },
+                        Text::default(),
+                        TextFont::from_font_size(30.0),
+                        TextColor::from(WHITE),
+                        TextLayout::new_with_justify(JustifyText::Center),
+                        text_marker,
+                    ));
+                });
+            }
+
+            // BURNED
+            spawn_info_block(
+                p,
+                Piece::o(),
+                GameStatisticsEntityMarker::Burned,
+                BurnedIconEntityMarker,
+            );
+
+            // TETRIS RATE
+            spawn_info_block(
+                p,
+                Piece::i(),
+                GameStatisticsEntityMarker::TetrisRate,
+                TetrisStatsIconEntityMarker::from(Piece::i()),
+            );
+
+            // DROUGHT
+            spawn_info_block(
+                p,
+                Piece::i(),
+                GameStatisticsEntityMarker::Drought,
+                DroughtIconEntityMarker,
+            );
+        });
+
         // TIME
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
-            align_items: AlignItems::Stretch,
+            align_items: AlignItems::End,
             margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(10.0)),
             ..default()
         })
         .with_children(|p| {
@@ -349,158 +446,153 @@ fn setup_left_panel(p: &mut ChildSpawnerCommands) {
     });
 }
 
-fn setup_central_panel(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
-    p.spawn(Node {
-        display: Display::Flex,
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        margin: UiRect::all(Val::Px(20.0)),
-        ..default()
-    })
-    .with_children(|p| {
-        // BOARD
-        p.spawn((
-            Node {
-                width: Val::Px(420.0),
-                height: Val::Auto,
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor::from(BLACK),
-        ))
-        .with_children(|p| {
-            fn spawn_row(p: &mut ChildSpawnerCommands, y: usize) {
-                for x in 0..Board::BOARD_COLS {
-                    p.spawn((
-                        Node {
-                            width: Val::Px(36.0),
-                            height: Val::Px(36.0),
-                            ..default()
-                        },
-                        ImageNode::default(),
-                        BoardSquareEntityMarker(x, y),
-                    ));
-                }
-            }
-
-            p.spawn((
-                Node {
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    border: UiRect::horizontal(Val::Px(1.0)),
-                    ..default()
-                },
-                BorderColor::from(BLACK),
-                BackgroundColor::from(BLACK),
-            ))
-            .with_children(|p| {
-                for y in (Board::BOARD_ROWS..Board::INTERNAL_BOARD_ROWS).rev() {
-                    spawn_row(p, y);
-                }
-            });
-
-            p.spawn((
-                Node {
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    border: UiRect {
-                        left: Val::Px(1.0),
-                        right: Val::Px(1.0),
-                        top: Val::Px(0.0),
-                        bottom: Val::Px(1.0),
-                    },
-                    ..default()
-                },
-                BorderColor::from(WHITE),
-                BackgroundColor::from(BLACK),
-            ))
-            .with_children(|p| {
-                for y in (0..Board::BOARD_ROWS).rev() {
-                    spawn_row(p, y);
-                }
-            });
-        });
-
-        // DAS
+fn setup_central_panel(p: &mut EntityCommands, player_data: &PlayerData) {
+    p.with_children(|p| {
         p.spawn(Node {
             display: Display::Flex,
-            flex_direction: FlexDirection::Row,
+            flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            column_gap: Val::Px(20.0),
-            margin: UiRect::all(Val::Px(20.0)),
             ..default()
         })
         .with_children(|p| {
-            p.spawn((
-                Text::new("DAS"),
-                TextFont::from_font_size(40.0),
-                TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
-            ));
             p.spawn(Node {
-                width: Val::Auto,
-                height: Val::Auto,
+                display: Display::Grid,
+                grid_template_columns: vec![GridTrack::auto(); 3],
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(2.0),
+                margin: UiRect::top(Val::Px(50.0)),
+                ..default()
+            })
+            .with_children(|p| {
+                // BOARD
+                p.spawn((
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BackgroundColor::from(BLACK),
+                ))
+                .with_children(|p| {
+                    fn spawn_row(p: &mut ChildSpawnerCommands, y: usize) {
+                        for x in 0..Board::BOARD_COLS {
+                            p.spawn((
+                                Node {
+                                    width: Val::Px(36.0),
+                                    height: Val::Px(36.0),
+                                    ..default()
+                                },
+                                ImageNode::default(),
+                                BoardSquareEntityMarker(x, y),
+                            ));
+                        }
+                    }
+
+                    p.spawn((
+                        Node {
+                            display: Display::Grid,
+                            grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            border: UiRect::horizontal(Val::Px(BORDER_WIDTH)),
+                            ..default()
+                        },
+                        BorderColor::from(BLACK),
+                        BackgroundColor::from(BLACK),
+                    ))
+                    .with_children(|p| {
+                        for y in (Board::BOARD_ROWS..Board::INTERNAL_BOARD_ROWS).rev() {
+                            spawn_row(p, y);
+                        }
+                    });
+
+                    p.spawn((
+                        Node {
+                            display: Display::Grid,
+                            grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            border: UiRect::px(BORDER_WIDTH, BORDER_WIDTH, 0.0, BORDER_WIDTH),
+                            ..default()
+                        },
+                        BorderColor::from(WHITE),
+                        BackgroundColor::from(BLACK),
+                    ))
+                    .with_children(|p| {
+                        for y in (0..Board::BOARD_ROWS).rev() {
+                            spawn_row(p, y);
+                        }
+                    });
+                });
+            });
+
+            // DAS
+            p.spawn(Node {
                 display: Display::Flex,
                 flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
-                column_gap: Val::Px(0.0),
+                column_gap: Val::Px(20.0),
+                margin: UiRect::all(Val::Px(20.0)),
                 ..default()
             })
             .with_children(|p| {
-                for idx in 0..player_data.das_timer.get_threshold_ticks() {
-                    p.spawn((
-                        Node {
-                            width: Val::Px(12.0),
-                            height: Val::Px(36.0),
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..default()
-                        },
-                        BorderColor::from(WHITE),
-                        BorderRadius::right(Val::Px(12.0)),
-                        DASCounterBarEntityMarker(idx),
-                    ));
-                }
+                p.spawn((
+                    Text::new("DAS"),
+                    TextFont::from_font_size(40.0),
+                    TextColor::from(WHITE),
+                    TextLayout::new_with_justify(JustifyText::Center),
+                ));
+                p.spawn(Node {
+                    width: Val::Auto,
+                    height: Val::Auto,
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(0.0),
+                    ..default()
+                })
+                .with_children(|p| {
+                    for idx in 0..player_data.das_timer.get_threshold_ticks() {
+                        p.spawn((
+                            Node {
+                                width: Val::Px(12.0),
+                                height: Val::Px(36.0),
+                                border: UiRect::all(Val::Px(1.0)),
+                                ..default()
+                            },
+                            BorderColor::from(WHITE),
+                            BorderRadius::right(Val::Px(12.0)),
+                            DASCounterBarEntityMarker(idx),
+                        ));
+                    }
+                });
+                p.spawn((
+                    Text::default(),
+                    TextFont::from_font_size(40.0),
+                    TextColor::from(WHITE),
+                    TextLayout::new_with_justify(JustifyText::Center),
+                    DASCounterEntityMarker,
+                ));
             });
-            p.spawn((
-                Text::default(),
-                TextFont::from_font_size(40.0),
-                TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
-                DASCounterEntityMarker,
-            ));
         });
     });
 }
 
-fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
-    p.spawn(Node {
-        display: Display::Flex,
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Start,
-        align_items: AlignItems::Start,
-        ..default()
-    })
-    .with_children(|p| {
+fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
+    p.with_children(|p| {
         // SCORE
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Stretch,
             margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(10.0)),
             ..default()
         })
         .with_children(|p| {
@@ -524,12 +616,7 @@ fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Start,
-            margin: UiRect {
-                left: Val::Px(10.0),
-                right: Val::Px(10.0),
-                top: Val::Px(110.0),
-                bottom: Val::Px(10.0),
-            },
+            margin: UiRect::px(10.0, 10.0, 110.0, 10.0),
             ..default()
         })
         .with_children(|p| {
@@ -557,8 +644,6 @@ fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
 
         // NEXT PIECE (1..)
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Flex,
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Start,
@@ -581,15 +666,12 @@ fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
 
         // LEVEL
         p.spawn(Node {
-            width: Val::Px(300.0),
-            height: Val::Auto,
             display: Display::Flex,
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Start,
             align_items: AlignItems::Center,
             column_gap: Val::Px(40.0),
             margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(10.0)),
             ..default()
         })
         .with_children(|p| {
@@ -713,7 +795,14 @@ fn setup_right_panel(p: &mut ChildSpawnerCommands, game_config: &GameConfig) {
     });
 }
 
-fn spawn_piece_distribution_icon(p: &mut ChildSpawnerCommands, piece: Piece) {
+fn spawn_piece_icon<Marker>(
+    p: &mut ChildSpawnerCommands,
+    piece: Piece,
+    square_size: Val,
+    marker: Marker,
+) where
+    Marker: Component + Copy,
+{
     let sqrs = piece.to_squares();
     let (min_x, max_x, min_y, max_y) =
         sqrs.iter()
@@ -739,15 +828,13 @@ fn spawn_piece_distribution_icon(p: &mut ChildSpawnerCommands, piece: Piece) {
             for x in min_x..=max_x {
                 p.spawn((
                     Node {
-                        width: Val::Px(25.0),
-                        height: Val::Px(25.0),
+                        width: square_size,
+                        height: square_size,
                         ..default()
                     },
                     ImageNode::default(),
                 ))
-                .insert_if(PieceDistributionIconEntityMarker(piece), || {
-                    sqrs.iter().any(|sqr| sqr.0 == x && sqr.1 == y)
-                });
+                .insert_if(marker, || sqrs.iter().any(|sqr| sqr.0 == x && sqr.1 == y));
             }
         }
     });
@@ -766,7 +853,7 @@ fn spawn_next_piece(
             grid_template_columns: vec![GridTrack::auto(); 4],
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            border: UiRect::all(Val::Px(1.0)),
+            border: UiRect::all(Val::Px(BORDER_WIDTH * scale)),
             padding: UiRect::all(Val::Px(10.0 * scale)),
             ..default()
         },
@@ -796,35 +883,62 @@ fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData
 }
 
 fn update_statistics_system(
+    time: Res<Time>,
     mut query: ParamSet<(
-        Query<Entity, With<LinesEntityMarker>>,
-        Query<Entity, With<ScoreEntityMarker>>,
-        Query<Entity, With<LevelEntityMarker>>,
-        Query<(Entity, &GameStatisticsEntityMarker)>,
-        Query<(Entity, &PieceDistributionTextEntityMarker)>,
-        Query<Entity, With<GameStopwatchEntityMarker>>,
-        Query<Entity, With<DASCounterEntityMarker>>,
-        Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
+        ParamSet<(
+            Query<Entity, With<LinesEntityMarker>>,
+            Query<Entity, With<ScoreEntityMarker>>,
+            Query<Entity, With<LevelEntityMarker>>,
+            Query<(Entity, &GameStatisticsEntityMarker)>,
+            Query<(Entity, &PieceDistributionTextEntityMarker)>,
+            Query<Entity, With<GameStopwatchEntityMarker>>,
+            Query<Entity, With<DASCounterEntityMarker>>,
+            Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
+        )>,
+        Query<&mut ImageNode, With<DroughtIconEntityMarker>>,
+        Query<&mut ImageNode, With<BurnedIconEntityMarker>>,
     )>,
     mut tw: TextUiWriter,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
+    square_image_assets: Res<SquareImageAssets>,
 ) {
-    if let Ok(entity) = query.p0().single_mut() {
+    let drought_level = match player_data.board.drought() {
+        0..7 => SquareImageDisplayLevel::Info,
+        7..14 => SquareImageDisplayLevel::Warn,
+        _ => SquareImageDisplayLevel::Error,
+    };
+
+    fn flicker(time: f32, period: f32) -> f32 {
+        ((std::f32::consts::TAU * time / period).sin() / 2.0 + 0.5).clamp(0.0, 1.0)
+    }
+
+    let drought_alpha = match drought_level {
+        SquareImageDisplayLevel::Info => 1.0,
+        SquareImageDisplayLevel::Warn => flicker(time.elapsed_secs(), 1.0),
+        SquareImageDisplayLevel::Error => flicker(time.elapsed_secs(), 0.5),
+    };
+
+    if let Ok(entity) = query.p0().p0().single_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(entity) = query.p1().single_mut() {
+    if let Ok(entity) = query.p0().p1().single_mut() {
         *tw.text(entity, 0) = game_config.scoring.format(player_data.board.score());
     }
-    if let Ok(entity) = query.p2().single_mut() {
+    if let Ok(entity) = query.p0().p2().single_mut() {
         *tw.text(entity, 0) = game_config
             .leveling
             .format_string(player_data.board.level());
     }
-    for (entity, marker) in query.p3() {
-        match marker.0 {
-            0 => *tw.text(entity, 0) = format!("{:4}", player_data.board.burned_lines()),
-            1 => {
+    for (entity, marker) in query.p0().p3() {
+        match marker {
+            GameStatisticsEntityMarker::Burned => {
+                *tw.text(entity, 0) = format!("{}", player_data.board.burned_lines())
+            }
+            GameStatisticsEntityMarker::TetrisCount => {
+                *tw.text(entity, 0) = format!("{}", player_data.board.tetris_clear())
+            }
+            GameStatisticsEntityMarker::TetrisRate => {
                 let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
                 *tw.text(entity, 0) = format!("{:3}%", rate);
                 match rate {
@@ -833,22 +947,24 @@ fn update_statistics_system(
                     _ => *tw.color(entity, 0) = GREEN.into(),
                 }
             }
-            2 => {
-                let drought = player_data.board.drought();
-                *tw.text(entity, 0) = format!("{:4}", drought);
-                match drought {
-                    0..7 => *tw.color(entity, 0) = WHITE.into(),
-                    7..14 => *tw.color(entity, 0) = YELLOW.into(),
-                    _ => *tw.color(entity, 0) = RED.into(),
+            GameStatisticsEntityMarker::Drought => {
+                *tw.text(entity, 0) = format!("{}", player_data.board.drought());
+                *tw.color(entity, 0) = {
+                    let mut color = drought_level.color();
+                    color.set_alpha(drought_alpha);
+                    color
                 }
+                .into();
             }
-            _ => unreachable!(),
+            GameStatisticsEntityMarker::MaxDrought => {
+                *tw.text(entity, 0) = format!("{}", player_data.board.max_drought())
+            }
         }
     }
-    for (entity, piece) in query.p4().iter_mut() {
+    for (entity, piece) in query.p0().p4().iter_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
-    if let Ok(entity) = query.p5().single_mut() {
+    if let Ok(entity) = query.p0().p5().single_mut() {
         *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
     }
 
@@ -860,16 +976,24 @@ fn update_statistics_system(
     let das_ticks = game_config
         .tv_system
         .duration_to_ticks(player_data.das_timer.elapsed());
-    if let Ok(entity) = query.p6().single_mut() {
+    if let Ok(entity) = query.p0().p6().single_mut() {
         *tw.text(entity, 0) = format!("{:02}", das_ticks);
         *tw.color(entity, 0) = das_color.into();
     }
-    for (mut bg_color, marker) in query.p7() {
+    for (mut bg_color, marker) in query.p0().p7() {
         if marker.0 < das_ticks {
             *bg_color = das_color.into();
         } else {
             *bg_color = BLACK.into();
         }
+    }
+
+    for mut img in query.p1() {
+        img.image = square_image_assets.get_display_level_image(drought_level);
+        img.color.set_alpha(drought_alpha);
+    }
+    for mut img in query.p2() {
+        img.image = square_image_assets.get_burned_image();
     }
 }
 
@@ -948,8 +1072,17 @@ fn update_next_piece(
     }
 }
 
-fn update_piece_count(
+fn update_piece_distribution_icon(
     mut query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
+    square_image_assets: &SquareImageAssets,
+) {
+    for (mut img, marker) in query.iter_mut() {
+        img.image = square_image_assets.get_image(SquareImageSize::Small, marker.0);
+    }
+}
+
+fn update_tetris_stats_icon(
+    mut query: Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
     square_image_assets: &SquareImageAssets,
 ) {
     for (mut img, marker) in query.iter_mut() {
@@ -980,6 +1113,7 @@ mod state_player_init {
                 &NextPieceEntityMarker,
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
+            Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
         )>,
         player_data: Res<PlayerData>,
         game_config: Res<GameConfig>,
@@ -995,7 +1129,8 @@ mod state_player_init {
             None,
         );
         update_next_piece(query.p1(), &player_data, &square_image_assets);
-        update_piece_count(query.p2(), &square_image_assets);
+        update_piece_distribution_icon(query.p2(), &square_image_assets);
+        update_tetris_stats_icon(query.p3(), &square_image_assets);
         player_phase.set(PlayerPhase::Dropping);
     }
 }
@@ -1310,6 +1445,7 @@ mod state_player_entry_delay {
                 &NextPieceEntityMarker,
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
+            Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
         )>,
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
@@ -1334,7 +1470,8 @@ mod state_player_entry_delay {
                 None,
             );
             update_next_piece(query.p2(), &player_data, &square_image_assets);
-            update_piece_count(query.p3(), &square_image_assets);
+            update_piece_distribution_icon(query.p3(), &square_image_assets);
+            update_tetris_stats_icon(query.p4(), &square_image_assets);
 
             if game_config.linecap == Linecap::Halt
                 && player_data.board.level() >= game_config.linecap_level

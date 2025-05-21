@@ -2,7 +2,7 @@ use bevy::{ecs::spawn, prelude::*};
 
 use crate::game::{
     level::Level,
-    palette::{SquareImageSize, get_square_image},
+    palette::{SquareImageSize, get_square_image_by_level},
     piece::Piece,
 };
 
@@ -35,33 +35,37 @@ pub fn logo(size: Val, image_assets: &mut Assets<Image>) -> impl Bundle {
 
 fn load_logo_images(image_assets: &mut Assets<Image>) -> [Handle<Image>; 7] {
     [
-        image_assets.add(get_square_image(SquareImageSize::Small, Piece::X, Level(0))),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
+            SquareImageSize::Small,
+            Piece::X,
+            Level(0),
+        )),
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::j(),
             Level(8),
         )),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::t(),
             Level(2),
         )),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::z(),
             Level(8),
         )),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::z(),
             Level(9),
         )),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::z(),
             Level(0),
         )),
-        image_assets.add(get_square_image(
+        image_assets.add(get_square_image_by_level(
             SquareImageSize::Small,
             Piece::z(),
             Level(1),

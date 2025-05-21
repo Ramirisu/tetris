@@ -181,20 +181,8 @@ tetris.level_option.level:
   zh-CN: 等级
 tetris.game.lines:
   en: LINES
-  zh-TW: 已消除
-  zh-CN: 已消除
-tetris.game.brn:
-  en: BURNED
-  zh-TW: 燒毀
-  zh-CN: 烧毁
-tetris.game.tetris:
-  en: TETRIS
-  zh-TW: 消四
-  zh-CN: 消四
-tetris.game.drt:
-  en: DROUGHT
-  zh-TW: 乾旱
-  zh-CN: 干旱
+  zh-TW: 消除
+  zh-CN: 消除
 tetris.game.score:
   en: SCORE
   zh-TW: 分數

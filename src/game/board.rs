@@ -104,7 +104,7 @@ impl Board {
 
     pub fn tetris_rate(&self) -> f32 {
         if self.lines == 0 {
-            0.0
+            1.0
         } else {
             self.tetris_clear() as f32 * 4.0 / self.lines as f32
         }
@@ -114,7 +114,6 @@ impl Board {
         self.drought
     }
 
-    #[allow(dead_code)]
     pub fn max_drought(&self) -> usize {
         self.max_drought
     }

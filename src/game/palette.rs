@@ -16,7 +16,7 @@ use image::{DynamicImage, Rgb32FImage};
 
 use super::{level::Level, piece::Piece};
 
-pub fn get_square_image(size: SquareImageSize, piece: Piece, level: Level) -> Image {
+pub fn get_square_image_by_level(size: SquareImageSize, piece: Piece, level: Level) -> Image {
     let palette = get_level_palette(level);
     match piece {
         Piece::T(_) => SquareImagePattern::X.to_image(size, palette),
@@ -28,7 +28,6 @@ pub fn get_square_image(size: SquareImageSize, piece: Piece, level: Level) -> Im
         Piece::I(_) => SquareImagePattern::X.to_image(size, palette),
         Piece::X => SquareImagePattern::X.to_image(size, &[BLACK, BLACK, BLACK, BLACK]),
     }
-    .into()
 }
 
 fn get_level_palette(level: Level) -> &'static [Srgba; 4] {
