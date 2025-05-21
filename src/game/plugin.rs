@@ -8,7 +8,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
-    utility::{despawn_all, format_hhmmss},
+    utility::{effect::flicker, entity::despawn_all, format::format_hhmmss},
 };
 
 use super::{
@@ -908,10 +908,6 @@ fn update_statistics_system(
         7..14 => SquareImageDisplayLevel::Warn,
         _ => SquareImageDisplayLevel::Error,
     };
-
-    fn flicker(time: f32, period: f32) -> f32 {
-        ((std::f32::consts::TAU * time / period).sin() / 2.0 + 0.5).clamp(0.0, 1.0)
-    }
 
     let drought_alpha = match drought_level {
         SquareImageDisplayLevel::Info => 1.0,

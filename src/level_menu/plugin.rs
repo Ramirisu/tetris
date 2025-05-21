@@ -14,7 +14,7 @@ use crate::{
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    utility::despawn_all,
+    utility::entity::despawn_all,
 };
 
 pub fn setup(app: &mut App) {

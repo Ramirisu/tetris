@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     app_state::AppState,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    utility::despawn_all,
+    utility::entity::despawn_all,
 };
 
 pub fn setup(app: &mut App) {
