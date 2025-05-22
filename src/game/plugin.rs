@@ -114,7 +114,7 @@ enum GameStatisticsEntityMarker {
     MaxDrought,
 }
 
-const SQUARE_SIZE: f32 = 40.0;
+const BOARD_SQUARE_SIZE: f32 = 40.0;
 const BORDER_WIDTH: f32 = 4.0;
 
 #[derive(Clone, Copy, Component)]
@@ -133,13 +133,7 @@ struct PieceDistributionTextEntityMarker(Piece);
 struct BurnedIconEntityMarker;
 
 #[derive(Clone, Copy, Component)]
-struct TetrisStatsIconEntityMarker(Piece);
-
-impl From<Piece> for TetrisStatsIconEntityMarker {
-    fn from(value: Piece) -> Self {
-        TetrisStatsIconEntityMarker(value)
-    }
-}
+struct TetrisRateIconEntityMarker;
 
 #[derive(Clone, Copy, Component)]
 struct DroughtIconEntityMarker;
@@ -368,7 +362,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         height: Val::Percent(100.0),
                         display: Display::Flex,
                         flex_direction: FlexDirection::Column,
-                        justify_content: JustifyContent::SpaceEvenly,
+                        justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         margin: UiRect::all(Val::Px(10.0)),
                         padding: UiRect::all(Val::Px(10.0)),
@@ -378,7 +372,16 @@ fn setup_left_panel(p: &mut EntityCommands) {
                     BorderColor::from(WHITE),
                 ))
                 .with_children(|p| {
-                    spawn_piece_icon(p, piece, Val::Px(20.0), icon_marker);
+                    const SQUARE_SIZE: f32 = 20.0;
+
+                    p.spawn(Node {
+                        width: Val::Auto,
+                        height: Val::Px(SQUARE_SIZE * 2.5),
+                        ..default()
+                    })
+                    .with_children(|p| {
+                        spawn_piece_icon(p, piece, Val::Px(SQUARE_SIZE), icon_marker);
+                    });
 
                     p.spawn((
                         Node {
@@ -405,9 +408,9 @@ fn setup_left_panel(p: &mut EntityCommands) {
             // TETRIS RATE
             spawn_info_block(
                 p,
-                Piece::i(),
+                Piece::t(),
                 GameStatisticsEntityMarker::TetrisRate,
-                TetrisStatsIconEntityMarker::from(Piece::i()),
+                TetrisRateIconEntityMarker,
             );
 
             // DROUGHT
@@ -821,6 +824,7 @@ fn spawn_piece_icon<Marker>(
         grid_template_columns: vec![GridTrack::auto(); cols],
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
+        margin: UiRect::AUTO,
         ..default()
     })
     .with_children(|p| {
@@ -865,8 +869,8 @@ fn spawn_next_piece(
             for x in -2..2 {
                 p.spawn((
                     Node {
-                        width: Val::Px(SQUARE_SIZE * scale),
-                        height: Val::Px(SQUARE_SIZE * scale),
+                        width: Val::Px(BOARD_SQUARE_SIZE * scale),
+                        height: Val::Px(BOARD_SQUARE_SIZE * scale),
                         ..default()
                     },
                     ImageNode::default(),
@@ -1051,8 +1055,8 @@ fn update_next_piece(
             Piece::X => (0.0, 0.0),
         };
 
-        node.left = Val::Px(shift.0 * marker.scale * SQUARE_SIZE);
-        node.top = Val::Px(shift.1 * marker.scale * SQUARE_SIZE);
+        node.left = Val::Px(shift.0 * marker.scale * BOARD_SQUARE_SIZE);
+        node.top = Val::Px(shift.1 * marker.scale * BOARD_SQUARE_SIZE);
 
         if piece
             .to_squares()
@@ -1077,12 +1081,12 @@ fn update_piece_distribution_icon(
     }
 }
 
-fn update_tetris_stats_icon(
-    mut query: Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
+fn update_tetris_rate_icon(
+    mut query: Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
     square_image_assets: &SquareImageAssets,
 ) {
-    for (mut img, marker) in query.iter_mut() {
-        img.image = square_image_assets.get_image(SquareImageSize::Small, marker.0);
+    for mut img in query.iter_mut() {
+        img.image = square_image_assets.get_image(SquareImageSize::Small, Piece::t());
     }
 }
 
@@ -1109,7 +1113,7 @@ mod state_player_init {
                 &NextPieceEntityMarker,
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
-            Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
+            Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
         )>,
         player_data: Res<PlayerData>,
         game_config: Res<GameConfig>,
@@ -1126,7 +1130,7 @@ mod state_player_init {
         );
         update_next_piece(query.p1(), &player_data, &square_image_assets);
         update_piece_distribution_icon(query.p2(), &square_image_assets);
-        update_tetris_stats_icon(query.p3(), &square_image_assets);
+        update_tetris_rate_icon(query.p3(), &square_image_assets);
         player_phase.set(PlayerPhase::Dropping);
     }
 }
@@ -1441,7 +1445,7 @@ mod state_player_entry_delay {
                 &NextPieceEntityMarker,
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
-            Query<(&mut ImageNode, &TetrisStatsIconEntityMarker)>,
+            Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
         )>,
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
@@ -1467,7 +1471,7 @@ mod state_player_entry_delay {
             );
             update_next_piece(query.p2(), &player_data, &square_image_assets);
             update_piece_distribution_icon(query.p3(), &square_image_assets);
-            update_tetris_stats_icon(query.p4(), &square_image_assets);
+            update_tetris_rate_icon(query.p4(), &square_image_assets);
 
             if game_config.linecap == Linecap::Halt
                 && player_data.board.level() >= game_config.linecap_level
