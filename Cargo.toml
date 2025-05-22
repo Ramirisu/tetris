@@ -17,12 +17,12 @@ rand = "0.9"
 rand_chacha = "0.9"
 getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.25"
+rust-i18n = "3.1.5"
+sys-locale = { version = "0.3.2", features = ["js"] }
 log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
-rust-i18n = "3.1.4"
-sys-locale = { version = "0.3.2", features = ["js"] }
 
 [profile.wasm-release]
 inherits = "release"

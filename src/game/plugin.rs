@@ -106,11 +106,11 @@ struct GameStopwatchEntityMarker;
 #[derive(Debug, Component)]
 enum GameStatisticsEntityMarker {
     Burned,
-    #[allow(dead_code)] // TODO:
+    #[allow(dead_code)] // TODO: UI?
     TetrisCount,
     TetrisRate,
     Drought,
-    #[allow(dead_code)] // TODO:
+    #[allow(dead_code)] // TODO: UI?
     MaxDrought,
 }
 

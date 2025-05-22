@@ -123,7 +123,7 @@ impl SoftDropTimer {
     fn get_initial_entry_delay(tv_system: TVSystem) -> Duration {
         match tv_system {
             TVSystem::NTSC => tv_system.ticks_to_duration(96),
-            TVSystem::PAL => tv_system.ticks_to_duration(72), // TODO: is this correct?
+            TVSystem::PAL => tv_system.ticks_to_duration(72), // TODO: correct?
         }
     }
 }
@@ -162,7 +162,7 @@ impl PressDownTimer {
     fn get_threshold(tv_system: TVSystem) -> Duration {
         match tv_system {
             TVSystem::NTSC => tv_system.ticks_to_duration(2),
-            TVSystem::PAL => tv_system.ticks_to_duration(2), // TODO: is this correct?
+            TVSystem::PAL => tv_system.ticks_to_duration(2), // TODO: correct?
         }
     }
 }
@@ -263,7 +263,7 @@ impl LineClearTimer {
     fn get_threshold(tv_system: TVSystem) -> Duration {
         match tv_system {
             TVSystem::NTSC => tv_system.ticks_to_duration(18),
-            TVSystem::PAL => tv_system.ticks_to_duration(18), // TODO: is this correct?
+            TVSystem::PAL => tv_system.ticks_to_duration(18), // TODO: correct?
         }
     }
 }
@@ -303,7 +303,7 @@ impl EntryDelayTimer {
                 tv_system.ticks_to_duration(ticks)
             }
             TVSystem::PAL => {
-                // TODO: is this correct?
+                // TODO: correct?
                 let ticks = (height + 2) / 4 * 2 + 10;
                 tv_system.ticks_to_duration(ticks)
             }
