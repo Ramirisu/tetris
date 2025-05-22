@@ -2,7 +2,7 @@ use bevy::{
     asset::load_internal_binary_asset,
     color::palettes::css::GREEN,
     prelude::*,
-    window::{PresentMode, WindowResolution},
+    window::{EnabledButtons, PresentMode, WindowResolution},
 };
 
 mod app_state;
@@ -43,6 +43,12 @@ fn main() {
                         .with_scale_factor_override(1.0),
                     present_mode: PresentMode::AutoNoVsync,
                     position: WindowPosition::Centered(MonitorSelection::Primary),
+                    resizable: false,
+                    enabled_buttons: EnabledButtons {
+                        minimize: true,
+                        maximize: false,
+                        close: true,
+                    },
                     title: "TETRIS".into(),
                     ..default()
                 }),
