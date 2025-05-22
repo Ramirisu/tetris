@@ -291,7 +291,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
+            align_items: AlignItems::End,
             margin: UiRect::all(Val::Px(10.0)),
             ..default()
         })
