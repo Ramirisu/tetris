@@ -18,10 +18,14 @@ use crate::{
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    utility::entity::despawn_all,
+    utility::{effect::flicker, entity::despawn_all},
 };
 
-use super::{scale_factor::ScaleFactor, setting_name::SettingName, show_fps::ShowFPS};
+use super::{
+    scale_factor::{ScaleFactor, WINDOW_HEIGHT, WINDOW_WIDTH},
+    setting_name::SettingName,
+    show_fps::ShowFPS,
+};
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
 use super::fps_limiter::FPSLimiter;
@@ -162,56 +166,68 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             ..default()
         },
         SettingsMenuEntityMarker,
-        Children::spawn((
-            Spawn((
-                Node {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                },
-                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
-            )),
-            Spawn((
-                Node {
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::auto(); 5],
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    column_gap: Val::Px(20.0),
-                    row_gap: Val::Px(5.0),
-                    margin: UiRect::all(Val::Px(20.0)),
-                    padding: UiRect::all(Val::Px(20.0)),
-                    border: UiRect::all(Val::Px(5.0)),
-                    ..default()
-                },
-                BorderColor::from(BLUE),
-                Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
-                    for selected_main_setting in SelectedMainSetting::iter() {
-                        let cols: [(String, Val); 5] = [
-                            ("".into(), Val::Auto),
-                            (selected_main_setting.name().into(), Val::Px(300.0)),
-                            ("".into(), Val::Auto),
-                            ("".into(), Val::Px(300.0)),
-                            ("".into(), Val::Auto),
-                        ];
+        Children::spawn(Spawn((
+            Node {
+                width: Val::Px(WINDOW_WIDTH),
+                height: Val::Px(WINDOW_HEIGHT),
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(Val::Px(50.0)),
+                ..default()
+            },
+            Children::spawn((
+                Spawn((
+                    Node {
+                        margin: UiRect::all(Val::Px(40.0)),
+                        ..default()
+                    },
+                    Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+                )),
+                Spawn((
+                    Node {
+                        display: Display::Grid,
+                        grid_template_columns: vec![GridTrack::auto(); 5],
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        column_gap: Val::Px(20.0),
+                        row_gap: Val::Px(5.0),
+                        margin: UiRect::all(Val::Px(20.0)),
+                        padding: UiRect::all(Val::Px(20.0)),
+                        border: UiRect::all(Val::Px(5.0)),
+                        ..default()
+                    },
+                    BorderColor::from(BLUE),
+                    Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
+                        for selected_main_setting in SelectedMainSetting::iter() {
+                            let cols: [(String, Val, f32); 5] = [
+                                ("▶".into(), Val::Auto, 20.0),
+                                (selected_main_setting.name().into(), Val::Px(300.0), 30.0),
+                                ("".into(), Val::Auto, 30.0),
+                                ("".into(), Val::Px(300.0), 30.0),
+                                ("".into(), Val::Auto, 30.0),
+                            ];
 
-                        for (idx, (name, width)) in cols.iter().enumerate() {
-                            p.spawn((
-                                Node {
-                                    width: *width,
-                                    height: Val::Auto,
-                                    ..default()
-                                },
-                                Text::new(name),
-                                TextFont::from_font_size(30.0),
-                                TextColor::from(WHITE),
-                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                                SelectedMainSettingEntityMarker(selected_main_setting, idx),
-                            ));
+                            for (idx, (name, width, font_size)) in cols.iter().enumerate() {
+                                p.spawn((
+                                    Node {
+                                        width: *width,
+                                        height: Val::Auto,
+                                        ..default()
+                                    },
+                                    Text::new(name),
+                                    TextFont::from_font_size(*font_size),
+                                    TextColor::from(WHITE),
+                                    TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                    SelectedMainSettingEntityMarker(selected_main_setting, idx),
+                                ));
+                            }
                         }
-                    }
-                })),
+                    })),
+                )),
             )),
-        )),
+        ))),
     ));
 }
 
@@ -536,6 +552,7 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
+    time: Res<Time>,
     mut query: Query<(Entity, &SelectedMainSettingEntityMarker)>,
     mut tw: TextUiWriter,
     settings_menu_data: Res<SettingsMenuData>,
@@ -545,12 +562,13 @@ fn update_ui_system(
 ) {
     query.iter_mut().for_each(|(entity, marker)| {
         let fmt_selected = |tw: &mut TextUiWriter| {
-            *tw.text(entity, 0) = (if marker.0 == settings_menu_data.selected_main_setting {
-                "▶"
-            } else {
-                " "
-            })
-            .into()
+            tw.color(entity, 0).set_alpha(
+                if marker.0 == settings_menu_data.selected_main_setting {
+                    flicker(time.elapsed_secs(), 0.5)
+                } else {
+                    0.0
+                },
+            );
         };
         let fmt_larrow = |tw: &mut TextUiWriter, b: bool| {
             *tw.text(entity, 0) = (if b { "<" } else { " " }).into()

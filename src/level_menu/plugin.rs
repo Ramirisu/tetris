@@ -1,6 +1,5 @@
 use bevy::{
-    color::palettes::css::{BLACK, BLUE, CRIMSON, GOLD, GREEN, WHITE},
-    ecs::spawn::SpawnWith,
+    color::palettes::css::{BLACK, BLUE, GOLD, GREEN, RED, WHITE},
     prelude::*,
 };
 
@@ -14,7 +13,8 @@ use crate::{
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    utility::entity::despawn_all,
+    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    utility::{effect::flicker, entity::despawn_all},
 };
 
 pub fn setup(app: &mut App) {
@@ -72,39 +72,52 @@ const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands.spawn((
-        Node {
-            display: Display::Flex,
-            flex_direction: FlexDirection::Column,
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        LevelMenuEntityMarker,
-        Children::spawn((
-            Spawn((
-                Node {
+    commands
+        .spawn((
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            LevelMenuEntityMarker,
+        ))
+        .with_children(|p| {
+            p.spawn(Node {
+                width: Val::Px(WINDOW_WIDTH),
+                height: Val::Px(WINDOW_HEIGHT),
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(Val::Px(50.0)),
+                ..default()
+            })
+            .with_children(|p| {
+                p.spawn(Node {
                     margin: UiRect::all(Val::Px(40.0)),
                     ..default()
-                },
-                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
-            )),
-            Spawn((
-                Node {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::all(Val::Px(10.0)),
-                    padding: UiRect::all(Val::Px(10.0)),
-                    border: UiRect::all(Val::Px(5.0)),
-                    ..default()
-                },
-                BorderColor::from(BLUE),
-                Children::spawn((
-                    Spawn((
+                })
+                .with_child(logo(Val::Px(20.0), &mut image_assets));
+
+                p.spawn((
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        margin: UiRect::all(Val::Px(10.0)),
+                        padding: UiRect::all(Val::Px(10.0)),
+                        border: UiRect::all(Val::Px(5.0)),
+                        ..default()
+                    },
+                    BorderColor::from(BLUE),
+                ))
+                .with_children(|p| {
+                    p.spawn((
                         Node {
                             margin: UiRect::all(Val::Px(20.0)),
                             ..default()
@@ -112,11 +125,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         Text::new(t!("tetris.level_option.level")),
                         TextFont::from_font_size(40.0),
                         TextColor::from(WHITE),
-                    )),
-                    Spawn((
+                    ));
+
+                    p.spawn((
                         Node {
                             display: Display::Grid,
                             grid_template_columns: vec![GridTrack::auto(); 5],
+                            justify_items: JustifyItems::Center,
+                            align_items: AlignItems::Center,
                             row_gap: Val::Px(5.0),
                             column_gap: Val::Px(5.0),
                             border: UiRect::all(Val::Px(5.0)),
@@ -124,49 +140,39 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         },
                         BackgroundColor::from(GREEN),
                         BorderColor::from(GREEN),
-                        Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
-                            for (y, rows) in LEVELS.iter().enumerate() {
-                                for (x, col) in rows.iter().enumerate() {
-                                    if let Some(level) = col {
-                                        p.spawn((
-                                            Node {
-                                                width: Val::Px(60.0),
-                                                height: Val::Px(60.0),
-                                                display: Display::Flex,
-                                                flex_direction: FlexDirection::Row,
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                ..default()
-                                            },
-                                            BackgroundColor::from(BLUE),
-                                            Text::new(format!("{}", level)),
-                                            TextFont::from_font_size(40.0),
-                                            TextColor::from(CRIMSON),
-                                            TextLayout::new_with_justify(JustifyText::Center),
-                                            LevelButtonEntityMarker {
-                                                cordinate: (x as i32, y as i32),
-                                            },
-                                        ));
-                                    } else {
-                                        p.spawn((
-                                            Node {
-                                                width: Val::Px(60.0),
-                                                height: Val::Px(60.0),
-                                                align_items: AlignItems::Center,
-                                                justify_content: JustifyContent::Center,
-                                                ..default()
-                                            },
-                                            BackgroundColor::from(BLACK),
-                                        ));
-                                    }
+                    ))
+                    .with_children(|p| {
+                        for (y, rows) in LEVELS.iter().enumerate() {
+                            for (x, col) in rows.iter().enumerate() {
+                                let mut ec = p.spawn((
+                                    Node {
+                                        width: Val::Px(60.0),
+                                        height: Val::Px(60.0),
+                                        display: Display::Flex,
+                                        flex_direction: FlexDirection::Column,
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..default()
+                                    },
+                                    BackgroundColor::from(BLACK),
+                                    LevelButtonEntityMarker {
+                                        cordinate: (x as i32, y as i32),
+                                    },
+                                ));
+                                if let Some(level) = col {
+                                    ec.with_child((
+                                        Text::new(level.to_string()),
+                                        TextFont::from_font_size(40.0),
+                                        TextColor::from(RED),
+                                        TextLayout::new_with_justify(JustifyText::Center),
+                                    ));
                                 }
                             }
-                        })),
-                    )),
-                )),
-            )),
-        )),
-    ));
+                        }
+                    });
+                });
+            });
+        });
 }
 
 fn handle_input_system(
@@ -252,20 +258,17 @@ fn handle_input_system(
 
 fn update_ui_system(
     time: Res<Time>,
-    mut query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
+    query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
     level_menu_data: Res<LevelMenuData>,
 ) {
-    fn sin(elapsed: f32) -> f32 {
-        const SPEED: f32 = 30.0;
-        (((elapsed * SPEED).sin() + 1.0) / 4.0 + 0.5).clamp(0.5, 1.0)
-    }
+    for (mut bg_color, marker) in query {
+        if marker.cordinate == level_menu_data.selected_level {
+            let mut color = GOLD;
+            color.set_alpha(flicker(time.elapsed_secs(), 0.25));
 
-    query.iter_mut().for_each(|(mut bg_color, level_button)| {
-        if level_button.cordinate == level_menu_data.selected_level {
-            let color = GOLD * sin(time.elapsed_secs());
             *bg_color = color.into();
         } else {
             *bg_color = BLACK.into();
         }
-    });
+    }
 }

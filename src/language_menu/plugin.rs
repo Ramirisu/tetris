@@ -12,7 +12,8 @@ use crate::{
     enum_advance, enum_advance_cycle,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    utility::entity::despawn_all,
+    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    utility::{effect::flicker, entity::despawn_all},
 };
 
 pub fn setup(app: &mut App) {
@@ -81,49 +82,61 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             ..default()
         },
         LanguageMenuEntityMarker,
-        Children::spawn((
-            Spawn((
-                Node {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                },
-                Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+        Children::spawn(Spawn((
+            Node {
+                width: Val::Px(WINDOW_WIDTH),
+                height: Val::Px(WINDOW_HEIGHT),
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(Val::Px(50.0)),
+                ..default()
+            },
+            Children::spawn((
+                Spawn((
+                    Node {
+                        margin: UiRect::all(Val::Px(40.0)),
+                        ..default()
+                    },
+                    Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
+                )),
+                Spawn((
+                    Node {
+                        width: Val::Px(300.0),
+                        height: Val::Auto,
+                        display: Display::Grid,
+                        grid_template_columns: vec![GridTrack::auto(); 2],
+                        column_gap: Val::Px(20.0),
+                        row_gap: Val::Px(5.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        margin: UiRect::all(Val::Px(20.0)),
+                        padding: UiRect::all(Val::Px(20.0)),
+                        border: UiRect::all(Val::Px(5.0)),
+                        ..default()
+                    },
+                    BorderColor::from(BLUE),
+                    Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
+                        for lang in Language::iter() {
+                            p.spawn((
+                                Text::new("▶"),
+                                TextFont::from_font_size(25.0),
+                                TextColor::from(WHITE),
+                                TextLayout::new_with_justify(JustifyText::Center),
+                                LanguageSelectionEntityMarker(lang),
+                            ));
+                            p.spawn((
+                                Text::new(lang.name()),
+                                TextFont::from_font_size(35.0),
+                                TextColor::from(WHITE),
+                                TextLayout::new_with_justify(JustifyText::Left),
+                            ));
+                        }
+                    })),
+                )),
             )),
-            Spawn((
-                Node {
-                    width: Val::Px(300.0),
-                    height: Val::Auto,
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::auto(); 2],
-                    column_gap: Val::Px(20.0),
-                    row_gap: Val::Px(5.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::all(Val::Px(20.0)),
-                    padding: UiRect::all(Val::Px(20.0)),
-                    border: UiRect::all(Val::Px(5.0)),
-                    ..default()
-                },
-                BorderColor::from(BLUE),
-                Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
-                    for lang in Language::iter() {
-                        p.spawn((
-                            Text::default(),
-                            TextFont::from_font_size(40.0),
-                            TextColor::from(WHITE),
-                            TextLayout::new_with_justify(JustifyText::Center),
-                            LanguageSelectionEntityMarker(lang),
-                        ));
-                        p.spawn((
-                            Text::new(lang.name()),
-                            TextFont::from_font_size(40.0),
-                            TextColor::from(WHITE),
-                            TextLayout::new_with_justify(JustifyText::Left),
-                        ));
-                    }
-                })),
-            )),
-        )),
+        ))),
     ));
 }
 
@@ -168,16 +181,17 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
+    time: Res<Time>,
     query: Query<(Entity, &LanguageSelectionEntityMarker)>,
     mut tw: TextUiWriter,
     lang_menu_data: Res<LanguageMenuData>,
 ) {
     for (entity, marker) in query {
-        *tw.text(entity, 0) = (if lang_menu_data.selected_lang == marker.0 {
-            "▶"
-        } else {
-            ""
-        })
-        .into();
+        tw.color(entity, 0)
+            .set_alpha(if lang_menu_data.selected_lang == marker.0 {
+                flicker(time.elapsed_secs(), 0.5)
+            } else {
+                0.0
+            });
     }
 }
