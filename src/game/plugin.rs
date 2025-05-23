@@ -966,7 +966,7 @@ fn update_statistics_system(
             }
         }
     }
-    for (entity, piece) in query.p0().p4().iter_mut() {
+    for (entity, piece) in query.p0().p4() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
     if let Ok(entity) = query.p0().p5().single_mut() {
@@ -1078,19 +1078,19 @@ fn update_next_piece_icons(
 }
 
 fn update_piece_distribution_icons(
-    mut query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
+    query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
     square_image_assets: &SquareImageAssets,
 ) {
-    for (mut img, marker) in query.iter_mut() {
+    for (mut img, marker) in query {
         img.image = square_image_assets.get_image(SquareImageSize::Small, marker.0);
     }
 }
 
 fn update_tetris_rate_icon(
-    mut query: Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
+    query: Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
     square_image_assets: &SquareImageAssets,
 ) {
-    for mut img in query.iter_mut() {
+    for mut img in query {
         img.image = square_image_assets.get_image(SquareImageSize::Small, Piece::t());
     }
 }
@@ -1179,7 +1179,7 @@ mod state_player_dropping {
             return;
         }
 
-        query.p2().iter_mut().for_each(|(mut bg_color, marker)| {
+        for (mut bg_color, marker) in query.p2() {
             let pressed = match marker {
                 PlayerInputsEntityMarker::Left => player_inputs.left.pressed,
                 PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
@@ -1193,7 +1193,7 @@ mod state_player_dropping {
             } else {
                 *bg_color = WHITE.into();
             }
-        });
+        }
 
         player_data.soft_drop_timer.tick(time.delta());
 
@@ -1398,7 +1398,7 @@ mod state_player_line_clear {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
-                for (mut img, coord) in query.p0().iter_mut() {
+                for (mut img, coord) in query.p0() {
                     if (coord.0 == left || coord.0 == right)
                         && player_data.line_clear_rows.contains(&coord.1)
                     {

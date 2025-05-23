@@ -553,14 +553,14 @@ fn handle_input_system(
 
 fn update_ui_system(
     time: Res<Time>,
-    mut query: Query<(Entity, &SelectedMainSettingEntityMarker)>,
+    query: Query<(Entity, &SelectedMainSettingEntityMarker)>,
     mut tw: TextUiWriter,
     settings_menu_data: Res<SettingsMenuData>,
     game_config: Res<GameConfig>,
     controller_mapping: Res<ControllerMapping>,
     scale_factor: Res<ScaleFactor>,
 ) {
-    query.iter_mut().for_each(|(entity, marker)| {
+    for (entity, marker) in query {
         let fmt_selected = |tw: &mut TextUiWriter| {
             tw.color(entity, 0).set_alpha(
                 if marker.0 == settings_menu_data.selected_main_setting {
@@ -729,5 +729,5 @@ fn update_ui_system(
             (_, 1) => (),
             (select, idx) => unreachable!("unimplemented option: ({:?}, {})", select, idx),
         }
-    });
+    }
 }
