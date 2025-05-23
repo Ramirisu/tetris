@@ -36,32 +36,37 @@ pub fn setup(app: &mut App) {
             Update,
             (
                 (
-                    (state_player_init::init_system,).run_if(in_state(PlayerPhase::Init)),
+                    (
+                        state_player_init::init_system, //
+                    )
+                        .run_if(in_state(PlayerPhase::Init)),
                     (
                         increase_stopwatch_system,
-                        state_player_dropping::tick_system,
                         state_player_dropping::handle_input_system,
-                        state_player_dropping::curr_piece_fall_system,
+                        state_player_dropping::drop_curr_piece_system,
                         update_statistics_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::Dropping)),
                     (
                         increase_stopwatch_system,
-                        state_player_line_clear::tick_system,
+                        state_player_line_clear::clear_lines_system,
                         update_statistics_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::LineClear)),
                     (
                         increase_stopwatch_system,
-                        state_player_entry_delay::tick_system,
+                        state_player_entry_delay::deploy_new_piece_system,
+                        update_statistics_system,
                     )
                         .run_if(in_state(PlayerPhase::EntryDelay)),
                 )
                     .run_if(in_state(GameState::Running)),
-                state_game_pause::handle_input_system.run_if(in_state(GameState::Pause)),
-                state_game_over::handle_input_system.run_if(in_state(GameState::Over)),
+                (state_game_pause::handle_input_system,) //
+                    .run_if(in_state(GameState::Pause)),
+                (state_game_over::handle_input_system,) //
+                    .run_if(in_state(GameState::Over)),
             )
                 .run_if(in_state(AppState::Game)),
         );
@@ -1031,7 +1036,7 @@ fn update_board(
     }
 }
 
-fn update_next_piece(
+fn update_next_piece_icons(
     query: Query<(
         &mut Node,
         &mut ImageNode,
@@ -1072,7 +1077,7 @@ fn update_next_piece(
     }
 }
 
-fn update_piece_distribution_icon(
+fn update_piece_distribution_icons(
     mut query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
     square_image_assets: &SquareImageAssets,
 ) {
@@ -1128,8 +1133,8 @@ mod state_player_init {
             false,
             None,
         );
-        update_next_piece(query.p1(), &player_data, &square_image_assets);
-        update_piece_distribution_icon(query.p2(), &square_image_assets);
+        update_next_piece_icons(query.p1(), &player_data, &square_image_assets);
+        update_piece_distribution_icons(query.p2(), &square_image_assets);
         update_tetris_rate_icon(query.p3(), &square_image_assets);
         player_phase.set(PlayerPhase::Dropping);
     }
@@ -1139,10 +1144,6 @@ mod state_player_dropping {
     use crate::game::timer::EntryDelayTimer;
 
     use super::*;
-
-    pub(super) fn tick_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-        player_data.soft_drop_timer.tick(time.delta());
-    }
 
     pub(super) fn handle_input_system(
         time: Res<Time>,
@@ -1193,6 +1194,8 @@ mod state_player_dropping {
                 *bg_color = WHITE.into();
             }
         });
+
+        player_data.soft_drop_timer.tick(time.delta());
 
         let (moved, horizontally_moved, rotated) =
             handle_input(&player_inputs, &time, &mut player_data);
@@ -1288,7 +1291,7 @@ mod state_player_dropping {
         )
     }
 
-    pub(super) fn curr_piece_fall_system(
+    pub(super) fn drop_curr_piece_system(
         query: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
@@ -1374,7 +1377,7 @@ mod state_player_dropping {
 mod state_player_line_clear {
     use super::*;
 
-    pub(super) fn tick_system(
+    pub(super) fn clear_lines_system(
         time: Res<Time>,
         mut query: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
@@ -1433,7 +1436,7 @@ mod state_player_line_clear {
 mod state_player_entry_delay {
     use super::*;
 
-    pub(super) fn tick_system(
+    pub(super) fn deploy_new_piece_system(
         time: Res<Time>,
         mut query: ParamSet<(
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
@@ -1469,8 +1472,8 @@ mod state_player_entry_delay {
                 false,
                 None,
             );
-            update_next_piece(query.p2(), &player_data, &square_image_assets);
-            update_piece_distribution_icon(query.p3(), &square_image_assets);
+            update_next_piece_icons(query.p2(), &player_data, &square_image_assets);
+            update_piece_distribution_icons(query.p3(), &square_image_assets);
             update_tetris_rate_icon(query.p4(), &square_image_assets);
 
             if game_config.linecap == Linecap::Halt
