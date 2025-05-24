@@ -347,13 +347,19 @@ fn setup_left_panel(p: &mut EntityCommands) {
                 });
         });
 
-        p.spawn(Node {
-            display: Display::Flex,
-            flex_direction: FlexDirection::Row,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        })
+        p.spawn((
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(1.0),
+                border: UiRect::all(Val::Px(BORDER_WIDTH)),
+                ..default()
+            },
+            BorderColor::from(WHITE),
+            BackgroundColor::from(WHITE),
+        ))
         .with_children(|p| {
             fn spawn_info_block<Marker: Component + Copy>(
                 p: &mut ChildSpawnerCommands,
@@ -369,12 +375,10 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         flex_direction: FlexDirection::Column,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
-                        margin: UiRect::all(Val::Px(10.0)),
                         padding: UiRect::all(Val::Px(10.0)),
-                        border: UiRect::all(Val::Px(1.0)),
                         ..default()
                     },
-                    BorderColor::from(WHITE),
+                    BackgroundColor::from(BLACK),
                 ))
                 .with_children(|p| {
                     const SQUARE_SIZE: f32 = 20.0;
