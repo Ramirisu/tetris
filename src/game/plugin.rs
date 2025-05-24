@@ -1417,9 +1417,7 @@ mod state_player_line_clear {
             }
 
             if to_next_state {
-                let old_level = player_data.board.level();
-                player_data.board.clear_lines();
-                let new_level = player_data.board.level();
+                let (new_level, old_level) = player_data.board.clear_lines();
                 if new_level > old_level {
                     play_sound.write(PlaySoundEvent::LevelUp);
                     player_data.soft_drop_timer.set_level(new_level);

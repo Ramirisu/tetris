@@ -133,12 +133,13 @@ impl Board {
         }
     }
 
-    pub fn clear_lines(&mut self) {
+    pub fn clear_lines(&mut self) -> (Level, Level) {
         let rows = self.get_line_clear_rows();
         rows.iter().rev().for_each(|row| {
             self.squares.remove(*row);
         });
 
+        let old_level = self.level();
         self.score += Self::transform_score(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
@@ -149,6 +150,8 @@ impl Board {
             Self::INTERNAL_BOARD_ROWS,
             vec![Piece::default(); Self::BOARD_COLS],
         );
+
+        (self.level(), old_level)
     }
 
     pub fn switch_to_next_piece(&mut self) {
