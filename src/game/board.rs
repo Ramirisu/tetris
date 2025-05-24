@@ -21,7 +21,7 @@ pub struct Board {
     next_pieces: VecDeque<Piece>,
     lines: usize,
     score: usize,
-    lines_clear: [usize; 4],
+    clear_lines_count: [usize; 4],
     drought: usize,
     max_drought: usize,
     piece_count: [usize; Piece::variant_len()],
@@ -55,7 +55,7 @@ impl Board {
             next_pieces,
             lines: 0,
             score: 0,
-            lines_clear: [0; 4],
+            clear_lines_count: [0; 4],
             drought: 0,
             max_drought: 0,
             piece_count: [0; Piece::variant_len()],
@@ -80,33 +80,17 @@ impl Board {
     }
 
     pub fn burned_lines(&self) -> usize {
-        self.lines - self.tetris_clear() * 4
+        self.lines - self.clear_lines_rate(4).0 * 4
     }
 
-    #[allow(dead_code)]
-    pub fn single_clear(&self) -> usize {
-        self.lines_clear[0]
-    }
+    pub fn clear_lines_rate(&self, lines: usize) -> (usize, Option<f32>) {
+        assert!(lines >= 1 && lines <= 4);
+        let count = self.clear_lines_count[lines - 1];
 
-    #[allow(dead_code)]
-    pub fn double_clear(&self) -> usize {
-        self.lines_clear[1]
-    }
-
-    #[allow(dead_code)]
-    pub fn triple_clear(&self) -> usize {
-        self.lines_clear[2]
-    }
-
-    pub fn tetris_clear(&self) -> usize {
-        self.lines_clear[3]
-    }
-
-    pub fn tetris_rate(&self) -> f32 {
         if self.lines == 0 {
-            1.0
+            (count, None)
         } else {
-            self.tetris_clear() as f32 * 4.0 / self.lines as f32
+            (count, Some((count * lines) as f32 / self.lines as f32))
         }
     }
 
@@ -114,6 +98,7 @@ impl Board {
         self.drought
     }
 
+    #[allow(dead_code)]
     pub fn max_drought(&self) -> usize {
         self.max_drought
     }
@@ -157,7 +142,7 @@ impl Board {
         self.score += Self::transform_score(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
-            1..=4 => self.lines_clear[rows.len() - 1] += 1,
+            1..=4 => self.clear_lines_count[rows.len() - 1] += 1,
             _ => (),
         }
         self.squares.resize(

@@ -111,12 +111,8 @@ struct GameStopwatchEntityMarker;
 #[derive(Debug, Component)]
 enum GameStatisticsEntityMarker {
     Burned,
-    #[allow(dead_code)] // TODO: UI?
-    TetrisCount,
     TetrisRate,
     Drought,
-    #[allow(dead_code)] // TODO: UI?
-    MaxDrought,
 }
 
 const BOARD_SQUARE_SIZE: f32 = 40.0;
@@ -944,16 +940,18 @@ fn update_statistics_system(
             GameStatisticsEntityMarker::Burned => {
                 *tw.text(entity, 0) = format!("{}", player_data.board.burned_lines())
             }
-            GameStatisticsEntityMarker::TetrisCount => {
-                *tw.text(entity, 0) = format!("{}", player_data.board.tetris_clear())
-            }
             GameStatisticsEntityMarker::TetrisRate => {
-                let rate = (player_data.board.tetris_rate() * 100.0).round() as usize;
-                *tw.text(entity, 0) = format!("{:3}%", rate);
-                match rate {
-                    0..50 => *tw.color(entity, 0) = RED.into(),
-                    50..80 => *tw.color(entity, 0) = YELLOW.into(),
-                    _ => *tw.color(entity, 0) = GREEN.into(),
+                if let Some(rate) = player_data.board.clear_lines_rate(4).1 {
+                    let rate = (rate * 100.0).round() as usize;
+                    *tw.text(entity, 0) = format!("{:3}%", rate);
+                    match rate {
+                        0..50 => *tw.color(entity, 0) = RED.into(),
+                        50..80 => *tw.color(entity, 0) = YELLOW.into(),
+                        _ => *tw.color(entity, 0) = GREEN.into(),
+                    }
+                } else {
+                    *tw.text(entity, 0) = format!("-%");
+                    *tw.color(entity, 0) = WHITE.into()
                 }
             }
             GameStatisticsEntityMarker::Drought => {
@@ -964,9 +962,6 @@ fn update_statistics_system(
                     color
                 }
                 .into();
-            }
-            GameStatisticsEntityMarker::MaxDrought => {
-                *tw.text(entity, 0) = format!("{}", player_data.board.max_drought())
             }
         }
     }
