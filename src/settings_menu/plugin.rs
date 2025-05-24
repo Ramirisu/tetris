@@ -84,6 +84,8 @@ enum SelectedMainSetting {
     ShowFPS,
     ControllerMapping,
     ScaleFactor,
+    #[cfg(not(target_arch = "wasm32"))]
+    Exit,
 }
 
 impl SelectedMainSetting {
@@ -108,6 +110,8 @@ impl SelectedMainSetting {
                 t!("tetris.settings.controller_mapping")
             }
             SelectedMainSetting::ScaleFactor => t!("tetris.settings.scale_factor"),
+            #[cfg(not(target_arch = "wasm32"))]
+            SelectedMainSetting::Exit => t!("tetris.settings.exit"),
         }
     }
 }
@@ -245,6 +249,7 @@ fn handle_input_system(
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))] mut framepace_settins: ResMut<
         bevy_framepace::FramepaceSettings,
     >,
+    #[cfg(not(target_arch = "wasm32"))] mut exit: EventWriter<AppExit>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
@@ -536,6 +541,12 @@ fn handle_input_system(
                 }
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        SelectedMainSetting::Exit => {
+            if player_inputs.start.just_pressed {
+                exit.write(AppExit::Success);
+            }
+        }
     }
 
     if scale_changed {
@@ -578,11 +589,9 @@ fn update_ui_system(
         };
         let fmt_desc = |tw: &mut TextUiWriter, desc: String| *tw.text(entity, 0) = desc;
         match (marker.0, marker.1) {
-            (SelectedMainSetting::Tetris, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Tetris, 2) => (),
             (SelectedMainSetting::Tetris, 3) => (),
             (SelectedMainSetting::Tetris, 4) => (),
-            (SelectedMainSetting::Transition, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Transition, 2) => {
                 fmt_larrow(&mut tw, game_config.transition.enum_prev().is_some())
             }
@@ -592,7 +601,6 @@ fn update_ui_system(
             (SelectedMainSetting::Transition, 4) => {
                 fmt_rarrow(&mut tw, game_config.transition.enum_next().is_some())
             }
-            (SelectedMainSetting::Linecap, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Linecap, 2) => {
                 fmt_larrow(&mut tw, game_config.linecap.enum_prev().is_some())
             }
@@ -600,7 +608,6 @@ fn update_ui_system(
             (SelectedMainSetting::Linecap, 4) => {
                 fmt_rarrow(&mut tw, game_config.linecap.enum_next().is_some())
             }
-            (SelectedMainSetting::LinecapLevel, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::LinecapLevel, 2) => fmt_larrow(
                 &mut tw,
                 game_config.linecap != crate::game::linecap::Linecap::Off
@@ -617,7 +624,6 @@ fn update_ui_system(
                 &mut tw,
                 game_config.linecap != crate::game::linecap::Linecap::Off,
             ),
-            (SelectedMainSetting::Gravity, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Gravity, 2) => {
                 fmt_larrow(&mut tw, game_config.gravity.enum_prev().is_some())
             }
@@ -625,7 +631,6 @@ fn update_ui_system(
             (SelectedMainSetting::Gravity, 4) => {
                 fmt_rarrow(&mut tw, game_config.gravity.enum_next().is_some())
             }
-            (SelectedMainSetting::Seeding, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Seeding, 2) => {
                 fmt_larrow(&mut tw, game_config.seeding.enum_prev().is_some())
             }
@@ -633,14 +638,12 @@ fn update_ui_system(
             (SelectedMainSetting::Seeding, 4) => {
                 fmt_rarrow(&mut tw, game_config.seeding.enum_next().is_some())
             }
-            (SelectedMainSetting::Seed, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Seed, 2) => fmt_larrow(&mut tw, false),
             (SelectedMainSetting::Seed, 3) => match game_config.seeding {
                 Seeding::System => fmt_desc(&mut tw, "".into()),
                 Seeding::Custom => fmt_desc(&mut tw, game_config.seed.to_string()),
             },
             (SelectedMainSetting::Seed, 4) => fmt_rarrow(&mut tw, false),
-            (SelectedMainSetting::Scoring, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Scoring, 2) => {
                 fmt_larrow(&mut tw, game_config.scoring.enum_prev().is_some())
             }
@@ -648,7 +651,6 @@ fn update_ui_system(
             (SelectedMainSetting::Scoring, 4) => {
                 fmt_rarrow(&mut tw, game_config.scoring.enum_next().is_some())
             }
-            (SelectedMainSetting::Leveling, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Leveling, 2) => {
                 fmt_larrow(&mut tw, game_config.leveling.enum_prev().is_some())
             }
@@ -656,7 +658,6 @@ fn update_ui_system(
             (SelectedMainSetting::Leveling, 4) => {
                 fmt_rarrow(&mut tw, game_config.leveling.enum_next().is_some())
             }
-            (SelectedMainSetting::TVSystem, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::TVSystem, 2) => {
                 fmt_larrow(&mut tw, game_config.tv_system.enum_prev().is_some())
             }
@@ -664,7 +665,6 @@ fn update_ui_system(
             (SelectedMainSetting::TVSystem, 4) => {
                 fmt_rarrow(&mut tw, game_config.tv_system.enum_next().is_some())
             }
-            (SelectedMainSetting::NextPieceHint, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::NextPieceHint, 2) => {
                 fmt_larrow(&mut tw, game_config.next_piece_hint.enum_prev().is_some())
             }
@@ -674,7 +674,6 @@ fn update_ui_system(
             (SelectedMainSetting::NextPieceHint, 4) => {
                 fmt_rarrow(&mut tw, game_config.next_piece_hint.enum_next().is_some())
             }
-            (SelectedMainSetting::Invisible, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::Invisible, 2) => {
                 fmt_larrow(&mut tw, game_config.invisible.enum_prev().is_some())
             }
@@ -682,8 +681,6 @@ fn update_ui_system(
             (SelectedMainSetting::Invisible, 4) => {
                 fmt_rarrow(&mut tw, game_config.invisible.enum_next().is_some())
             }
-            #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
-            (SelectedMainSetting::FPSLimiter, 0) => fmt_selected(&mut tw),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             (SelectedMainSetting::FPSLimiter, 2) => fmt_larrow(
                 &mut tw,
@@ -698,7 +695,6 @@ fn update_ui_system(
                 &mut tw,
                 settings_menu_data.fps_limiter.enum_next().is_some(),
             ),
-            (SelectedMainSetting::ShowFPS, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::ShowFPS, 2) => {
                 fmt_larrow(&mut tw, settings_menu_data.show_fps.enum_prev().is_some())
             }
@@ -708,7 +704,6 @@ fn update_ui_system(
             (SelectedMainSetting::ShowFPS, 4) => {
                 fmt_rarrow(&mut tw, settings_menu_data.show_fps.enum_next().is_some())
             }
-            (SelectedMainSetting::ControllerMapping, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::ControllerMapping, 2) => {
                 fmt_larrow(&mut tw, controller_mapping.enum_prev().is_some())
             }
@@ -718,7 +713,6 @@ fn update_ui_system(
             (SelectedMainSetting::ControllerMapping, 4) => {
                 fmt_rarrow(&mut tw, controller_mapping.enum_next().is_some())
             }
-            (SelectedMainSetting::ScaleFactor, 0) => fmt_selected(&mut tw),
             (SelectedMainSetting::ScaleFactor, 2) => {
                 fmt_larrow(&mut tw, scale_factor.enum_prev().is_some())
             }
@@ -726,6 +720,13 @@ fn update_ui_system(
             (SelectedMainSetting::ScaleFactor, 4) => {
                 fmt_rarrow(&mut tw, scale_factor.enum_next().is_some())
             }
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::Exit, 2) => (),
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::Exit, 3) => (),
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::Exit, 4) => (),
+            (_, 0) => fmt_selected(&mut tw),
             (_, 1) => (),
             (select, idx) => unreachable!("unimplemented option: ({:?}, {})", select, idx),
         }

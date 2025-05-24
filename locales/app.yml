@@ -63,6 +63,10 @@ tetris.settings.scale_factor:
   en: SCALE FACTOR
   zh-TW: 介面縮放比例
   zh-CN: 界面缩放比例
+tetris.settings.exit:
+  en: EXIT
+  zh-TW: 離開
+  zh-CN: 退出
 tetris.settings.transition.classic:
   en: CLASSIC
   zh-TW: 經典
