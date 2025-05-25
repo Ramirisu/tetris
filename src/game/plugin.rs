@@ -65,7 +65,10 @@ pub fn setup(app: &mut App) {
                     .run_if(in_state(GameState::Running)),
                 (state_game_pause::handle_input_system,) //
                     .run_if(in_state(GameState::Pause)),
-                (state_game_over::handle_input_system,) //
+                (
+                    state_game_over::handle_input_system,
+                    update_statistics_system,
+                ) //
                     .run_if(in_state(GameState::Over)),
             )
                 .run_if(in_state(AppState::Game)),
