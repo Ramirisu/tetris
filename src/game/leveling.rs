@@ -15,14 +15,14 @@ pub enum Leveling {
 enum_advance::enum_advance_derive!(Leveling);
 
 impl Leveling {
-    pub fn format_string(&self, level: Level) -> String {
+    pub fn format(&self, level: Level) -> String {
         match *self {
             Leveling::Decimal => format!("{:02}", level.0),
-            Leveling::Classic => Self::format_level_classic(level),
+            Leveling::Classic => Self::format_classic(level),
         }
     }
 
-    fn format_level_classic(level: Level) -> String {
+    fn format_classic(level: Level) -> String {
         #[rustfmt::skip]
         const LOOKUP_TABLE: &[&str; 256] = &[
             "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15",

@@ -83,8 +83,7 @@ impl Board {
     }
 
     pub fn level(&self) -> Level {
-        self.transition
-            .transform_level(self.start_level, self.lines)
+        self.transition.transform(self.start_level, self.lines)
     }
 
     pub fn lines(&self) -> usize {

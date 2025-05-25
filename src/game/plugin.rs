@@ -934,9 +934,7 @@ fn update_statistics_system(
         *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
     }
     if let Ok(entity) = query.p0().p2().single_mut() {
-        *tw.text(entity, 0) = game_config
-            .leveling
-            .format_string(player_data.board.level());
+        *tw.text(entity, 0) = game_config.leveling.format(player_data.board.level());
     }
     for (entity, marker) in query.p0().p3() {
         match marker {
