@@ -5,6 +5,7 @@ use rand::SeedableRng;
 use super::{
     level::Level,
     piece::{Piece, Square},
+    random::{PieceHistory, Random},
     seed::Seed,
     seeding::Seeding,
     transition::Transition,
@@ -13,12 +14,13 @@ use super::{
 pub struct Board {
     start_level: Level,
     transition: Transition,
+    random: Random,
     seed: Seed,
     rng: rand_chacha::ChaCha20Rng,
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_pos: (i32, i32),
-    next_pieces: VecDeque<Piece>,
+    next_pieces: PieceHistory,
     lines: usize,
     score: usize,
     clear_lines_count: [usize; 4],
@@ -34,20 +36,27 @@ impl Board {
     const BOARD_PIECE_START_X: i32 = (Self::BOARD_COLS / 2) as i32;
     const BOARD_PIECE_START_Y: i32 = (Self::BOARD_ROWS - 1) as i32;
 
-    pub fn new(start_level: Level, transition: Transition, seeding: Seeding, seed: Seed) -> Self {
+    pub fn new(
+        start_level: Level,
+        transition: Transition,
+        random: Random,
+        seeding: Seeding,
+        seed: Seed,
+    ) -> Self {
         let seed = match seeding {
             Seeding::System => Seed::new(),
             Seeding::Custom => seed,
         };
         let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.into());
         let next_pieces = (0..5).fold(VecDeque::new(), |mut accu, _| {
-            accu.push_back(gen_piece_1h2r(&mut rng, &accu));
+            accu.push_back(random.gen_piece(&mut rng, &accu));
             accu
         });
         let mut board = Self {
             start_level,
             transition,
             seed,
+            random,
             rng,
             squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::INTERNAL_BOARD_ROWS],
             curr_piece: Piece::X,
@@ -156,7 +165,7 @@ impl Board {
 
     pub fn switch_to_next_piece(&mut self) {
         self.next_pieces
-            .push_back(gen_piece_1h2r(&mut self.rng, &self.next_pieces));
+            .push_back(self.random.gen_piece(&mut self.rng, &self.next_pieces));
         self.curr_piece = self.next_pieces.pop_front().unwrap();
 
         self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
@@ -180,7 +189,7 @@ impl Board {
             .map(|sqr| Square(sqr.0 + self.curr_pos.0, sqr.1 + self.curr_pos.1))
     }
 
-    pub fn next_pieces(&self) -> &VecDeque<Piece> {
+    pub fn next_pieces(&self) -> &PieceHistory {
         &self.next_pieces
     }
 
@@ -290,26 +299,9 @@ impl Default for Board {
         Self::new(
             Level(0),
             Transition::default(),
-            Seeding::System,
+            Random::default(),
+            Seeding::default(),
             Seed::default(),
         )
-    }
-}
-
-fn gen_piece<R: rand::Rng>(rng: &mut R) -> Piece {
-    rng.random_range(0..(Piece::variant_len() - 1)).into()
-}
-
-fn gen_piece_1h2r<R: rand::Rng>(rng: &mut R, history: &VecDeque<Piece>) -> Piece {
-    match history.back() {
-        Some(piece) => {
-            let index = rng.random_range(0..Piece::variant_len());
-            if index + 1 != Piece::variant_len() && index != piece.variant_index() {
-                index.into()
-            } else {
-                gen_piece(rng)
-            }
-        }
-        None => gen_piece(rng),
     }
 }

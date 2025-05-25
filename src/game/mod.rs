@@ -11,6 +11,7 @@ pub mod palette;
 pub mod piece;
 pub mod player;
 pub mod plugin;
+pub mod random;
 pub mod scoring;
 pub mod seed;
 pub mod seeding;

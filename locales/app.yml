@@ -27,6 +27,10 @@ tetris.settings.seed:
   en: SEED
   zh-TW: 種子
   zh-CN: 种子
+tetris.settings.random:
+  en: RANDOM
+  zh-TW: 隨機模式
+  zh-CN: 随机模式
 tetris.settings.scoring:
   en: SCORING
   zh-TW: 分數顯示
@@ -111,6 +115,10 @@ tetris.settings.seeding.custom:
   en: CUSTOM
   zh-TW: 自訂
   zh-CN: 自定义
+tetris.settings.random.classic:
+  en: CLASSIC (1H2R)
+  zh-TW: 經典 (1H2R)
+  zh-CN: 经典 (1H2R)
 tetris.settings.scoring.decimal:
   en: DECIMAL
   zh-TW: 十進制

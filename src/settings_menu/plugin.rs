@@ -72,6 +72,7 @@ enum SelectedMainSetting {
     Linecap,
     LinecapLevel,
     Gravity,
+    Random,
     Seeding,
     Seed,
     Scoring,
@@ -96,6 +97,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::Linecap => t!("tetris.settings.linecap"),
             SelectedMainSetting::LinecapLevel => t!("tetris.settings.linecap_level"),
             SelectedMainSetting::Gravity => t!("tetris.settings.gravity"),
+            SelectedMainSetting::Random => t!("tetris.settings.random"),
             SelectedMainSetting::Seeding => t!("tetris.settings.seeding"),
             SelectedMainSetting::Seed => t!("tetris.settings.seed"),
             SelectedMainSetting::Scoring => t!("tetris.settings.scoring"),
@@ -206,11 +208,11 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                     Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
                         for selected_main_setting in SelectedMainSetting::iter() {
                             let cols: [(String, Val, f32); 5] = [
-                                ("▶".into(), Val::Auto, 20.0),
-                                (selected_main_setting.name().into(), Val::Px(300.0), 30.0),
-                                ("".into(), Val::Auto, 30.0),
-                                ("".into(), Val::Px(300.0), 30.0),
-                                ("".into(), Val::Auto, 30.0),
+                                ("▶".into(), Val::Auto, 15.0),
+                                (selected_main_setting.name().into(), Val::Px(300.0), 25.0),
+                                ("".into(), Val::Auto, 25.0),
+                                ("".into(), Val::Px(300.0), 25.0),
+                                ("".into(), Val::Auto, 25.0),
                             ];
 
                             for (idx, (name, width, font_size)) in cols.iter().enumerate() {
@@ -353,6 +355,19 @@ fn handle_input_system(
                 }
             }
         }
+        SelectedMainSetting::Random => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_config.random.enum_next() {
+                    game_config.random = e;
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_config.random.enum_prev() {
+                    game_config.random = e;
+                    option_changed = true;
+                }
+            }
+        }
         SelectedMainSetting::Seeding => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.seeding.enum_next() {
@@ -431,7 +446,6 @@ fn handle_input_system(
                 }
             }
         }
-
         SelectedMainSetting::Leveling => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = game_config.leveling.enum_next() {
@@ -630,6 +644,13 @@ fn update_ui_system(
             (SelectedMainSetting::Gravity, 3) => fmt_desc(&mut tw, game_config.gravity.name()),
             (SelectedMainSetting::Gravity, 4) => {
                 fmt_rarrow(&mut tw, game_config.gravity.enum_next().is_some())
+            }
+            (SelectedMainSetting::Random, 2) => {
+                fmt_larrow(&mut tw, game_config.random.enum_prev().is_some())
+            }
+            (SelectedMainSetting::Random, 3) => fmt_desc(&mut tw, game_config.random.name()),
+            (SelectedMainSetting::Random, 4) => {
+                fmt_rarrow(&mut tw, game_config.random.enum_prev().is_some())
             }
             (SelectedMainSetting::Seeding, 2) => {
                 fmt_larrow(&mut tw, game_config.seeding.enum_prev().is_some())

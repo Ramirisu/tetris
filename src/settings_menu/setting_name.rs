@@ -1,8 +1,8 @@
 use crate::{
     game::{
         gravity::Gravity, invisible::Invisible, leveling::Leveling, linecap::Linecap,
-        next_piece_hint::NextPieceHint, scoring::Scoring, seeding::Seeding, transition::Transition,
-        tv_system::TVSystem,
+        next_piece_hint::NextPieceHint, random::Random, scoring::Scoring, seeding::Seeding,
+        transition::Transition, tv_system::TVSystem,
     },
     input::controller_mapping::ControllerMapping,
 };
@@ -54,6 +54,15 @@ impl SettingName for Seeding {
         match self {
             Seeding::System => t!("tetris.settings.seeding.system"),
             Seeding::Custom => t!("tetris.settings.seeding.custom"),
+        }
+        .into()
+    }
+}
+
+impl SettingName for Random {
+    fn name(&self) -> String {
+        match self {
+            Random::Classic => t!("tetris.settings.random.classic"),
         }
         .into()
     }
