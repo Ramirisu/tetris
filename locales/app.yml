@@ -119,6 +119,10 @@ tetris.settings.random.classic:
   en: CLASSIC (1H2R)
   zh-TW: 經典 (1H2R)
   zh-CN: 经典 (1H2R)
+tetris.settings.random.modern:
+  en: MODERN (7BAG)
+  zh-TW: 現代 (7BAG)
+  zh-CN: 现代 (7BAG)
 tetris.settings.scoring.decimal:
   en: DECIMAL
   zh-TW: 十進制

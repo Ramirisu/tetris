@@ -1049,32 +1049,32 @@ fn update_next_piece_icons(
     square_image_assets: &SquareImageAssets,
 ) {
     for (mut node, mut img, mut vis, marker) in query {
-        let piece = player_data.board.next_pieces()[marker.idx];
+        if let Some(piece) = player_data.board.next_pieces().get(marker.idx) {
+            let shift: (f32, f32) = match piece {
+                Piece::T(_) => (-0.5, 0.0),
+                Piece::J(_) => (-0.5, 0.0),
+                Piece::Z(_) => (-0.5, 0.0),
+                Piece::O(_) => (0.0, 0.0),
+                Piece::S(_) => (-0.5, 0.0),
+                Piece::L(_) => (-0.5, 0.0),
+                Piece::I(_) => (0.0, 0.5),
+                Piece::X => (0.0, 0.0),
+            };
 
-        let shift: (f32, f32) = match piece {
-            Piece::T(_) => (-0.5, 0.0),
-            Piece::J(_) => (-0.5, 0.0),
-            Piece::Z(_) => (-0.5, 0.0),
-            Piece::O(_) => (0.0, 0.0),
-            Piece::S(_) => (-0.5, 0.0),
-            Piece::L(_) => (-0.5, 0.0),
-            Piece::I(_) => (0.0, 0.5),
-            Piece::X => (0.0, 0.0),
-        };
+            node.left = Val::Px(shift.0 * marker.scale * BOARD_SQUARE_SIZE);
+            node.top = Val::Px(shift.1 * marker.scale * BOARD_SQUARE_SIZE);
 
-        node.left = Val::Px(shift.0 * marker.scale * BOARD_SQUARE_SIZE);
-        node.top = Val::Px(shift.1 * marker.scale * BOARD_SQUARE_SIZE);
-
-        if piece
-            .to_squares()
-            .iter()
-            .any(|sqr| sqr.0 == marker.x && sqr.1 == marker.y)
-        {
-            *vis = Visibility::Inherited;
-            img.image = square_image_assets.get_image(SquareImageSize::Standard, piece);
-        } else {
-            *vis = Visibility::Hidden;
-            img.image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
+            if piece
+                .to_squares()
+                .iter()
+                .any(|sqr| sqr.0 == marker.x && sqr.1 == marker.y)
+            {
+                *vis = Visibility::Inherited;
+                img.image = square_image_assets.get_image(SquareImageSize::Standard, *piece);
+            } else {
+                *vis = Visibility::Hidden;
+                img.image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
+            }
         }
     }
 }

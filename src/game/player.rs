@@ -40,6 +40,7 @@ impl PlayerData {
                 config.random,
                 config.seeding,
                 config.seed,
+                config.next_piece_hint,
             ),
             stopwatch: Stopwatch::new(),
             soft_drop_timer: SoftDropTimer::new(

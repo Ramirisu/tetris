@@ -60,9 +60,18 @@ The *GRAVITY* option determines how the gravity will increase when the level adv
 | Level   | The gravity increases when the level advances. |
 | Locked  | The gravity is locked at the `startLevel`.     |
 
+**RANDOM**
+
+The *RANDOM* option determines how to generate NEXT pieces.
+
+| Options | Description                                                                                                                                     |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Classic | The algorithm 1H2R is used. The randomizer refers to the type of previous piece and has less chance to generate the same one as the next piece. |
+| Modern  | The algorithm 7Bag is used. The randomizer always generates 7 pieces each and shuffle their order as the sequence.                              |
+
 **SEEDING**
 
-The *SEEDING* option determines how to generate NEXT pieces. The 1H2R Randomizer is used to choose the pieces.
+The *SEEDING* option determines how to set the initial seed for the random number generator.
 
 | Options | Description                                                                                           |
 | ------- | ----------------------------------------------------------------------------------------------------- |
@@ -71,7 +80,7 @@ The *SEEDING* option determines how to generate NEXT pieces. The 1H2R Randomizer
 
 **SEED**
 
-The *SEED* option determines the seed for the random number generator. It is only available when **SEEDING** is set to `CUSTOM`.
+The *SEED* option can be used to set the given initial seed by user. It is only available when **SEEDING** is set to `CUSTOM`.
 
 - Press `Start` to enter/leave seed configuration.
 - Press `Up` and `Down` to adjust the hex value.

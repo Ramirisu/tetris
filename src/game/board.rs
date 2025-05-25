@@ -4,6 +4,7 @@ use rand::SeedableRng;
 
 use super::{
     level::Level,
+    next_piece_hint::NextPieceHint,
     piece::{Piece, Square},
     random::{PieceHistory, Random},
     seed::Seed,
@@ -20,6 +21,7 @@ pub struct Board {
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_pos: (i32, i32),
+    next_piece_hint: NextPieceHint,
     next_pieces: PieceHistory,
     lines: usize,
     score: usize,
@@ -42,16 +44,16 @@ impl Board {
         random: Random,
         seeding: Seeding,
         seed: Seed,
+        next_piece_hint: NextPieceHint,
     ) -> Self {
         let seed = match seeding {
             Seeding::System => Seed::new(),
             Seeding::Custom => seed,
         };
         let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.into());
-        let next_pieces = (0..5).fold(VecDeque::new(), |mut accu, _| {
-            accu.push_back(random.gen_piece(&mut rng, &accu));
-            accu
-        });
+        let mut next_pieces = VecDeque::new();
+        Self::gen_next_pieces(random, &mut rng, &mut next_pieces, next_piece_hint);
+
         let mut board = Self {
             start_level,
             transition,
@@ -61,6 +63,7 @@ impl Board {
             squares: vec![vec![Piece::default(); Self::BOARD_COLS]; Self::INTERNAL_BOARD_ROWS],
             curr_piece: Piece::X,
             curr_pos: (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y),
+            next_piece_hint,
             next_pieces,
             lines: 0,
             score: 0,
@@ -164,8 +167,12 @@ impl Board {
     }
 
     pub fn switch_to_next_piece(&mut self) {
-        self.next_pieces
-            .push_back(self.random.gen_piece(&mut self.rng, &self.next_pieces));
+        Self::gen_next_pieces(
+            self.random,
+            &mut self.rng,
+            &mut self.next_pieces,
+            self.next_piece_hint,
+        );
         self.curr_piece = self.next_pieces.pop_front().unwrap();
 
         self.curr_pos = (Self::BOARD_PIECE_START_X, Self::BOARD_PIECE_START_Y);
@@ -292,6 +299,17 @@ impl Board {
                 _ => panic!("can only clear lines between 1-4"),
             }
     }
+
+    fn gen_next_pieces(
+        random: Random,
+        rng: &mut rand_chacha::ChaCha20Rng,
+        history: &mut PieceHistory,
+        next_piece_hint: NextPieceHint,
+    ) {
+        while history.len() <= next_piece_hint.count() {
+            history.extend(random.gen_pieces(rng, history));
+        }
+    }
 }
 
 impl Default for Board {
@@ -302,6 +320,7 @@ impl Default for Board {
             Random::default(),
             Seeding::default(),
             Seed::default(),
+            NextPieceHint::default(),
         )
     }
 }

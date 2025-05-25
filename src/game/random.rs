@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 
+use rand::seq::SliceRandom;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
@@ -13,14 +14,16 @@ pub type PieceHistory = VecDeque<Piece>;
 pub enum Random {
     #[default]
     Classic,
+    Modern,
 }
 
 enum_advance::enum_advance_derive!(Random);
 
 impl Random {
-    pub fn gen_piece<R: rand::Rng>(&self, rng: &mut R, history: &PieceHistory) -> Piece {
+    pub fn gen_pieces<R: rand::Rng>(&self, rng: &mut R, history: &PieceHistory) -> Vec<Piece> {
         match self {
-            Random::Classic => Self::gen_piece_1h2r(rng, history),
+            Random::Classic => Self::gen_pieces_1h2r(rng, history),
+            Random::Modern => Self::gen_pieces_7bag(rng, history),
         }
     }
 
@@ -28,8 +31,8 @@ impl Random {
         rng.random_range(0..(Piece::variant_len() - 1)).into()
     }
 
-    fn gen_piece_1h2r<R: rand::Rng>(rng: &mut R, history: &PieceHistory) -> Piece {
-        match history.back() {
+    fn gen_pieces_1h2r<R: rand::Rng>(rng: &mut R, history: &PieceHistory) -> Vec<Piece> {
+        let piece = match history.back() {
             Some(piece) => {
                 let index = rng.random_range(0..Piece::variant_len());
                 if index + 1 != Piece::variant_len() && index != piece.variant_index() {
@@ -39,6 +42,17 @@ impl Random {
                 }
             }
             None => Self::gen_piece_uniform(rng),
-        }
+        };
+
+        vec![piece]
+    }
+
+    fn gen_pieces_7bag<R: rand::Rng>(rng: &mut R, _history: &PieceHistory) -> Vec<Piece> {
+        let mut pieces = Piece::iter()
+            .filter(|piece| !piece.is_placeholder())
+            .cloned()
+            .collect::<Vec<Piece>>();
+        pieces.shuffle(rng);
+        pieces
     }
 }

@@ -63,6 +63,7 @@ impl SettingName for Random {
     fn name(&self) -> String {
         match self {
             Random::Classic => t!("tetris.settings.random.classic"),
+            Random::Modern => t!("tetris.settings.random.modern"),
         }
         .into()
     }
