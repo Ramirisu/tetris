@@ -37,6 +37,7 @@ impl PlayerData {
             board: Board::new(
                 config.start_level,
                 config.transition,
+                config.scoring,
                 config.random,
                 config.seeding,
                 config.seed,

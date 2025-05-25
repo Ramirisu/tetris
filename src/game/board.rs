@@ -7,6 +7,7 @@ use super::{
     next_piece_hint::NextPieceHint,
     piece::{Piece, Square},
     random::{PieceHistory, Random},
+    scoring::Scoring,
     seed::Seed,
     seeding::Seeding,
     transition::Transition,
@@ -15,6 +16,7 @@ use super::{
 pub struct Board {
     start_level: Level,
     transition: Transition,
+    scoring: Scoring,
     random: Random,
     seed: Seed,
     rng: rand_chacha::ChaCha20Rng,
@@ -41,6 +43,7 @@ impl Board {
     pub fn new(
         start_level: Level,
         transition: Transition,
+        scoring: Scoring,
         random: Random,
         seeding: Seeding,
         seed: Seed,
@@ -57,6 +60,7 @@ impl Board {
         let mut board = Self {
             start_level,
             transition,
+            scoring,
             seed,
             random,
             rng,
@@ -152,7 +156,7 @@ impl Board {
         });
 
         let old_level = self.level();
-        self.score += Self::transform_score(rows.len(), self.level());
+        self.score += self.scoring.transform(rows.len(), self.level());
         self.lines += rows.len();
         match rows.len() {
             1..=4 => self.clear_lines_count[rows.len() - 1] += 1,
@@ -289,17 +293,6 @@ impl Board {
         x >= 0 && x < Self::BOARD_COLS as i32 && y >= 0 && y < Self::INTERNAL_BOARD_ROWS as i32
     }
 
-    fn transform_score(lines: usize, level: Level) -> usize {
-        (level.0 + 1)
-            * match lines {
-                1 => 40,
-                2 => 100,
-                3 => 300,
-                4 => 1200,
-                _ => panic!("can only clear lines between 1-4"),
-            }
-    }
-
     fn gen_next_pieces(
         random: Random,
         rng: &mut rand_chacha::ChaCha20Rng,
@@ -317,6 +310,7 @@ impl Default for Board {
         Self::new(
             Level(0),
             Transition::default(),
+            Scoring::default(),
             Random::default(),
             Seeding::default(),
             Seed::default(),

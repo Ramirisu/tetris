@@ -666,11 +666,11 @@ fn update_ui_system(
             },
             (SelectedMainSetting::Seed, 4) => fmt_rarrow(&mut tw, false),
             (SelectedMainSetting::Scoring, 2) => {
-                fmt_larrow(&mut tw, game_config.scoring.enum_prev().is_some())
+                fmt_larrow(&mut tw, game_config.score.enum_prev().is_some())
             }
-            (SelectedMainSetting::Scoring, 3) => fmt_desc(&mut tw, game_config.scoring.name()),
+            (SelectedMainSetting::Scoring, 3) => fmt_desc(&mut tw, game_config.score.name()),
             (SelectedMainSetting::Scoring, 4) => {
-                fmt_rarrow(&mut tw, game_config.scoring.enum_next().is_some())
+                fmt_rarrow(&mut tw, game_config.score.enum_next().is_some())
             }
             (SelectedMainSetting::Leveling, 2) => {
                 fmt_larrow(&mut tw, game_config.leveling.enum_prev().is_some())

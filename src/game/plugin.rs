@@ -931,7 +931,7 @@ fn update_statistics_system(
         *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
     }
     if let Ok(entity) = query.p0().p1().single_mut() {
-        *tw.text(entity, 0) = game_config.scoring.format(player_data.board.score());
+        *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
     }
     if let Ok(entity) = query.p0().p2().single_mut() {
         *tw.text(entity, 0) = game_config
