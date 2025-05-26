@@ -45,6 +45,7 @@ pub fn setup(app: &mut App) {
                         state_player_dropping::handle_input_system,
                         state_player_dropping::drop_curr_piece_system,
                         update_statistics_system,
+                        player_inputs_display_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::Dropping)),
@@ -52,6 +53,7 @@ pub fn setup(app: &mut App) {
                         increase_stopwatch_system,
                         state_player_line_clear::clear_lines_system,
                         update_statistics_system,
+                        player_inputs_display_system,
                     )
                         .chain()
                         .run_if(in_state(PlayerPhase::LineClear)),
@@ -59,6 +61,7 @@ pub fn setup(app: &mut App) {
                         increase_stopwatch_system,
                         state_player_entry_delay::deploy_new_piece_system,
                         update_statistics_system,
+                        player_inputs_display_system,
                     )
                         .run_if(in_state(PlayerPhase::EntryDelay)),
                 )
@@ -68,6 +71,7 @@ pub fn setup(app: &mut App) {
                 (
                     state_game_over::handle_input_system,
                     update_statistics_system,
+                    player_inputs_display_system,
                 ) //
                     .run_if(in_state(GameState::Over)),
             )
@@ -741,22 +745,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
                     None,
                 ];
                 for button in buttons {
+                    let mut ec = p.spawn(Node {
+                        width: Val::Px(20.0),
+                        height: Val::Px(20.0),
+                        ..default()
+                    });
                     if let Some(marker) = button {
-                        p.spawn((
-                            Node {
-                                width: Val::Px(20.0),
-                                height: Val::Px(20.0),
-                                ..default()
-                            },
-                            BackgroundColor::from(WHITE),
-                            marker,
-                        ));
-                    } else {
-                        p.spawn(Node {
-                            width: Val::Px(20.0),
-                            height: Val::Px(20.0),
-                            ..default()
-                        });
+                        ec.insert((BackgroundColor::from(WHITE), marker));
                     }
                 }
             });
@@ -1032,6 +1027,32 @@ fn update_board(
     }
 }
 
+fn player_inputs_display_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
+    controller_mapping: Res<ControllerMapping>,
+    query: Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
+) {
+    let player_inputs = PlayerInputs::with_keyboard(&keys)
+        | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
+
+    for (mut bg_color, marker) in query {
+        let pressed = match marker {
+            PlayerInputsEntityMarker::Left => player_inputs.left.pressed,
+            PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
+            PlayerInputsEntityMarker::Up => player_inputs.up.pressed,
+            PlayerInputsEntityMarker::Down => player_inputs.down.pressed,
+            PlayerInputsEntityMarker::A => player_inputs.a.pressed,
+            PlayerInputsEntityMarker::B => player_inputs.b.pressed,
+        };
+        if pressed {
+            *bg_color = RED.into();
+        } else {
+            *bg_color = WHITE.into();
+        }
+    }
+}
+
 fn update_next_piece_icons(
     query: Query<(
         &mut Node,
@@ -1149,7 +1170,6 @@ mod state_player_dropping {
         mut query: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<PauseScreenEntityMarker>>,
-            Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
         )>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
@@ -1173,22 +1193,6 @@ mod state_player_dropping {
             }
             game_state.set(GameState::Pause);
             return;
-        }
-
-        for (mut bg_color, marker) in query.p2() {
-            let pressed = match marker {
-                PlayerInputsEntityMarker::Left => player_inputs.left.pressed,
-                PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
-                PlayerInputsEntityMarker::Up => player_inputs.up.pressed,
-                PlayerInputsEntityMarker::Down => player_inputs.down.pressed,
-                PlayerInputsEntityMarker::A => player_inputs.a.pressed,
-                PlayerInputsEntityMarker::B => player_inputs.b.pressed,
-            };
-            if pressed {
-                *bg_color = RED.into();
-            } else {
-                *bg_color = WHITE.into();
-            }
         }
 
         player_data.soft_drop_timer.tick(time.delta());
