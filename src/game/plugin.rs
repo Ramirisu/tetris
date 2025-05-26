@@ -383,7 +383,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
                     const SQUARE_SIZE: f32 = 20.0;
 
                     p.spawn(Node {
-                        width: Val::Auto,
+                        width: Val::Px(SQUARE_SIZE * 4.5),
                         height: Val::Px(SQUARE_SIZE * 2.5),
                         ..default()
                     })
@@ -392,10 +392,6 @@ fn setup_left_panel(p: &mut EntityCommands) {
                     });
 
                     p.spawn((
-                        Node {
-                            margin: UiRect::all(Val::Px(5.0)),
-                            ..default()
-                        },
                         Text::default(),
                         TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
@@ -944,7 +940,7 @@ fn update_statistics_system(
             GameStatisticsEntityMarker::TetrisRate => {
                 if let Some(rate) = player_data.board.clear_lines_rate(4).1 {
                     let rate = (rate * 100.0).round() as usize;
-                    *tw.text(entity, 0) = format!("{:3}%", rate);
+                    *tw.text(entity, 0) = format!("{}%", rate);
                     match rate {
                         0..50 => *tw.color(entity, 0) = RED.into(),
                         50..80 => *tw.color(entity, 0) = YELLOW.into(),
