@@ -12,6 +12,7 @@ pub type PieceHistory = VecDeque<Piece>;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum Random {
+    Uniform,
     #[default]
     Classic,
     Modern,
@@ -22,6 +23,7 @@ enum_advance::enum_advance_derive!(Random);
 impl Random {
     pub fn gen_pieces<R: rand::Rng>(&self, rng: &mut R, history: &PieceHistory) -> Vec<Piece> {
         match self {
+            Random::Uniform => vec![Self::gen_piece_uniform(rng)],
             Random::Classic => Self::gen_pieces_1h2r(rng, history),
             Random::Modern => Self::gen_pieces_7bag(rng, history),
         }

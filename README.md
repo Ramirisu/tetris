@@ -15,7 +15,7 @@ Classic Tetris (NES Tetris) built using the Bevy engine.
   - [x] Game Statistics
   - [x] Piece Distribution
   - [x] Display Input
-  - [x] Sound Effect
+  - [x] Sound Effects
   - [x] Support English/繁體中文/简体中文
 
 - Platform
@@ -64,10 +64,11 @@ The *GRAVITY* option determines how the gravity will increase when the level adv
 
 The *RANDOM* option determines how to generate NEXT pieces.
 
-| Options | Description                                                                                                                                     |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Classic | The algorithm 1H2R is used. The randomizer refers to the type of previous piece and has less chance to generate the same one as the next piece. |
-| Modern  | The algorithm 7Bag is used. The randomizer always generates 7 pieces each and shuffle their order as the sequence.                              |
+| Options | Description                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------ |
+| Uniform | Every piece has the same chance (1/7) to be chosen and each generation is independent.                             |
+| Classic | The algorithm 1H2R is used. The randomizer has less chance to generate the same piece as current one.              |
+| Modern  | The algorithm 7Bag is used. The randomizer always generates 7 pieces each and shuffle their order as the sequence. |
 
 **SEEDING**
 

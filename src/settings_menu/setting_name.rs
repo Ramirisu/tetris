@@ -62,6 +62,7 @@ impl SettingName for Seeding {
 impl SettingName for Random {
     fn name(&self) -> String {
         match self {
+            Random::Uniform => t!("tetris.settings.random.uniform"),
             Random::Classic => t!("tetris.settings.random.classic"),
             Random::Modern => t!("tetris.settings.random.modern"),
         }

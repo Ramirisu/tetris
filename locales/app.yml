@@ -115,6 +115,10 @@ tetris.settings.seeding.custom:
   en: CUSTOM
   zh-TW: 自訂
   zh-CN: 自定义
+tetris.settings.random.uniform:
+  en: UNIFORM
+  zh-TW: 均勻
+  zh-CN: 均匀
 tetris.settings.random.classic:
   en: CLASSIC (1H2R)
   zh-TW: 經典 (1H2R)
