@@ -166,6 +166,8 @@ enum PlayerInputsEntityMarker {
     Right,
     Up,
     Down,
+    Select,
+    Start,
     A,
     B,
 }
@@ -704,15 +706,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
         // PLAYER INPUTS
         p.spawn((
             Node {
-                width: Val::Px(300.0),
-                height: Val::Auto,
                 display: Display::Flex,
                 flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::Center,
-                border: UiRect::all(Val::Px(1.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::End,
+                border: UiRect::all(Val::Px(BORDER_WIDTH)),
                 margin: UiRect::all(Val::Px(10.0)),
-                padding: UiRect::all(Val::Px(5.0)),
+                padding: UiRect::all(Val::Px(10.0)),
                 ..default()
             },
             BorderColor::from(WHITE),
@@ -725,15 +725,15 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
                     grid_template_columns: vec![GridTrack::auto(); 3],
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    border: UiRect::all(Val::Px(1.0)),
-                    margin: UiRect::all(Val::Px(10.0)),
+                    margin: UiRect::horizontal(Val::Px(5.0)),
                     padding: UiRect::all(Val::Px(10.0)),
+                    border: UiRect::all(Val::Px(1.0)),
                     ..default()
                 },
                 BorderColor::from(WHITE),
             ))
             .with_children(|p| {
-                let buttons = vec![
+                let buttons = [
                     None,
                     Some(PlayerInputsEntityMarker::Up),
                     None,
@@ -756,18 +756,50 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
                 }
             });
 
+            p.spawn((
+                Node {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::horizontal(Val::Px(5.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BorderColor::from(WHITE),
+            ))
+            .with_children(|p| {
+                let buttons = [
+                    PlayerInputsEntityMarker::Select,
+                    PlayerInputsEntityMarker::Start,
+                ];
+                for button in buttons {
+                    p.spawn((
+                        Node {
+                            width: Val::Px(30.0),
+                            height: Val::Px(10.0),
+                            margin: UiRect::axes(Val::Px(5.0), Val::Px(10.0)),
+                            ..default()
+                        },
+                        BorderColor::from(WHITE),
+                        BorderRadius::all(Val::Px(5.0)),
+                        button,
+                    ));
+                }
+            });
+
             // A & B BUTTONS
             p.spawn(Node {
                 display: Display::Flex,
                 flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
-                margin: UiRect::top(Val::Auto),
-                padding: UiRect::all(Val::Px(10.0)),
+                column_gap: Val::Px(10.0),
+                margin: UiRect::horizontal(Val::Px(5.0)),
                 ..default()
             })
             .with_children(|p| {
-                let buttons = vec![PlayerInputsEntityMarker::B, PlayerInputsEntityMarker::A];
+                let buttons = [PlayerInputsEntityMarker::B, PlayerInputsEntityMarker::A];
 
                 for button in buttons {
                     p.spawn((
@@ -775,7 +807,6 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
                             width: Val::Auto,
                             height: Val::Auto,
                             border: UiRect::all(Val::Px(1.0)),
-                            margin: UiRect::horizontal(Val::Px(5.0)),
                             ..default()
                         },
                         BorderColor::from(WHITE),
@@ -784,7 +815,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
                         Node {
                             width: Val::Px(30.0),
                             height: Val::Px(30.0),
-                            margin: UiRect::all(Val::Px(10.0)),
+                            margin: UiRect::all(Val::Px(5.0)),
                             ..default()
                         },
                         BackgroundColor::from(WHITE),
@@ -1042,6 +1073,8 @@ fn player_inputs_display_system(
             PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
             PlayerInputsEntityMarker::Up => player_inputs.up.pressed,
             PlayerInputsEntityMarker::Down => player_inputs.down.pressed,
+            PlayerInputsEntityMarker::Select => player_inputs.select.pressed,
+            PlayerInputsEntityMarker::Start => player_inputs.start.pressed,
             PlayerInputsEntityMarker::A => player_inputs.a.pressed,
             PlayerInputsEntityMarker::B => player_inputs.b.pressed,
         };
