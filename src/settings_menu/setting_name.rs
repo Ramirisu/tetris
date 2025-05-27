@@ -73,9 +73,9 @@ impl SettingName for Random {
 impl SettingName for Score {
     fn name(&self) -> String {
         match self {
-            Score::Decimal => t!("tetris.settings.scoring.decimal"),
-            Score::Classic => t!("tetris.settings.scoring.classic"),
-            Score::Base36 => t!("tetris.settings.scoring.base36"),
+            Score::Decimal => t!("tetris.settings.score.decimal"),
+            Score::Classic => t!("tetris.settings.score.classic"),
+            Score::Base36 => t!("tetris.settings.score.base36"),
         }
         .into()
     }

@@ -5,8 +5,8 @@ tetris.splash.press_start:
   zh-CN: 按开始继续
 tetris.settings.transition:
   en: TRANSITION
-  zh-TW: 升階設定
-  zh-CN: 过渡设置
+  zh-TW: 升等設定
+  zh-CN: 升等设置
 tetris.settings.linecap:
   en: LINECAP
   zh-TW: 終局模式
@@ -19,6 +19,10 @@ tetris.settings.gravity:
   en: GRAVITY
   zh-TW: 重力設定
   zh-CN: 重力设置
+tetris.settings.random:
+  en: RANDOM
+  zh-TW: 隨機模式
+  zh-CN: 随机模式
 tetris.settings.seeding:
   en: SEEDING
   zh-TW: 隨機種子模式
@@ -27,10 +31,6 @@ tetris.settings.seed:
   en: SEED
   zh-TW: 種子
   zh-CN: 种子
-tetris.settings.random:
-  en: RANDOM
-  zh-TW: 隨機模式
-  zh-CN: 随机模式
 tetris.settings.scoring:
   en: SCORING
   zh-TW: 分數顯示
@@ -107,14 +107,6 @@ tetris.settings.gravity.locked:
   en: LOCKED
   zh-TW: 鎖定起始等級
   zh-CN: 锁定起始等级
-tetris.settings.seeding.system:
-  en: SYSTEM
-  zh-TW: 系統
-  zh-CN: 系统
-tetris.settings.seeding.custom:
-  en: CUSTOM
-  zh-TW: 自訂
-  zh-CN: 自定义
 tetris.settings.random.uniform:
   en: UNIFORM
   zh-TW: 均勻
@@ -127,15 +119,23 @@ tetris.settings.random.modern:
   en: MODERN (7BAG)
   zh-TW: 現代 (7BAG)
   zh-CN: 现代 (7BAG)
-tetris.settings.scoring.decimal:
+tetris.settings.seeding.system:
+  en: SYSTEM
+  zh-TW: 系統
+  zh-CN: 系统
+tetris.settings.seeding.custom:
+  en: CUSTOM
+  zh-TW: 自訂
+  zh-CN: 自定义
+tetris.settings.score.decimal:
   en: DECIMAL
   zh-TW: 十進制
   zh-CN: 十进制
-tetris.settings.scoring.classic:
+tetris.settings.score.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.scoring.base36:
+tetris.settings.score.base36:
   en: BASE36
   zh-TW: 三十六進制
   zh-CN: 三十六进制
@@ -173,11 +173,11 @@ tetris.settings.fps_limiter.unlimited:
   zh-CN: 无限制
 tetris.settings.fps_limiter.240fps:
   en: 240 FPS
-  zh-TW: 每秒 240 畫格
+  zh-TW: 每秒 240 幀
   zh-CN: 每秒 240 帧
 tetris.settings.fps_limiter.480fps:
   en: 480 FPS
-  zh-TW: 每秒 480 畫格
+  zh-TW: 每秒 480 幀
   zh-CN: 每秒 480 帧
 tetris.settings.show_fps.off:
   en: OFF
