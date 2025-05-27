@@ -1,7 +1,4 @@
-use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
-
-use crate::utility::enum_advance;
 
 use super::level::Level;
 
@@ -10,8 +7,6 @@ pub enum Scoring {
     #[default]
     Classic,
 }
-
-enum_advance::enum_advance_derive!(Scoring);
 
 impl Scoring {
     pub fn transform(&self, lines: usize, level: Level) -> usize {

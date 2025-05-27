@@ -87,9 +87,9 @@ The *SEED* option can be used to set the given initial seed by user. It is only 
 - Press `Up` and `Down` to adjust the hex value.
 - Press `Select` to generate a random seed.
 
-**SCORING**
+**SCORE**
 
-The *SCORING* option determines how the score is displayed.
+The *SCORE* option determines how the score is displayed.
 
 | Options | Description                                                       |      123 | 1,234,567 | 3,704,567 | 39,504,567 |
 | ------- | ----------------------------------------------------------------- | -------: | --------: | --------: | ---------: |

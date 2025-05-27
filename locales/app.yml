@@ -31,8 +31,8 @@ tetris.settings.seed:
   en: SEED
   zh-TW: 種子
   zh-CN: 种子
-tetris.settings.scoring:
-  en: SCORING
+tetris.settings.score:
+  en: SCORE
   zh-TW: 分數顯示
   zh-CN: 分数显示
 tetris.settings.leveling:
