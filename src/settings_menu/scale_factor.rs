@@ -1,9 +1,8 @@
-
 use bevy::prelude::*;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::enum_advance;
+use crate::utility::enum_advance;
 
 pub const WINDOW_WIDTH: f32 = 1440.0;
 pub const WINDOW_HEIGHT: f32 = 1080.0;

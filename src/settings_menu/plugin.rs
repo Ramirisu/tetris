@@ -10,7 +10,6 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    enum_advance, enum_advance_cycle,
     game::{
         game::GameConfig,
         seed::{SEED_BYTES_USED, Seed},
@@ -18,7 +17,7 @@ use crate::{
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    utility::{effect::flicker, entity::despawn_all},
+    utility::{effect::flicker, entity::despawn_all, enum_advance, enum_advance_cycle},
 };
 
 use super::{

@@ -9,11 +9,10 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    enum_advance, enum_advance_cycle,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
     settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
-    utility::{effect::flicker, entity::despawn_all},
+    utility::{effect::flicker, entity::despawn_all, enum_advance, enum_advance_cycle},
 };
 
 pub fn setup(app: &mut App) {

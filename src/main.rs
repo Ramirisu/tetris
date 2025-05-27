@@ -7,8 +7,6 @@ use bevy::{
 
 mod app_state;
 mod audio;
-mod enum_advance;
-mod enum_advance_cycle;
 mod game;
 mod init;
 mod input;

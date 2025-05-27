@@ -1,7 +1,7 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::enum_advance;
+use crate::utility::enum_advance;
 
 use super::level::Level;
 

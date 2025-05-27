@@ -1,7 +1,7 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::{enum_advance, enum_advance_cycle};
+use crate::utility::{enum_advance, enum_advance_cycle};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub i32, pub i32);

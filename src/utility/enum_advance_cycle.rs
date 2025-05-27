@@ -18,7 +18,7 @@ pub(crate) use enum_advance_cycle_derive;
 
 #[cfg(test)]
 mod test {
-    use crate::enum_advance::enum_advance_derive;
+    use crate::utility::enum_advance::enum_advance_derive;
 
     #[test]
     fn test() {
