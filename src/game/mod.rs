@@ -2,6 +2,7 @@ mod asset;
 mod board;
 pub mod game;
 pub mod gravity;
+pub mod input_freqency;
 pub mod invisible;
 pub mod level;
 pub mod leveling;

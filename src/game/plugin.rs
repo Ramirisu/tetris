@@ -147,6 +147,9 @@ struct TetrisRateIconEntityMarker;
 struct DroughtIconEntityMarker;
 
 #[derive(Component)]
+struct InputHzEntityMarker;
+
+#[derive(Component)]
 struct NextPieceEntityMarker {
     pub idx: usize,
     pub x: i32,
@@ -763,36 +766,56 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                 }
             });
 
-            p.spawn((
-                Node {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Row,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::horizontal(Val::Px(5.0)),
-                    border: UiRect::all(Val::Px(1.0)),
-                    ..default()
-                },
-                BorderColor::from(WHITE),
-            ))
+            p.spawn(Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                row_gap: Val::Px(20.0),
+                ..default()
+            })
             .with_children(|p| {
-                let buttons = [
-                    PlayerInputsEntityMarker::Select,
-                    PlayerInputsEntityMarker::Start,
-                ];
-                for button in buttons {
-                    p.spawn((
-                        Node {
-                            width: Val::Px(30.0),
-                            height: Val::Px(10.0),
-                            margin: UiRect::axes(Val::Px(5.0), Val::Px(10.0)),
-                            ..default()
-                        },
-                        BorderColor::from(WHITE),
-                        BorderRadius::all(Val::Px(5.0)),
-                        button,
-                    ));
-                }
+                // INPUT FREQUENCY
+                p.spawn((
+                    Text::default(),
+                    TextFont::from_font_size(20.0),
+                    TextColor::from(WHITE),
+                    TextLayout::new_with_justify(JustifyText::Center),
+                    InputHzEntityMarker,
+                ));
+
+                // START & SELECT
+                p.spawn((
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        margin: UiRect::horizontal(Val::Px(5.0)),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BorderColor::from(WHITE),
+                ))
+                .with_children(|p| {
+                    let buttons = [
+                        PlayerInputsEntityMarker::Select,
+                        PlayerInputsEntityMarker::Start,
+                    ];
+                    for button in buttons {
+                        p.spawn((
+                            Node {
+                                width: Val::Px(30.0),
+                                height: Val::Px(10.0),
+                                margin: UiRect::axes(Val::Px(5.0), Val::Px(10.0)),
+                                ..default()
+                            },
+                            BorderColor::from(WHITE),
+                            BorderRadius::all(Val::Px(5.0)),
+                            button,
+                        ));
+                    }
+                });
             });
 
             // A & B BUTTONS
@@ -938,6 +961,7 @@ fn update_statistics_system(
         )>,
         Query<&mut ImageNode, With<DroughtIconEntityMarker>>,
         Query<&mut ImageNode, With<BurnedIconEntityMarker>>,
+        Query<Entity, With<InputHzEntityMarker>>,
     )>,
     mut tw: TextUiWriter,
     game_config: Res<GameConfig>,
@@ -1028,6 +1052,10 @@ fn update_statistics_system(
     }
     for mut img in query.p2() {
         img.image = square_image_assets.get_burned_image();
+    }
+
+    if let Ok(entity) = query.p3().single_mut() {
+        *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_freqency.freq());
     }
 }
 
@@ -1233,6 +1261,13 @@ mod state_player_dropping {
             }
             game_state.set(GameState::Pause);
             return;
+        }
+
+        player_data
+            .input_freqency
+            .reset_when_expired(time.elapsed_secs());
+        if player_inputs.left.just_pressed || player_inputs.right.just_pressed {
+            player_data.input_freqency.increment(time.elapsed_secs());
         }
 
         player_data.soft_drop_timer.tick(time.delta());

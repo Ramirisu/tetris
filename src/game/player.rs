@@ -3,6 +3,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use super::{
     board::Board,
     game::GameConfig,
+    input_freqency::InputFrequency,
     timer::{DelayAutoShiftTimer, EntryDelayTimer, LineClearTimer, PressDownTimer, SoftDropTimer},
     tv_system::TVSystem,
 };
@@ -29,6 +30,7 @@ pub struct PlayerData {
     pub line_clear_rows: Vec<usize>,
     pub line_clear_phase: LineClearPhase,
     pub entry_delay_timer: EntryDelayTimer,
+    pub input_freqency: InputFrequency,
 }
 
 impl PlayerData {
@@ -59,6 +61,7 @@ impl PlayerData {
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::new(config.tv_system),
             entry_delay_timer: EntryDelayTimer::new(0, config.tv_system),
+            input_freqency: InputFrequency::default(),
         }
     }
 }
