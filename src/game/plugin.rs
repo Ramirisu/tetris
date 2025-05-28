@@ -248,7 +248,6 @@ fn setup_screen(
                         ..default()
                     })
                     .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
-                    &player_data,
                 );
                 setup_right_panel(
                     p.spawn(Node {
@@ -264,6 +263,7 @@ fn setup_screen(
                     })
                     .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
                     &game_config,
+                    &player_data,
                 );
             });
         });
@@ -459,7 +459,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
     });
 }
 
-fn setup_central_panel(p: &mut EntityCommands, player_data: &PlayerData) {
+fn setup_central_panel(p: &mut EntityCommands) {
     p.with_children(|p| {
         p.spawn(Node {
             display: Display::Flex,
@@ -542,62 +542,11 @@ fn setup_central_panel(p: &mut EntityCommands, player_data: &PlayerData) {
                     });
                 });
             });
-
-            // DAS
-            p.spawn(Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                column_gap: Val::Px(20.0),
-                margin: UiRect::all(Val::Px(20.0)),
-                ..default()
-            })
-            .with_children(|p| {
-                p.spawn((
-                    Text::new("DAS"),
-                    TextFont::from_font_size(40.0),
-                    TextColor::from(WHITE),
-                    TextLayout::new_with_justify(JustifyText::Center),
-                ));
-                p.spawn(Node {
-                    width: Val::Auto,
-                    height: Val::Auto,
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Row,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    column_gap: Val::Px(0.0),
-                    ..default()
-                })
-                .with_children(|p| {
-                    for idx in 0..player_data.das_timer.get_threshold_ticks() {
-                        p.spawn((
-                            Node {
-                                width: Val::Px(12.0),
-                                height: Val::Px(36.0),
-                                border: UiRect::all(Val::Px(1.0)),
-                                ..default()
-                            },
-                            BorderColor::from(WHITE),
-                            BorderRadius::right(Val::Px(12.0)),
-                            DASCounterBarEntityMarker(idx),
-                        ));
-                    }
-                });
-                p.spawn((
-                    Text::default(),
-                    TextFont::from_font_size(40.0),
-                    TextColor::from(WHITE),
-                    TextLayout::new_with_justify(JustifyText::Center),
-                    DASCounterEntityMarker,
-                ));
-            });
         });
     });
 }
 
-fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
+fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_data: &PlayerData) {
     p.with_children(|p| {
         // SCORE
         p.spawn(Node {
@@ -703,20 +652,78 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig) {
             ));
         });
 
-        // PLAYER INPUTS
-        p.spawn((
-            Node {
+        spawn_player_inputs(p, player_data);
+    });
+}
+
+fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
+    // PLAYER INPUTS
+    p.spawn((
+        Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            row_gap: Val::Px(10.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(10.0)),
+            border: UiRect::all(Val::Px(BORDER_WIDTH)),
+            ..default()
+        },
+        BorderColor::from(WHITE),
+    ))
+    .with_children(|p| {
+        // DAS
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(10.0),
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn(Node {
+                width: Val::Auto,
+                height: Val::Auto,
                 display: Display::Flex,
                 flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::Center,
-                align_items: AlignItems::End,
-                border: UiRect::all(Val::Px(BORDER_WIDTH)),
-                margin: UiRect::all(Val::Px(10.0)),
-                padding: UiRect::all(Val::Px(10.0)),
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(0.0),
                 ..default()
-            },
-            BorderColor::from(WHITE),
-        ))
+            })
+            .with_children(|p| {
+                for idx in 0..player_data.das_timer.get_threshold_ticks() {
+                    p.spawn((
+                        Node {
+                            width: Val::Px(15.0),
+                            height: Val::Px(15.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BorderColor::from(WHITE),
+                        DASCounterBarEntityMarker(idx),
+                    ));
+                }
+            });
+
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(25.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                DASCounterEntityMarker,
+            ));
+        });
+
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::End,
+            ..default()
+        })
         .with_children(|p| {
             // ARROW BUTTONS
             p.spawn((
