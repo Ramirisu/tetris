@@ -697,7 +697,7 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                 ..default()
             })
             .with_children(|p| {
-                for idx in 0..player_data.das_timer.get_threshold_ticks() {
+                for idx in 0..player_data.das_timer.get_full_charge_threshold_ticks() {
                     p.spawn((
                         Node {
                             width: Val::Px(15.0),

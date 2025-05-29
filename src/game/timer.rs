@@ -185,13 +185,13 @@ impl DelayAutoShiftTimer {
     }
 
     pub fn tick(&mut self, delta: Duration) -> &mut Self {
-        self.elapsed += delta;
+        self.elapsed = (self.elapsed + delta).min(self.get_full_charge_threshold());
         self
     }
 
     pub fn consume(&mut self) -> bool {
-        if self.elapsed >= self.get_threshold() {
-            self.elapsed = self.get_active_threshold();
+        if self.elapsed >= self.get_full_charge_threshold() {
+            self.elapsed = self.get_active_charge_threshold();
             true
         } else {
             false
@@ -203,34 +203,35 @@ impl DelayAutoShiftTimer {
     }
 
     pub fn charge(&mut self) {
-        self.elapsed = self.get_threshold();
+        self.elapsed = self.get_full_charge_threshold();
     }
 
     pub fn is_active(&self) -> bool {
-        self.elapsed >= self.get_active_threshold()
+        self.elapsed >= self.get_active_charge_threshold()
     }
 
-    pub fn get_threshold_ticks(&self) -> u64 {
+    pub fn get_full_charge_threshold_ticks(&self) -> u64 {
         match self.tv_system {
             TVSystem::NTSC => 16,
             TVSystem::PAL => 12,
         }
     }
 
-    pub fn get_active_threshold_ticks(&self) -> u64 {
+    pub fn get_active_charge_threshold_ticks(&self) -> u64 {
         match self.tv_system {
             TVSystem::NTSC => 10,
             TVSystem::PAL => 8,
         }
     }
 
-    fn get_threshold(&self) -> Duration {
-        self.tv_system.ticks_to_duration(self.get_threshold_ticks())
+    fn get_full_charge_threshold(&self) -> Duration {
+        self.tv_system
+            .ticks_to_duration(self.get_full_charge_threshold_ticks())
     }
 
-    fn get_active_threshold(&self) -> Duration {
+    fn get_active_charge_threshold(&self) -> Duration {
         self.tv_system
-            .ticks_to_duration(self.get_active_threshold_ticks())
+            .ticks_to_duration(self.get_active_charge_threshold_ticks())
     }
 }
 
