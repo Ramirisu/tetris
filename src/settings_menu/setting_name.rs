@@ -12,6 +12,9 @@ use super::{scale_factor::ScaleFactor, show_fps::ShowFPS};
 #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
 use super::fps_limiter::FPSLimiter;
 
+#[cfg(not(target_arch = "wasm32"))]
+use super::window_mode::WindowMode;
+
 pub trait SettingName {
     fn name(&self) -> String;
 }
@@ -149,6 +152,19 @@ impl SettingName for ControllerMapping {
         match self {
             ControllerMapping::MappingA => t!("tetris.settings.controller_mapping.mapping_a"),
             ControllerMapping::MappingB => t!("tetris.settings.controller_mapping.mapping_b"),
+        }
+        .into()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl SettingName for WindowMode {
+    fn name(&self) -> String {
+        match self {
+            WindowMode::Windowed => t!("tetris.settings.window_mode.windowed"),
+            WindowMode::BorderlessFullscreen => {
+                t!("tetris.settings.window_mode.borderless_fullscreen")
+            }
         }
         .into()
     }

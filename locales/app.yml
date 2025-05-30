@@ -63,6 +63,10 @@ tetris.settings.controller_mapping:
   en: CONTROLLER MAPPING
   zh-TW: 控制器型態
   zh-CN: 控制器类型
+tetris.settings.window_mode:
+  en: WINDOW MODE
+  zh-TW: 視窗模式
+  zh-CN: 窗口模式
 tetris.settings.scale_factor:
   en: SCALE FACTOR
   zh-TW: 介面縮放比例
@@ -195,6 +199,14 @@ tetris.settings.controller_mapping.mapping_b:
   en: MAPPING B
   zh-TW: B 類型
   zh-CN: B 类型
+tetris.settings.window_mode.windowed:
+  en: WINDOWED
+  zh-TW: 視窗化
+  zh-CN: 窗口化
+tetris.settings.window_mode.borderless_fullscreen:
+  en: BORDERLESS FULLSCREEN
+  zh-TW: 無邊界視窗
+  zh-CN: 无边框全屏
 tetris.level_option.level:
   en: LEVEL
   zh-TW: 等級

@@ -2,6 +2,7 @@ use bevy::{
     color::palettes::css::{BLUE, WHITE},
     ecs::spawn::SpawnWith,
     prelude::*,
+    window::PrimaryWindow,
 };
 use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
 use strum::{EnumCount, IntoEnumIterator};
@@ -29,6 +30,12 @@ use super::{
 #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
 use super::fps_limiter::FPSLimiter;
 
+#[cfg(not(target_arch = "wasm32"))]
+use bevy::winit::WinitWindows;
+
+#[cfg(not(target_arch = "wasm32"))]
+use super::window_mode::WindowMode;
+
 pub fn setup(app: &mut App) {
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
     {
@@ -40,7 +47,11 @@ pub fn setup(app: &mut App) {
         .add_systems(OnEnter(AppState::SettingsMenu), setup_screen)
         .add_systems(
             Update,
-            (handle_input_system, update_ui_system)
+            (
+                handle_input_system,
+                change_window_mode_system,
+                update_ui_system,
+            )
                 .chain()
                 .run_if(in_state(AppState::SettingsMenu)),
         )
@@ -83,6 +94,8 @@ enum SelectedMainSetting {
     FPSLimiter,
     ShowFPS,
     ControllerMapping,
+    #[cfg(not(target_arch = "wasm32"))]
+    WindowMode,
     ScaleFactor,
     #[cfg(not(target_arch = "wasm32"))]
     Exit,
@@ -110,6 +123,8 @@ impl SelectedMainSetting {
             SelectedMainSetting::ControllerMapping => {
                 t!("tetris.settings.controller_mapping")
             }
+            #[cfg(not(target_arch = "wasm32"))]
+            SelectedMainSetting::WindowMode => t!("tetris.settings.window_mode"),
             SelectedMainSetting::ScaleFactor => t!("tetris.settings.scale_factor"),
             #[cfg(not(target_arch = "wasm32"))]
             SelectedMainSetting::Exit => t!("tetris.settings.exit"),
@@ -138,6 +153,9 @@ struct SettingsMenuData {
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
     fps_limiter: FPSLimiter,
     show_fps: ShowFPS,
+    #[cfg(not(target_arch = "wasm32"))]
+    window_mode: WindowMode,
+    scale_changed: bool,
 }
 
 impl SettingsMenuData {
@@ -148,6 +166,9 @@ impl SettingsMenuData {
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             fps_limiter: FPSLimiter::default(),
             show_fps: ShowFPS::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            window_mode: WindowMode::default(),
+            scale_changed: false,
         }
     }
 }
@@ -245,7 +266,6 @@ fn handle_input_system(
     mut app_state: ResMut<NextState<AppState>>,
     mut play_sound: EventWriter<PlaySoundEvent>,
     mut scale_factor: ResMut<ScaleFactor>,
-    mut window_query: Query<&mut Window>,
     mut fps_overlay_config: ResMut<FpsOverlayConfig>,
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))] mut framepace_settins: ResMut<
         bevy_framepace::FramepaceSettings,
@@ -293,7 +313,6 @@ fn handle_input_system(
     }
 
     let mut option_changed = false;
-    let mut scale_changed = false;
 
     match settings_menu_data.selected_main_setting {
         SelectedMainSetting::Tetris => {
@@ -541,16 +560,30 @@ fn handle_input_system(
                 }
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        SelectedMainSetting::WindowMode => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = settings_menu_data.window_mode.enum_next() {
+                    settings_menu_data.window_mode = e;
+                    settings_menu_data.scale_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = settings_menu_data.window_mode.enum_prev() {
+                    settings_menu_data.window_mode = e;
+                    settings_menu_data.scale_changed = true;
+                }
+            }
+        }
         SelectedMainSetting::ScaleFactor => {
             if player_inputs.right.just_pressed {
                 if let Some(e) = scale_factor.enum_next() {
                     *scale_factor = e;
-                    scale_changed = true;
+                    settings_menu_data.scale_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
                 if let Some(e) = scale_factor.enum_prev() {
                     *scale_factor = e;
-                    scale_changed = true;
+                    settings_menu_data.scale_changed = true;
                 }
             }
         }
@@ -562,17 +595,62 @@ fn handle_input_system(
         }
     }
 
-    if scale_changed {
-        if let Ok(mut window) = window_query.single_mut() {
-            window
-                .resolution
-                .set_scale_factor_override(Some(scale_factor.mul()));
-        }
-    }
-    option_changed |= scale_changed;
+    option_changed |= settings_menu_data.scale_changed;
     if option_changed {
         play_sound.write(PlaySoundEvent::MoveCursor);
     }
+}
+
+fn change_window_mode_system(
+    mut settings_menu_data: ResMut<SettingsMenuData>,
+    scale_factor: Res<ScaleFactor>,
+    mut query: ParamSet<(Query<Entity, With<PrimaryWindow>>, Query<&mut Window>)>,
+    mut ui_scale: ResMut<UiScale>,
+    #[cfg(not(target_arch = "wasm32"))] winit_windows: NonSend<WinitWindows>,
+) {
+    if !std::mem::replace(&mut settings_menu_data.scale_changed, false) {
+        return;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let monitor = query
+        .p0()
+        .single()
+        .ok()
+        .and_then(|entity| winit_windows.get_window(entity))
+        .and_then(|winit_window| winit_window.current_monitor());
+
+    if let Ok(mut window) = query.p1().single_mut() {
+        #[cfg(target_arch = "wasm32")]
+        {
+            window.resolution.set_physical_resolution(
+                (WINDOW_WIDTH * scale_factor.mul()) as u32,
+                (WINDOW_HEIGHT * scale_factor.mul()) as u32,
+            );
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if settings_menu_data.window_mode != WindowMode::Windowed && monitor.is_some() {
+                // borderless fullscreen requires the current monitor's physical size to be known.
+                let monitor = monitor.unwrap();
+                info!("Current monitor: {:?}", monitor.size());
+                window
+                    .resolution
+                    .set_physical_resolution(monitor.size().width, monitor.size().height);
+            } else {
+                // fallback: set it to windowed mode.
+                settings_menu_data.window_mode = WindowMode::Windowed;
+                window.resolution.set_physical_resolution(
+                    (WINDOW_WIDTH * scale_factor.mul()) as u32,
+                    (WINDOW_HEIGHT * scale_factor.mul()) as u32,
+                );
+            }
+
+            window.mode = settings_menu_data.window_mode.into();
+        }
+    }
+
+    ui_scale.0 = scale_factor.mul();
 }
 
 fn update_ui_system(
@@ -733,6 +811,20 @@ fn update_ui_system(
             (SelectedMainSetting::ControllerMapping, 4) => {
                 fmt_rarrow(&mut tw, controller_mapping.enum_next().is_some())
             }
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::WindowMode, 2) => fmt_larrow(
+                &mut tw,
+                settings_menu_data.window_mode.enum_prev().is_some(),
+            ),
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::WindowMode, 3) => {
+                fmt_desc(&mut tw, settings_menu_data.window_mode.name())
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            (SelectedMainSetting::WindowMode, 4) => fmt_rarrow(
+                &mut tw,
+                settings_menu_data.window_mode.enum_next().is_some(),
+            ),
             (SelectedMainSetting::ScaleFactor, 2) => {
                 fmt_larrow(&mut tw, scale_factor.enum_prev().is_some())
             }
