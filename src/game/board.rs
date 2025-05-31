@@ -94,6 +94,11 @@ impl Board {
         self.score
     }
 
+    pub fn curr_level_score(&self, lines: usize) -> usize {
+        assert!(lines >= 1 && lines <= 4);
+        self.scoring.transform(lines, self.level())
+    }
+
     pub fn burned_lines(&self) -> usize {
         self.lines - self.clear_lines_rate(4).0 * 4
     }
@@ -155,7 +160,7 @@ impl Board {
         });
 
         let old_level = self.level();
-        self.score += self.scoring.transform(rows.len(), self.level());
+        self.score += self.curr_level_score(rows.len());
         self.lines += rows.len();
         match rows.len() {
             1..=4 => self.clear_lines_count[rows.len() - 1] += 1,

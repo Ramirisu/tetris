@@ -120,6 +120,7 @@ enum GameStatisticsEntityMarker {
     Burned,
     TetrisRate,
     Drought,
+    TetrisClearScore,
 }
 
 const BOARD_SQUARE_SIZE: f32 = 40.0;
@@ -145,6 +146,9 @@ struct TetrisRateIconEntityMarker;
 
 #[derive(Clone, Copy, Component)]
 struct DroughtIconEntityMarker;
+
+#[derive(Clone, Copy, Component)]
+struct TetrisScoreEntityMarker;
 
 #[derive(Component)]
 struct InputHzEntityMarker;
@@ -421,7 +425,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             // TETRIS RATE
             spawn_info_block(
                 p,
-                Piece::t(),
+                Piece::i(),
                 GameStatisticsEntityMarker::TetrisRate,
                 TetrisRateIconEntityMarker,
             );
@@ -441,7 +445,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::End,
-            margin: UiRect::all(Val::Px(10.0)),
+            margin: UiRect::px(10.0, 10.0, 30.0, 10.0),
             ..default()
         })
         .with_children(|p| {
@@ -576,12 +580,34 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
             ));
         });
 
+        // TETRIS CLEAR SCORE
+        p.spawn(Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(20.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|p| {
+            spawn_piece_icon(p, Piece::i(), Val::Px(20.0), TetrisScoreEntityMarker);
+
+            p.spawn((
+                Text::default(),
+                TextFont::from_font_size(20.0),
+                TextColor::from(WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                GameStatisticsEntityMarker::TetrisClearScore,
+            ));
+        });
+
         p.spawn(Node {
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Start,
-            margin: UiRect::px(10.0, 10.0, 110.0, 10.0),
+            margin: UiRect::px(10.0, 10.0, 60.0, 10.0),
             ..default()
         })
         .with_children(|p| {
@@ -1004,7 +1030,7 @@ fn update_statistics_system(
                         _ => *tw.color(entity, 0) = GREEN.into(),
                     }
                 } else {
-                    *tw.text(entity, 0) = format!("-%");
+                    *tw.text(entity, 0) = format!("---%");
                     *tw.color(entity, 0) = WHITE.into()
                 }
             }
@@ -1016,6 +1042,9 @@ fn update_statistics_system(
                     color
                 }
                 .into();
+            }
+            GameStatisticsEntityMarker::TetrisClearScore => {
+                *tw.text(entity, 0) = format!("+ {}", player_data.board.curr_level_score(4));
             }
         }
     }
@@ -1171,12 +1200,13 @@ fn update_piece_distribution_icons(
     }
 }
 
-fn update_tetris_rate_icon(
-    query: Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
+fn update_icon<Marker: Component>(
+    query: Query<&mut ImageNode, With<Marker>>,
     square_image_assets: &SquareImageAssets,
+    piece: Piece,
 ) {
     for mut img in query {
-        img.image = square_image_assets.get_image(SquareImageSize::Small, Piece::t());
+        img.image = square_image_assets.get_image(SquareImageSize::Small, piece);
     }
 }
 
@@ -1204,6 +1234,7 @@ mod state_player_init {
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
             Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
+            Query<&mut ImageNode, With<TetrisScoreEntityMarker>>,
         )>,
         player_data: Res<PlayerData>,
         game_config: Res<GameConfig>,
@@ -1220,7 +1251,8 @@ mod state_player_init {
         );
         update_next_piece_icons(query.p1(), &player_data, &square_image_assets);
         update_piece_distribution_icons(query.p2(), &square_image_assets);
-        update_tetris_rate_icon(query.p3(), &square_image_assets);
+        update_icon(query.p3(), &square_image_assets, Piece::i());
+        update_icon(query.p4(), &square_image_assets, Piece::i());
         player_phase.set(PlayerPhase::Dropping);
     }
 }
@@ -1522,6 +1554,7 @@ mod state_player_entry_delay {
             )>,
             Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
             Query<&mut ImageNode, With<TetrisRateIconEntityMarker>>,
+            Query<&mut ImageNode, With<TetrisScoreEntityMarker>>,
         )>,
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
@@ -1547,7 +1580,8 @@ mod state_player_entry_delay {
             );
             update_next_piece_icons(query.p2(), &player_data, &square_image_assets);
             update_piece_distribution_icons(query.p3(), &square_image_assets);
-            update_tetris_rate_icon(query.p4(), &square_image_assets);
+            update_icon(query.p4(), &square_image_assets, Piece::i());
+            update_icon(query.p5(), &square_image_assets, Piece::i());
 
             if game_config.linecap == Linecap::Halt
                 && player_data.board.level() >= game_config.linecap_level
