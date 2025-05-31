@@ -7,7 +7,7 @@ use strum_macros::EnumIter;
 
 use super::{
     level::Level,
-    palette::{SquareImagePattern, SquareImageSize, get_square_image_by_level},
+    palette::{SquareImagePattern, SquareImageSize, get_square_image_by_level, into_image},
     piece::Piece,
 };
 
@@ -41,33 +41,34 @@ impl SquareImageAssets {
         Self {
             standard: Piece::iter()
                 .map(|piece| {
-                    image_assets.add(get_square_image_by_level(
+                    image_assets.add(into_image(get_square_image_by_level(
                         SquareImageSize::Standard,
                         *piece,
                         level,
-                    ))
+                    )))
                 })
                 .collect(),
             small: Piece::iter()
                 .map(|piece| {
-                    image_assets.add(get_square_image_by_level(
+                    image_assets.add(into_image(get_square_image_by_level(
                         SquareImageSize::Small,
                         *piece,
                         level,
-                    ))
+                    )))
                 })
                 .collect(),
             level: SquareImageDisplayLevel::iter()
                 .map(|level| {
-                    image_assets.add(SquareImagePattern::X.to_image(
+                    image_assets.add(into_image(SquareImagePattern::X.to_dynamic_image(
                         SquareImageSize::Small,
                         &[BLACK, level.color(), level.color(), level.color()],
-                    ))
+                    )))
                 })
                 .collect(),
-            burned: image_assets.add(
-                SquareImagePattern::X.to_image(SquareImageSize::Small, &[BLACK, BLACK, BLACK, RED]),
-            ),
+            burned: image_assets.add(into_image(
+                SquareImagePattern::X
+                    .to_dynamic_image(SquareImageSize::Small, &[BLACK, BLACK, BLACK, RED]),
+            )),
         }
     }
 

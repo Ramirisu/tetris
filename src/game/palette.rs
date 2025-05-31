@@ -16,17 +16,29 @@ use image::{DynamicImage, Rgb32FImage};
 
 use super::{level::Level, piece::Piece};
 
-pub fn get_square_image_by_level(size: SquareImageSize, piece: Piece, level: Level) -> Image {
+pub fn into_image(dynamic_image: DynamicImage) -> Image {
+    Image::from_dynamic(
+        dynamic_image,
+        true,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+    )
+}
+
+pub fn get_square_image_by_level(
+    size: SquareImageSize,
+    piece: Piece,
+    level: Level,
+) -> DynamicImage {
     let palette = get_level_palette(level);
     match piece {
-        Piece::T(_) => SquareImagePattern::X.to_image(size, palette),
-        Piece::J(_) => SquareImagePattern::Z.to_image(size, palette),
-        Piece::Z(_) => SquareImagePattern::Y.to_image(size, palette),
-        Piece::O(_) => SquareImagePattern::X.to_image(size, palette),
-        Piece::S(_) => SquareImagePattern::Z.to_image(size, palette),
-        Piece::L(_) => SquareImagePattern::Y.to_image(size, palette),
-        Piece::I(_) => SquareImagePattern::X.to_image(size, palette),
-        Piece::X => SquareImagePattern::X.to_image(size, &[BLACK, BLACK, BLACK, BLACK]),
+        Piece::T(_) => SquareImagePattern::X.to_dynamic_image(size, palette),
+        Piece::J(_) => SquareImagePattern::Z.to_dynamic_image(size, palette),
+        Piece::Z(_) => SquareImagePattern::Y.to_dynamic_image(size, palette),
+        Piece::O(_) => SquareImagePattern::X.to_dynamic_image(size, palette),
+        Piece::S(_) => SquareImagePattern::Z.to_dynamic_image(size, palette),
+        Piece::L(_) => SquareImagePattern::Y.to_dynamic_image(size, palette),
+        Piece::I(_) => SquareImagePattern::X.to_dynamic_image(size, palette),
+        Piece::X => SquareImagePattern::X.to_dynamic_image(size, &[BLACK, BLACK, BLACK, BLACK]),
     }
 }
 
@@ -129,30 +141,26 @@ pub enum SquareImagePattern {
 }
 
 impl SquareImagePattern {
-    pub fn to_image(&self, size: SquareImageSize, colors: &[Srgba; 4]) -> Image {
-        Image::from_dynamic(
-            DynamicImage::ImageRgb32F(self.to_rgbf32_with_size(size, colors)),
-            true,
-            RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-        )
+    pub fn to_dynamic_image(&self, size: SquareImageSize, colors: &[Srgba; 4]) -> DynamicImage {
+        DynamicImage::ImageRgb32F(self.to_rgb32f_with_size(size, colors))
     }
 
-    fn to_rgbf32_with_size(&self, size: SquareImageSize, colors: &[Srgba; 4]) -> Rgb32FImage {
+    fn to_rgb32f_with_size(&self, size: SquareImageSize, colors: &[Srgba; 4]) -> Rgb32FImage {
         match size {
             SquareImageSize::Standard => match self {
-                SquareImagePattern::X => Self::to_rgbf32_with_pattern(Self::STANDARD_X, colors),
-                SquareImagePattern::Y => Self::to_rgbf32_with_pattern(Self::STANDARD_Y, colors),
-                SquareImagePattern::Z => Self::to_rgbf32_with_pattern(Self::STANDARD_Z, colors),
+                SquareImagePattern::X => Self::to_rgb32f_with_pattern(Self::STANDARD_X, colors),
+                SquareImagePattern::Y => Self::to_rgb32f_with_pattern(Self::STANDARD_Y, colors),
+                SquareImagePattern::Z => Self::to_rgb32f_with_pattern(Self::STANDARD_Z, colors),
             },
             SquareImageSize::Small => match self {
-                SquareImagePattern::X => Self::to_rgbf32_with_pattern(Self::SMALL_X, colors),
-                SquareImagePattern::Y => Self::to_rgbf32_with_pattern(Self::SMALL_Y, colors),
-                SquareImagePattern::Z => Self::to_rgbf32_with_pattern(Self::SMALL_Z, colors),
+                SquareImagePattern::X => Self::to_rgb32f_with_pattern(Self::SMALL_X, colors),
+                SquareImagePattern::Y => Self::to_rgb32f_with_pattern(Self::SMALL_Y, colors),
+                SquareImagePattern::Z => Self::to_rgb32f_with_pattern(Self::SMALL_Z, colors),
             },
         }
     }
 
-    fn to_rgbf32_with_pattern<const W: usize, const H: usize>(
+    fn to_rgb32f_with_pattern<const W: usize, const H: usize>(
         pattern: &[[u8; W]; H],
         colors: &[Srgba; 4],
     ) -> Rgb32FImage {
