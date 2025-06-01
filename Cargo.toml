@@ -25,6 +25,9 @@ log = { version = "0.4", features = [
     "release_max_level_warn",
 ] }
 
+[build-dependencies]
+winresource = "0.1.22"
+
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"
