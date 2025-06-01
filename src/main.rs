@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use bevy::{
     asset::load_internal_binary_asset,
     color::palettes::css::GREEN,
