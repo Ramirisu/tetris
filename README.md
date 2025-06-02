@@ -8,13 +8,9 @@ Classic Tetris (NES Tetris) built using the Bevy engine.
 ## Features
 
 - Game Play
-  - [x] DAS
-  - [x] 1H2R RNG for Next Piece
-  - [X] Glitched Color Palettes
-  - [x] Level 39 Super Kill Screen
   - [x] Game Statistics
   - [x] Piece Distribution
-  - [x] Display Input
+  - [x] Input Display
   - [x] Sound Effects
   - [x] Support English/繁體中文/简体中文
 
@@ -174,7 +170,7 @@ Ubuntu
 WGPU_BACKEND=vulkan cargo run --release
 ```
 
-> The OpenGL backend is broken; run with the Vulkan backend instead.
+> The OpenGL backend is broken, run with the Vulkan backend instead.
 
 ### Windows & MacOS
 
