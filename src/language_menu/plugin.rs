@@ -180,15 +180,15 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
-    time: Res<Time>,
-    query: Query<(Entity, &LanguageSelectionEntityMarker)>,
+    t: Res<Time>,
+    q: Query<(Entity, &LanguageSelectionEntityMarker)>,
     mut tw: TextUiWriter,
     lang_menu_data: Res<LanguageMenuData>,
 ) {
-    for (entity, marker) in query {
+    for (entity, marker) in q {
         tw.color(entity, 0)
             .set_alpha(if lang_menu_data.selected_lang == marker.0 {
-                flicker(time.elapsed_secs(), 0.5)
+                flicker(t.elapsed_secs(), 0.5)
             } else {
                 0.0
             });

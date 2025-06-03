@@ -257,14 +257,14 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
-    time: Res<Time>,
-    query: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
+    t: Res<Time>,
+    q: Query<(&mut BackgroundColor, &LevelButtonEntityMarker)>,
     level_menu_data: Res<LevelMenuData>,
 ) {
-    for (mut bg_color, marker) in query {
+    for (mut bg_color, marker) in q {
         if marker.cordinate == level_menu_data.selected_level {
             let mut color = GOLD;
-            color.set_alpha(flicker(time.elapsed_secs(), 0.25));
+            color.set_alpha(flicker(t.elapsed_secs(), 0.25));
 
             *bg_color = color.into();
         } else {

@@ -604,7 +604,7 @@ fn handle_input_system(
 fn change_window_mode_system(
     mut settings_menu_data: ResMut<SettingsMenuData>,
     scale_factor: Res<ScaleFactor>,
-    mut query: ParamSet<(Query<Entity, With<PrimaryWindow>>, Query<&mut Window>)>,
+    mut q: ParamSet<(Query<Entity, With<PrimaryWindow>>, Query<&mut Window>)>,
     mut ui_scale: ResMut<UiScale>,
     #[cfg(not(target_arch = "wasm32"))] winit_windows: NonSend<WinitWindows>,
 ) {
@@ -613,14 +613,14 @@ fn change_window_mode_system(
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    let monitor = query
+    let monitor = q
         .p0()
         .single()
         .ok()
         .and_then(|entity| winit_windows.get_window(entity))
         .and_then(|winit_window| winit_window.current_monitor());
 
-    if let Ok(mut window) = query.p1().single_mut() {
+    if let Ok(mut window) = q.p1().single_mut() {
         #[cfg(target_arch = "wasm32")]
         {
             window.resolution.set_physical_resolution(
@@ -654,19 +654,19 @@ fn change_window_mode_system(
 }
 
 fn update_ui_system(
-    time: Res<Time>,
-    query: Query<(Entity, &SelectedMainSettingEntityMarker)>,
+    t: Res<Time>,
+    q: Query<(Entity, &SelectedMainSettingEntityMarker)>,
     mut tw: TextUiWriter,
     settings_menu_data: Res<SettingsMenuData>,
     game_config: Res<GameConfig>,
     controller_mapping: Res<ControllerMapping>,
     scale_factor: Res<ScaleFactor>,
 ) {
-    for (entity, marker) in query {
+    for (entity, marker) in q {
         let fmt_selected = |tw: &mut TextUiWriter| {
             tw.color(entity, 0).set_alpha(
                 if marker.0 == settings_menu_data.selected_main_setting {
-                    flicker(time.elapsed_secs(), 0.5)
+                    flicker(t.elapsed_secs(), 0.5)
                 } else {
                     0.0
                 },

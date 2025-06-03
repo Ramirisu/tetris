@@ -75,11 +75,8 @@ fn handle_input_system(
     }
 }
 
-fn update_ui_system(
-    time: Res<Time>,
-    mut query: Query<&mut TextColor, With<PressStartEntityMarker>>,
-) {
-    if let Ok(mut color) = query.single_mut() {
-        color.set_alpha(flicker(time.elapsed_secs(), 2.0));
+fn update_ui_system(t: Res<Time>, mut q: Query<&mut TextColor, With<PressStartEntityMarker>>) {
+    if let Ok(mut color) = q.single_mut() {
+        color.set_alpha(flicker(t.elapsed_secs(), 2.0));
     }
 }

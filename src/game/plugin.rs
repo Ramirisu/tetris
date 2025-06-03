@@ -968,13 +968,13 @@ fn spawn_next_piece(
     });
 }
 
-fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData>) {
-    player_data.stopwatch.tick(time.delta());
+fn increase_stopwatch_system(t: Res<Time>, mut player_data: ResMut<PlayerData>) {
+    player_data.stopwatch.tick(t.delta());
 }
 
 fn update_game_stats_system(
-    time: Res<Time>,
-    mut query: ParamSet<(
+    t: Res<Time>,
+    mut q: ParamSet<(
         ParamSet<(
             Query<Entity, With<LinesEntityMarker>>,
             Query<Entity, With<ScoreEntityMarker>>,
@@ -994,19 +994,19 @@ fn update_game_stats_system(
     player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
 ) {
-    if let Ok(entity) = query.p0().p0().single_mut() {
+    if let Ok(entity) = q.p0().p0().single_mut() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
     }
-    if let Ok(entity) = query.p0().p1().single_mut() {
+    if let Ok(entity) = q.p0().p1().single_mut() {
         *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
     }
-    if let Ok(entity) = query.p0().p2().single_mut() {
+    if let Ok(entity) = q.p0().p2().single_mut() {
         *tw.text(entity, 0) = game_config.leveling.format(player_data.board.level());
     }
-    if let Ok(entity) = query.p0().p3().single_mut() {
+    if let Ok(entity) = q.p0().p3().single_mut() {
         *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
     }
-    if let Ok(entity) = query.p0().p4().single_mut() {
+    if let Ok(entity) = q.p0().p4().single_mut() {
         *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_freqency.freq());
     }
 
@@ -1018,11 +1018,11 @@ fn update_game_stats_system(
 
     let drought_alpha = match drought_level {
         SquareImageDisplayLevel::Info => 1.0,
-        SquareImageDisplayLevel::Warn => flicker(time.elapsed_secs(), 1.0),
-        SquareImageDisplayLevel::Error => flicker(time.elapsed_secs(), 0.5),
+        SquareImageDisplayLevel::Warn => flicker(t.elapsed_secs(), 1.0),
+        SquareImageDisplayLevel::Error => flicker(t.elapsed_secs(), 0.5),
     };
 
-    for (entity, marker) in query.p1() {
+    for (entity, marker) in q.p1() {
         match marker {
             GameStatsEntityMarker::Burned => {
                 *tw.text(entity, 0) = format!("{}", player_data.board.burned_lines())
@@ -1056,7 +1056,7 @@ fn update_game_stats_system(
         }
     }
 
-    for (entity, piece) in query.p2() {
+    for (entity, piece) in q.p2() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
     }
 
@@ -1066,12 +1066,12 @@ fn update_game_stats_system(
         RED
     };
 
-    if let Ok(entity) = query.p3().single_mut() {
+    if let Ok(entity) = q.p3().single_mut() {
         *tw.text(entity, 0) = format!("{:02}", player_data.das_timer.get_ticks());
         *tw.color(entity, 0) = das_color.into();
     }
 
-    for (mut bg_color, marker) in query.p4() {
+    for (mut bg_color, marker) in q.p4() {
         if marker.0 < player_data.das_timer.get_ticks() {
             *bg_color = das_color.into();
         } else {
@@ -1079,17 +1079,17 @@ fn update_game_stats_system(
         }
     }
 
-    for mut img in query.p5() {
+    for mut img in q.p5() {
         img.image = square_image_assets.get_display_level_image(drought_level);
         img.color.set_alpha(drought_alpha);
     }
-    for mut img in query.p6() {
+    for mut img in q.p6() {
         img.image = square_image_assets.get_burned_image();
     }
 }
 
 fn update_board(
-    query: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
+    q: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
     player_data: &PlayerData,
     game_config: &GameConfig,
     square_image_assets: &SquareImageAssets,
@@ -1097,7 +1097,7 @@ fn update_board(
     force_line_visible: Option<&Vec<usize>>,
 ) {
     let curr_piece_pos = player_data.board.curr_piece_to_squares_with_pos();
-    for (mut img, marker) in query {
+    for (mut img, marker) in q {
         if curr_piece_pos
             .iter()
             .any(|sqr| sqr.0 == marker.0 as i32 && sqr.1 == marker.1 as i32)
@@ -1126,12 +1126,12 @@ fn player_inputs_display_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
-    query: Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
+    q: Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
-    for (mut bg_color, marker) in query {
+    for (mut bg_color, marker) in q {
         let pressed = match marker {
             PlayerInputsEntityMarker::Left => player_inputs.left.pressed,
             PlayerInputsEntityMarker::Right => player_inputs.right.pressed,
@@ -1151,7 +1151,7 @@ fn player_inputs_display_system(
 }
 
 fn update_next_piece_icons(
-    query: Query<(
+    q: Query<(
         &mut Node,
         &mut ImageNode,
         &mut Visibility,
@@ -1160,7 +1160,7 @@ fn update_next_piece_icons(
     player_data: &PlayerData,
     square_image_assets: &SquareImageAssets,
 ) {
-    for (mut node, mut img, mut vis, marker) in query {
+    for (mut node, mut img, mut vis, marker) in q {
         if let Some(piece) = player_data.board.next_pieces().get(marker.idx) {
             let shift: (f32, f32) = match piece {
                 Piece::T(_) => (-0.5, 0.0),
@@ -1192,20 +1192,20 @@ fn update_next_piece_icons(
 }
 
 fn update_piece_distribution_icons(
-    query: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
+    q: Query<(&mut ImageNode, &PieceDistributionIconEntityMarker)>,
     square_image_assets: &SquareImageAssets,
 ) {
-    for (mut img, marker) in query {
+    for (mut img, marker) in q {
         img.image = square_image_assets.get_image(SquareImageSize::Small, marker.0);
     }
 }
 
 fn update_icon<Marker: Component>(
-    query: Query<&mut ImageNode, With<Marker>>,
+    q: Query<&mut ImageNode, With<Marker>>,
     square_image_assets: &SquareImageAssets,
     piece: Piece,
 ) {
-    for mut img in query {
+    for mut img in q {
         img.image = square_image_assets.get_image(SquareImageSize::Small, piece);
     }
 }
@@ -1224,7 +1224,7 @@ mod state_player_init {
     use super::*;
 
     pub(super) fn init_system(
-        mut query: ParamSet<(
+        mut q: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<(
                 &mut Node,
@@ -1242,17 +1242,17 @@ mod state_player_init {
         mut player_phase: ResMut<NextState<PlayerPhase>>,
     ) {
         update_board(
-            query.p0(),
+            q.p0(),
             &player_data,
             &game_config,
             &square_image_assets,
             false,
             None,
         );
-        update_next_piece_icons(query.p1(), &player_data, &square_image_assets);
-        update_piece_distribution_icons(query.p2(), &square_image_assets);
-        update_icon(query.p3(), &square_image_assets, Piece::i());
-        update_icon(query.p4(), &square_image_assets, Piece::i());
+        update_next_piece_icons(q.p1(), &player_data, &square_image_assets);
+        update_piece_distribution_icons(q.p2(), &square_image_assets);
+        update_icon(q.p3(), &square_image_assets, Piece::i());
+        update_icon(q.p4(), &square_image_assets, Piece::i());
         player_phase.set(PlayerPhase::Dropping);
     }
 }
@@ -1263,11 +1263,11 @@ mod state_player_dropping {
     use super::*;
 
     pub(super) fn handle_input_system(
-        time: Res<Time>,
+        t: Res<Time>,
         keys: Res<ButtonInput<KeyCode>>,
         gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
-        mut query: ParamSet<(
+        mut q: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<PauseScreenEntityMarker>>,
         )>,
@@ -1288,7 +1288,7 @@ mod state_player_dropping {
         }
 
         if player_inputs.start.just_pressed {
-            if let Ok(mut vis) = query.p1().single_mut() {
+            if let Ok(mut vis) = q.p1().single_mut() {
                 *vis = Visibility::Visible;
             }
             game_state.set(GameState::Pause);
@@ -1297,18 +1297,18 @@ mod state_player_dropping {
 
         player_data
             .input_freqency
-            .reset_when_expired(time.elapsed_secs());
+            .reset_when_expired(t.elapsed_secs());
         if player_inputs.left.just_pressed || player_inputs.right.just_pressed {
-            player_data.input_freqency.increment(time.elapsed_secs());
+            player_data.input_freqency.increment(t.elapsed_secs());
         }
 
-        player_data.soft_drop_timer.tick(time.delta());
+        player_data.soft_drop_timer.tick(t.delta());
 
         let (moved, horizontally_moved, rotated) =
-            handle_input(&player_inputs, &time, &mut player_data);
+            handle_input(&player_inputs, &t, &mut player_data);
         if moved {
             update_board(
-                query.p0(),
+                q.p0(),
                 &player_data,
                 &game_config,
                 &square_image_assets,
@@ -1326,7 +1326,7 @@ mod state_player_dropping {
 
     fn handle_input(
         inputs: &PlayerInputs,
-        time: &Time,
+        t: &Time,
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
         let mut down_moved = false;
@@ -1335,7 +1335,7 @@ mod state_player_dropping {
 
         if player_data.can_press_down {
             if inputs.down.pressed {
-                if player_data.press_down_timer.tick(time.delta()).consume() {
+                if player_data.press_down_timer.tick(t.delta()).consume() {
                     down_moved |= player_data.board.move_piece_down();
                     player_data.lock_curr_piece_immediately = !down_moved;
                 }
@@ -1363,19 +1363,19 @@ mod state_player_dropping {
             } else {
                 match (inputs.left.pressed, inputs.right.pressed) {
                     (true, true) => {
-                        player_data.das_timer.tick(time.delta());
+                        player_data.das_timer.tick(t.delta());
                     }
                     (true, false) => {
                         if !player_data.board.is_left_movable() {
                             player_data.das_timer.charge();
-                        } else if player_data.das_timer.tick(time.delta()).consume() {
+                        } else if player_data.das_timer.tick(t.delta()).consume() {
                             horizontally_moved |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
                         if !player_data.board.is_right_movable() {
                             player_data.das_timer.charge();
-                        } else if player_data.das_timer.tick(time.delta()).consume() {
+                        } else if player_data.das_timer.tick(t.delta()).consume() {
                             horizontally_moved |= player_data.board.move_piece_right();
                         }
                     }
@@ -1399,7 +1399,7 @@ mod state_player_dropping {
     }
 
     pub(super) fn drop_curr_piece_system(
-        query: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
+        q: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
@@ -1422,7 +1422,7 @@ mod state_player_dropping {
 
             if player_data.board.move_piece_down() {
                 update_board(
-                    query,
+                    q,
                     &player_data,
                     &game_config,
                     &square_image_assets,
@@ -1431,7 +1431,7 @@ mod state_player_dropping {
                 );
             } else if !player_data.board.is_curr_position_valid() {
                 update_board(
-                    query,
+                    q,
                     &player_data,
                     &game_config,
                     &square_image_assets,
@@ -1454,7 +1454,7 @@ mod state_player_dropping {
                 let lines = player_data.board.get_line_clear_rows();
 
                 update_board(
-                    query,
+                    q,
                     &player_data,
                     &game_config,
                     &square_image_assets,
@@ -1485,8 +1485,8 @@ mod state_player_line_clear {
     use super::*;
 
     pub(super) fn clear_lines_system(
-        time: Res<Time>,
-        mut query: ParamSet<(
+        t: Res<Time>,
+        mut q: ParamSet<(
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
         )>,
@@ -1496,16 +1496,11 @@ mod state_player_line_clear {
         mut square_image_assets: ResMut<SquareImageAssets>,
         mut image_assets: ResMut<Assets<Image>>,
     ) {
-        if player_data
-            .line_clear_phase
-            .timer
-            .tick(time.delta())
-            .consume()
-        {
+        if player_data.line_clear_phase.timer.tick(t.delta()).consume() {
             let mut to_next_state = true;
             if let Some((left, right, end)) = player_data.line_clear_phase.next() {
                 to_next_state = end;
-                for (mut img, coord) in query.p0() {
+                for (mut img, coord) in q.p0() {
                     if (coord.0 == left || coord.0 == right)
                         && player_data.line_clear_rows.contains(&coord.1)
                     {
@@ -1514,7 +1509,7 @@ mod state_player_line_clear {
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
-                    if let Ok(mut bg_color) = query.p1().single_mut() {
+                    if let Ok(mut bg_color) = q.p1().single_mut() {
                         match bg_color.0.alpha() {
                             0.0 => bg_color.0.set_alpha(1.0),
                             1.0 => bg_color.0.set_alpha(0.0),
@@ -1542,8 +1537,8 @@ mod state_player_entry_delay {
     use super::*;
 
     pub(super) fn deploy_new_piece_system(
-        time: Res<Time>,
-        mut query: ParamSet<(
+        t: Res<Time>,
+        mut q: ParamSet<(
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<(
@@ -1563,25 +1558,25 @@ mod state_player_entry_delay {
         mut game_state: ResMut<NextState<GameState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
-        if player_data.entry_delay_timer.tick(time.delta()).consume() {
+        if player_data.entry_delay_timer.tick(t.delta()).consume() {
             player_data.board.switch_to_next_piece();
 
-            if let Ok(mut bg_color) = query.p0().single_mut() {
+            if let Ok(mut bg_color) = q.p0().single_mut() {
                 bg_color.0.set_alpha(0.0);
             }
 
             update_board(
-                query.p1(),
+                q.p1(),
                 &player_data,
                 &game_config,
                 &square_image_assets,
                 false,
                 None,
             );
-            update_next_piece_icons(query.p2(), &player_data, &square_image_assets);
-            update_piece_distribution_icons(query.p3(), &square_image_assets);
-            update_icon(query.p4(), &square_image_assets, Piece::i());
-            update_icon(query.p5(), &square_image_assets, Piece::i());
+            update_next_piece_icons(q.p2(), &player_data, &square_image_assets);
+            update_piece_distribution_icons(q.p3(), &square_image_assets);
+            update_icon(q.p4(), &square_image_assets, Piece::i());
+            update_icon(q.p5(), &square_image_assets, Piece::i());
 
             if game_config.linecap == Linecap::Halt
                 && player_data.board.level() >= game_config.linecap_level
@@ -1601,7 +1596,7 @@ mod state_game_pause {
         keys: Res<ButtonInput<KeyCode>>,
         gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
-        mut query: Query<&mut Visibility, With<PauseScreenEntityMarker>>,
+        mut q: Query<&mut Visibility, With<PauseScreenEntityMarker>>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
@@ -1616,7 +1611,7 @@ mod state_game_pause {
         }
 
         if player_inputs.start.just_pressed {
-            if let Ok(mut vis) = query.single_mut() {
+            if let Ok(mut vis) = q.single_mut() {
                 *vis = Visibility::Hidden;
             }
             game_state.set(GameState::Running);

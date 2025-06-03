@@ -69,14 +69,14 @@ fn handle_input_system(
 }
 
 fn update_ui_system(
-    time: Res<Time>,
+    t: Res<Time>,
     mut duration: ResMut<LoadingScreenIconTimeDuration>,
-    mut query: Query<&mut ImageNode, With<LoadingScreenIconEntityMarker>>,
+    mut q: Query<&mut ImageNode, With<LoadingScreenIconEntityMarker>>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    duration.0 += time.delta();
+    duration.0 += t.delta();
 
-    if let Ok(mut img) = query.single_mut() {
+    if let Ok(mut img) = q.single_mut() {
         let t = duration.0.as_secs_f32();
         match t {
             0.0..2.0 => img.color.set_alpha(0.0),
