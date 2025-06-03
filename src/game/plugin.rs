@@ -136,7 +136,7 @@ impl From<Piece> for PieceDistributionIconEntityMarker {
 }
 
 #[derive(Component)]
-struct PieceDistributionTextEntityMarker(Piece);
+struct PieceDistributionEntityMarker(Piece, usize);
 
 #[derive(Clone, Copy, Component)]
 struct BurnedIconEntityMarker;
@@ -331,7 +331,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
         // PIECE DISTRIBUTION
         p.spawn(Node {
             display: Display::Grid,
-            grid_template_columns: vec![GridTrack::auto(); 2],
+            grid_template_columns: vec![GridTrack::auto(); 3],
             column_gap: Val::Px(20.0),
             row_gap: Val::Px(20.0),
             justify_content: JustifyContent::Center,
@@ -351,11 +351,32 @@ fn setup_left_panel(p: &mut EntityCommands) {
                     );
                     p.spawn((
                         Text::default(),
-                        TextFont::from_font_size(40.0),
+                        TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(JustifyText::Left),
-                        PieceDistributionTextEntityMarker(*piece),
+                        TextLayout::new_with_justify(JustifyText::Center),
+                        PieceDistributionEntityMarker(*piece, 0),
                     ));
+                    p.spawn((
+                        Text::new("("),
+                        TextFont::from_font_size(20.0),
+                        TextColor::from(WHITE),
+                        TextLayout::new_with_justify(JustifyText::Center),
+                        PieceDistributionEntityMarker(*piece, 1),
+                    ))
+                    .with_children(|p| {
+                        p.spawn((
+                            TextSpan::default(),
+                            TextFont::from_font_size(20.0),
+                            TextColor::from(WHITE),
+                            TextLayout::new_with_justify(JustifyText::Center),
+                        ));
+                        p.spawn((
+                            TextSpan::new(")"),
+                            TextFont::from_font_size(20.0),
+                            TextColor::from(WHITE),
+                            TextLayout::new_with_justify(JustifyText::Center),
+                        ));
+                    });
                 });
         });
 
@@ -983,7 +1004,7 @@ fn update_game_stats_system(
             Query<Entity, With<InputHzEntityMarker>>,
         )>,
         Query<(Entity, &GameStatsEntityMarker)>,
-        Query<(Entity, &PieceDistributionTextEntityMarker)>,
+        Query<(Entity, &PieceDistributionEntityMarker)>,
         Query<Entity, With<DASCounterEntityMarker>>,
         Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
         Query<&mut ImageNode, With<DroughtIconEntityMarker>>,
@@ -1031,11 +1052,12 @@ fn update_game_stats_system(
                 if let Some(rate) = player_data.board.clear_lines_rate(4).1 {
                     let rate = (rate * 100.0).round() as usize;
                     *tw.text(entity, 0) = format!("{}%", rate);
-                    match rate {
-                        0..50 => *tw.color(entity, 0) = RED.into(),
-                        50..80 => *tw.color(entity, 0) = YELLOW.into(),
-                        _ => *tw.color(entity, 0) = GREEN.into(),
+                    *tw.color(entity, 0) = match rate {
+                        0..50 => RED,
+                        50..80 => YELLOW,
+                        _ => GREEN,
                     }
+                    .into()
                 } else {
                     *tw.text(entity, 0) = format!("---%");
                     *tw.color(entity, 0) = WHITE.into()
@@ -1056,8 +1078,34 @@ fn update_game_stats_system(
         }
     }
 
-    for (entity, piece) in q.p2() {
-        *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
+    let total_piece_count = Piece::iter()
+        .filter(|piece| !piece.is_placeholder())
+        .map(|piece| player_data.board.get_piece_count(*piece))
+        .sum::<usize>();
+
+    for (entity, marker) in q.p2() {
+        let count = player_data.board.get_piece_count(marker.0);
+        match marker.1 {
+            0 => {
+                *tw.text(entity, 0) = format!("{:03}", count);
+            }
+            1 => {
+                let probability = count as f32 / total_piece_count as f32;
+                let average = 1.0
+                    / Piece::iter()
+                        .filter(|piece| !piece.is_placeholder())
+                        .count() as f32;
+                let diff = probability - average;
+                *tw.text(entity, 1) = format!("{:+5.1}%", 100.0 * diff);
+                *tw.color(entity, 1) = match diff.abs() {
+                    0.00..0.01 => GREEN,
+                    0.01..0.02 => YELLOW,
+                    _ => RED,
+                }
+                .into()
+            }
+            _ => unreachable!(),
+        }
     }
 
     let das_color = if player_data.das_timer.is_active() {
