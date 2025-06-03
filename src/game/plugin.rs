@@ -44,7 +44,7 @@ pub fn setup(app: &mut App) {
                         increase_stopwatch_system,
                         state_player_dropping::handle_input_system,
                         state_player_dropping::drop_curr_piece_system,
-                        update_statistics_system,
+                        update_game_stats_system,
                         player_inputs_display_system,
                     )
                         .chain()
@@ -52,7 +52,7 @@ pub fn setup(app: &mut App) {
                     (
                         increase_stopwatch_system,
                         state_player_line_clear::clear_lines_system,
-                        update_statistics_system,
+                        update_game_stats_system,
                         player_inputs_display_system,
                     )
                         .chain()
@@ -60,7 +60,7 @@ pub fn setup(app: &mut App) {
                     (
                         increase_stopwatch_system,
                         state_player_entry_delay::deploy_new_piece_system,
-                        update_statistics_system,
+                        update_game_stats_system,
                         player_inputs_display_system,
                     )
                         .run_if(in_state(PlayerPhase::EntryDelay)),
@@ -70,7 +70,7 @@ pub fn setup(app: &mut App) {
                     .run_if(in_state(GameState::Pause)),
                 (
                     state_game_over::handle_input_system,
-                    update_statistics_system,
+                    update_game_stats_system,
                     player_inputs_display_system,
                 ) //
                     .run_if(in_state(GameState::Over)),
@@ -116,7 +116,7 @@ struct DASCounterBarEntityMarker(u64);
 struct GameStopwatchEntityMarker;
 
 #[derive(Debug, Component)]
-enum GameStatisticsEntityMarker {
+enum GameStatsEntityMarker {
     Burned,
     TetrisRate,
     Drought,
@@ -376,7 +376,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             fn spawn_info_block<Marker: Component + Copy>(
                 p: &mut ChildSpawnerCommands,
                 piece: Piece,
-                text_marker: GameStatisticsEntityMarker,
+                text_marker: GameStatsEntityMarker,
                 icon_marker: Marker,
             ) {
                 p.spawn((
@@ -418,7 +418,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             spawn_info_block(
                 p,
                 Piece::o(),
-                GameStatisticsEntityMarker::Burned,
+                GameStatsEntityMarker::Burned,
                 BurnedIconEntityMarker,
             );
 
@@ -426,7 +426,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             spawn_info_block(
                 p,
                 Piece::i(),
-                GameStatisticsEntityMarker::TetrisRate,
+                GameStatsEntityMarker::TetrisRate,
                 TetrisRateIconEntityMarker,
             );
 
@@ -434,7 +434,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             spawn_info_block(
                 p,
                 Piece::i(),
-                GameStatisticsEntityMarker::Drought,
+                GameStatsEntityMarker::Drought,
                 DroughtIconEntityMarker,
             );
         });
@@ -598,7 +598,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 TextFont::from_font_size(20.0),
                 TextColor::from(WHITE),
                 TextLayout::new_with_justify(JustifyText::Center),
-                GameStatisticsEntityMarker::TetrisClearScore,
+                GameStatsEntityMarker::TetrisClearScore,
             ));
         });
 
@@ -972,28 +972,44 @@ fn increase_stopwatch_system(time: Res<Time>, mut player_data: ResMut<PlayerData
     player_data.stopwatch.tick(time.delta());
 }
 
-fn update_statistics_system(
+fn update_game_stats_system(
     time: Res<Time>,
     mut query: ParamSet<(
         ParamSet<(
             Query<Entity, With<LinesEntityMarker>>,
             Query<Entity, With<ScoreEntityMarker>>,
             Query<Entity, With<LevelEntityMarker>>,
-            Query<(Entity, &GameStatisticsEntityMarker)>,
-            Query<(Entity, &PieceDistributionTextEntityMarker)>,
             Query<Entity, With<GameStopwatchEntityMarker>>,
-            Query<Entity, With<DASCounterEntityMarker>>,
-            Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
+            Query<Entity, With<InputHzEntityMarker>>,
         )>,
+        Query<(Entity, &GameStatsEntityMarker)>,
+        Query<(Entity, &PieceDistributionTextEntityMarker)>,
+        Query<Entity, With<DASCounterEntityMarker>>,
+        Query<(&mut BackgroundColor, &DASCounterBarEntityMarker)>,
         Query<&mut ImageNode, With<DroughtIconEntityMarker>>,
         Query<&mut ImageNode, With<BurnedIconEntityMarker>>,
-        Query<Entity, With<InputHzEntityMarker>>,
     )>,
     mut tw: TextUiWriter,
     game_config: Res<GameConfig>,
     player_data: Res<PlayerData>,
     square_image_assets: Res<SquareImageAssets>,
 ) {
+    if let Ok(entity) = query.p0().p0().single_mut() {
+        *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
+    }
+    if let Ok(entity) = query.p0().p1().single_mut() {
+        *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
+    }
+    if let Ok(entity) = query.p0().p2().single_mut() {
+        *tw.text(entity, 0) = game_config.leveling.format(player_data.board.level());
+    }
+    if let Ok(entity) = query.p0().p3().single_mut() {
+        *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
+    }
+    if let Ok(entity) = query.p0().p4().single_mut() {
+        *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_freqency.freq());
+    }
+
     let drought_level = match player_data.board.drought() {
         0..7 => SquareImageDisplayLevel::Info,
         7..14 => SquareImageDisplayLevel::Warn,
@@ -1006,21 +1022,12 @@ fn update_statistics_system(
         SquareImageDisplayLevel::Error => flicker(time.elapsed_secs(), 0.5),
     };
 
-    if let Ok(entity) = query.p0().p0().single_mut() {
-        *tw.text(entity, 0) = format!("{:03}", player_data.board.lines());
-    }
-    if let Ok(entity) = query.p0().p1().single_mut() {
-        *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
-    }
-    if let Ok(entity) = query.p0().p2().single_mut() {
-        *tw.text(entity, 0) = game_config.leveling.format(player_data.board.level());
-    }
-    for (entity, marker) in query.p0().p3() {
+    for (entity, marker) in query.p1() {
         match marker {
-            GameStatisticsEntityMarker::Burned => {
+            GameStatsEntityMarker::Burned => {
                 *tw.text(entity, 0) = format!("{}", player_data.board.burned_lines())
             }
-            GameStatisticsEntityMarker::TetrisRate => {
+            GameStatsEntityMarker::TetrisRate => {
                 if let Some(rate) = player_data.board.clear_lines_rate(4).1 {
                     let rate = (rate * 100.0).round() as usize;
                     *tw.text(entity, 0) = format!("{}%", rate);
@@ -1034,7 +1041,7 @@ fn update_statistics_system(
                     *tw.color(entity, 0) = WHITE.into()
                 }
             }
-            GameStatisticsEntityMarker::Drought => {
+            GameStatsEntityMarker::Drought => {
                 *tw.text(entity, 0) = format!("{}", player_data.board.drought());
                 *tw.color(entity, 0) = {
                     let mut color = drought_level.color();
@@ -1043,16 +1050,14 @@ fn update_statistics_system(
                 }
                 .into();
             }
-            GameStatisticsEntityMarker::TetrisClearScore => {
+            GameStatsEntityMarker::TetrisClearScore => {
                 *tw.text(entity, 0) = format!("+ {}", player_data.board.curr_level_score(4));
             }
         }
     }
-    for (entity, piece) in query.p0().p4() {
+
+    for (entity, piece) in query.p2() {
         *tw.text(entity, 0) = format!("{:03}", player_data.board.get_piece_count(piece.0));
-    }
-    if let Ok(entity) = query.p0().p5().single_mut() {
-        *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
     }
 
     let das_color = if player_data.das_timer.is_active() {
@@ -1060,31 +1065,26 @@ fn update_statistics_system(
     } else {
         RED
     };
-    let das_ticks = game_config
-        .tv_system
-        .duration_to_ticks(player_data.das_timer.elapsed());
-    if let Ok(entity) = query.p0().p6().single_mut() {
-        *tw.text(entity, 0) = format!("{:02}", das_ticks);
+
+    if let Ok(entity) = query.p3().single_mut() {
+        *tw.text(entity, 0) = format!("{:02}", player_data.das_timer.get_ticks());
         *tw.color(entity, 0) = das_color.into();
     }
-    for (mut bg_color, marker) in query.p0().p7() {
-        if marker.0 < das_ticks {
+
+    for (mut bg_color, marker) in query.p4() {
+        if marker.0 < player_data.das_timer.get_ticks() {
             *bg_color = das_color.into();
         } else {
             *bg_color = BLACK.into();
         }
     }
 
-    for mut img in query.p1() {
+    for mut img in query.p5() {
         img.image = square_image_assets.get_display_level_image(drought_level);
         img.color.set_alpha(drought_alpha);
     }
-    for mut img in query.p2() {
+    for mut img in query.p6() {
         img.image = square_image_assets.get_burned_image();
-    }
-
-    if let Ok(entity) = query.p3().single_mut() {
-        *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_freqency.freq());
     }
 }
 

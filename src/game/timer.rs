@@ -180,10 +180,6 @@ impl DelayAutoShiftTimer {
         }
     }
 
-    pub fn elapsed(&self) -> Duration {
-        self.elapsed
-    }
-
     pub fn tick(&mut self, delta: Duration) -> &mut Self {
         self.elapsed = (self.elapsed + delta).min(self.get_full_charge_threshold());
         self
@@ -208,6 +204,10 @@ impl DelayAutoShiftTimer {
 
     pub fn is_active(&self) -> bool {
         self.elapsed >= self.get_active_charge_threshold()
+    }
+
+    pub fn get_ticks(&self) -> u64 {
+        self.tv_system.duration_to_ticks(self.elapsed)
     }
 
     pub fn get_full_charge_threshold_ticks(&self) -> u64 {
