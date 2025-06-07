@@ -336,7 +336,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
             row_gap: Val::Px(20.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            margin: UiRect::axes(Val::Px(20.0), Val::Px(50.0)),
+            margin: UiRect::px(20.0, 20.0, 80.0, 50.0),
             ..default()
         })
         .with_children(|p| {
@@ -628,7 +628,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Start,
-            margin: UiRect::px(10.0, 10.0, 60.0, 10.0),
+            margin: UiRect::px(10.0, 10.0, 90.0, 10.0),
             ..default()
         })
         .with_children(|p| {
