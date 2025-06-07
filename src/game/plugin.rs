@@ -1097,10 +1097,11 @@ fn update_game_stats_system(
                         .count() as f32;
                 let diff = probability - average;
                 *tw.text(entity, 1) = format!("{:+5.1}%", 100.0 * diff);
-                *tw.color(entity, 1) = match diff.abs() {
-                    0.00..0.01 => GREEN,
-                    0.01..0.02 => YELLOW,
-                    _ => RED,
+                *tw.color(entity, 1) = match diff {
+                    -1.00..-0.01 => RED,
+                    -0.01..0.01 => WHITE,
+                    0.01..1.00 => GREEN,
+                    _ => unreachable!(),
                 }
                 .into()
             }
