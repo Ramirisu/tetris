@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     gravity::Gravity, invisible::Invisible, level::Level, level_display::LevelDisplay,
-    linecap::Linecap, next_piece_hint::NextPieceHint, random::Random, score::Score,
+    linecap::Linecap, next_piece_hint::NextPieceHint, random::Random, score_display::ScoreDisplay,
     scoring::Scoring, seed::Seed, seeding::Seeding, transition::Transition, tv_system::TVSystem,
 };
 
@@ -25,7 +25,7 @@ pub struct GameConfig {
     pub seeding: Seeding,
     pub seed: Seed,
     pub random: Random,
-    pub score: Score,
+    pub score_display: ScoreDisplay,
     pub level_display: LevelDisplay,
     pub tv_system: TVSystem,
     pub next_piece_hint: NextPieceHint,
@@ -44,7 +44,7 @@ impl Default for GameConfig {
             seeding: Seeding::default(),
             seed: Seed::default(),
             random: Random::default(),
-            score: Score::default(),
+            score_display: ScoreDisplay::default(),
             level_display: LevelDisplay::default(),
             tv_system: TVSystem::default(),
             next_piece_hint: NextPieceHint::default(),

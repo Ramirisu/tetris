@@ -13,7 +13,7 @@ pub mod piece;
 pub mod player;
 pub mod plugin;
 pub mod random;
-pub mod score;
+pub mod score_display;
 pub mod scoring;
 pub mod seed;
 pub mod seeding;

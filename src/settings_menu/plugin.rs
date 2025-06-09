@@ -85,7 +85,7 @@ enum SelectedMainSetting {
     Random,
     Seeding,
     Seed,
-    Score,
+    ScoreDisplay,
     LevelDisplay,
     TVSystem,
     NextPieceHint,
@@ -112,7 +112,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::Random => t!("tetris.settings.random"),
             SelectedMainSetting::Seeding => t!("tetris.settings.seeding"),
             SelectedMainSetting::Seed => t!("tetris.settings.seed"),
-            SelectedMainSetting::Score => t!("tetris.settings.score"),
+            SelectedMainSetting::ScoreDisplay => t!("tetris.settings.score_display"),
             SelectedMainSetting::LevelDisplay => t!("tetris.settings.level_display"),
             SelectedMainSetting::TVSystem => t!("tetris.settings.tv_system"),
             SelectedMainSetting::NextPieceHint => t!("tetris.settings.next_piece_hint"),
@@ -451,15 +451,15 @@ fn handle_input_system(
                 game_config.seed = Seed::new();
             }
         }
-        SelectedMainSetting::Score => {
+        SelectedMainSetting::ScoreDisplay => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.score.enum_next() {
-                    game_config.score = e;
+                if let Some(e) = game_config.score_display.enum_next() {
+                    game_config.score_display = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.score.enum_prev() {
-                    game_config.score = e;
+                if let Some(e) = game_config.score_display.enum_prev() {
+                    game_config.score_display = e;
                     option_changed = true;
                 }
             }
@@ -742,12 +742,14 @@ fn update_ui_system(
                 Seeding::Custom => fmt_desc(&mut tw, game_config.seed.to_string()),
             },
             (SelectedMainSetting::Seed, 4) => fmt_rarrow(&mut tw, false),
-            (SelectedMainSetting::Score, 2) => {
-                fmt_larrow(&mut tw, game_config.score.enum_prev().is_some())
+            (SelectedMainSetting::ScoreDisplay, 2) => {
+                fmt_larrow(&mut tw, game_config.score_display.enum_prev().is_some())
             }
-            (SelectedMainSetting::Score, 3) => fmt_desc(&mut tw, game_config.score.name()),
-            (SelectedMainSetting::Score, 4) => {
-                fmt_rarrow(&mut tw, game_config.score.enum_next().is_some())
+            (SelectedMainSetting::ScoreDisplay, 3) => {
+                fmt_desc(&mut tw, game_config.score_display.name())
+            }
+            (SelectedMainSetting::ScoreDisplay, 4) => {
+                fmt_rarrow(&mut tw, game_config.score_display.enum_next().is_some())
             }
             (SelectedMainSetting::LevelDisplay, 2) => {
                 fmt_larrow(&mut tw, game_config.level_display.enum_prev().is_some())

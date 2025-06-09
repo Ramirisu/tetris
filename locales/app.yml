@@ -31,8 +31,8 @@ tetris.settings.seed:
   en: SEED
   zh-TW: 種子
   zh-CN: 种子
-tetris.settings.score:
-  en: SCORE
+tetris.settings.score_display:
+  en: SCORE DISPLAY
   zh-TW: 分數顯示
   zh-CN: 分数显示
 tetris.settings.level_display:
@@ -131,15 +131,15 @@ tetris.settings.seeding.custom:
   en: CUSTOM
   zh-TW: 自訂
   zh-CN: 自定义
-tetris.settings.score.decimal:
+tetris.settings.score_display.decimal:
   en: DECIMAL
   zh-TW: 十進制
   zh-CN: 十进制
-tetris.settings.score.classic:
+tetris.settings.score_display.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.score.base36:
+tetris.settings.score_display.base36:
   en: BASE36
   zh-TW: 三十六進制
   zh-CN: 三十六进制

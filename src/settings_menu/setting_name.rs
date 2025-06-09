@@ -1,8 +1,8 @@
 use crate::{
     game::{
         gravity::Gravity, invisible::Invisible, level_display::LevelDisplay, linecap::Linecap,
-        next_piece_hint::NextPieceHint, random::Random, score::Score, seeding::Seeding,
-        transition::Transition, tv_system::TVSystem,
+        next_piece_hint::NextPieceHint, random::Random, score_display::ScoreDisplay,
+        seeding::Seeding, transition::Transition, tv_system::TVSystem,
     },
     input::controller_mapping::ControllerMapping,
 };
@@ -73,12 +73,12 @@ impl SettingName for Random {
     }
 }
 
-impl SettingName for Score {
+impl SettingName for ScoreDisplay {
     fn name(&self) -> String {
         match self {
-            Score::Decimal => t!("tetris.settings.score.decimal"),
-            Score::Classic => t!("tetris.settings.score.classic"),
-            Score::Base36 => t!("tetris.settings.score.base36"),
+            ScoreDisplay::Decimal => t!("tetris.settings.score_display.decimal"),
+            ScoreDisplay::Classic => t!("tetris.settings.score_display.classic"),
+            ScoreDisplay::Base36 => t!("tetris.settings.score_display.base36"),
         }
         .into()
     }
