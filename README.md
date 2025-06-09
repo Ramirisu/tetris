@@ -93,9 +93,9 @@ The *SCORE* option determines how the score is displayed.
 | Classic | Display the score in decimal up to `999999`.                      | `000123` |  `999999` |  `999999` |   `999999` |
 | Base36  | Apply `base36` encoding for the 6th digit and above of the score. | `000123` |  `C34567` | `1104567` |  `AZ04567` |
 
-**LEVELING**
+**LEVEL DISPLAY**
 
-The *LEVELING* option determines how the level is displayed.
+The *LEVEL DISPLAY* option determines how the level is displayed.
 
 | Options | Description                                                                                                     |
 | ------- | --------------------------------------------------------------------------------------------------------------- |

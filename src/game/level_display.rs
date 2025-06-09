@@ -6,19 +6,19 @@ use crate::utility::enum_advance;
 use super::level::Level;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
-pub enum Leveling {
+pub enum LevelDisplay {
     #[default]
     Decimal,
     Classic,
 }
 
-enum_advance::enum_advance_derive!(Leveling);
+enum_advance::enum_advance_derive!(LevelDisplay);
 
-impl Leveling {
+impl LevelDisplay {
     pub fn format(&self, level: Level) -> String {
         match *self {
-            Leveling::Decimal => format!("{:02}", level.0),
-            Leveling::Classic => Self::format_classic(level),
+            LevelDisplay::Decimal => format!("{:02}", level.0),
+            LevelDisplay::Classic => Self::format_classic(level),
         }
     }
 

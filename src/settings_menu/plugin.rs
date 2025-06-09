@@ -86,7 +86,7 @@ enum SelectedMainSetting {
     Seeding,
     Seed,
     Score,
-    Leveling,
+    LevelDisplay,
     TVSystem,
     NextPieceHint,
     Invisible,
@@ -113,7 +113,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::Seeding => t!("tetris.settings.seeding"),
             SelectedMainSetting::Seed => t!("tetris.settings.seed"),
             SelectedMainSetting::Score => t!("tetris.settings.score"),
-            SelectedMainSetting::Leveling => t!("tetris.settings.leveling"),
+            SelectedMainSetting::LevelDisplay => t!("tetris.settings.level_display"),
             SelectedMainSetting::TVSystem => t!("tetris.settings.tv_system"),
             SelectedMainSetting::NextPieceHint => t!("tetris.settings.next_piece_hint"),
             SelectedMainSetting::Invisible => t!("tetris.settings.invisible"),
@@ -464,15 +464,15 @@ fn handle_input_system(
                 }
             }
         }
-        SelectedMainSetting::Leveling => {
+        SelectedMainSetting::LevelDisplay => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.leveling.enum_next() {
-                    game_config.leveling = e;
+                if let Some(e) = game_config.level_display.enum_next() {
+                    game_config.level_display = e;
                     option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.leveling.enum_prev() {
-                    game_config.leveling = e;
+                if let Some(e) = game_config.level_display.enum_prev() {
+                    game_config.level_display = e;
                     option_changed = true;
                 }
             }
@@ -749,12 +749,14 @@ fn update_ui_system(
             (SelectedMainSetting::Score, 4) => {
                 fmt_rarrow(&mut tw, game_config.score.enum_next().is_some())
             }
-            (SelectedMainSetting::Leveling, 2) => {
-                fmt_larrow(&mut tw, game_config.leveling.enum_prev().is_some())
+            (SelectedMainSetting::LevelDisplay, 2) => {
+                fmt_larrow(&mut tw, game_config.level_display.enum_prev().is_some())
             }
-            (SelectedMainSetting::Leveling, 3) => fmt_desc(&mut tw, game_config.leveling.name()),
-            (SelectedMainSetting::Leveling, 4) => {
-                fmt_rarrow(&mut tw, game_config.leveling.enum_next().is_some())
+            (SelectedMainSetting::LevelDisplay, 3) => {
+                fmt_desc(&mut tw, game_config.level_display.name())
+            }
+            (SelectedMainSetting::LevelDisplay, 4) => {
+                fmt_rarrow(&mut tw, game_config.level_display.enum_next().is_some())
             }
             (SelectedMainSetting::TVSystem, 2) => {
                 fmt_larrow(&mut tw, game_config.tv_system.enum_prev().is_some())

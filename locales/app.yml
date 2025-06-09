@@ -35,8 +35,8 @@ tetris.settings.score:
   en: SCORE
   zh-TW: 分數顯示
   zh-CN: 分数显示
-tetris.settings.leveling:
-  en: LEVELING
+tetris.settings.level_display:
+  en: LEVEL DISPLAY
   zh-TW: 等級顯示
   zh-CN: 等级显示
 tetris.settings.tv_system:
@@ -143,11 +143,11 @@ tetris.settings.score.base36:
   en: BASE36
   zh-TW: 三十六進制
   zh-CN: 三十六进制
-tetris.settings.leveling.decimal:
+tetris.settings.level_display.decimal:
   en: DECIMAL
   zh-TW: 十進制
   zh-CN: 十进制
-tetris.settings.leveling.classic:
+tetris.settings.level_display.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典

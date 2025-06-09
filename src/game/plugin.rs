@@ -1022,7 +1022,7 @@ fn update_game_stats_system(
         *tw.text(entity, 0) = game_config.score.format(player_data.board.score());
     }
     if let Ok(entity) = q.p0().p2().single_mut() {
-        *tw.text(entity, 0) = game_config.leveling.format(player_data.board.level());
+        *tw.text(entity, 0) = game_config.level_display.format(player_data.board.level());
     }
     if let Ok(entity) = q.p0().p3().single_mut() {
         *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());

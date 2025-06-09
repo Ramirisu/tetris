@@ -5,7 +5,7 @@ pub mod gravity;
 pub mod input_freqency;
 pub mod invisible;
 pub mod level;
-pub mod leveling;
+pub mod level_display;
 pub mod linecap;
 pub mod next_piece_hint;
 pub mod palette;
