@@ -11,7 +11,7 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    game::{
+    game_screen::{
         game::GameConfig,
         seed::{SEED_BYTES_USED, Seed},
         seeding::Seeding,
@@ -348,7 +348,7 @@ fn handle_input_system(
             }
         }
         SelectedMainSetting::LinecapLevel => {
-            if game_config.linecap != crate::game::linecap::Linecap::Off {
+            if game_config.linecap != crate::game_screen::linecap::Linecap::Off {
                 if player_inputs.right.just_pressed {
                     game_config.linecap_level += 1;
                     option_changed = true;
@@ -701,19 +701,19 @@ fn update_ui_system(
             }
             (SelectedMainSetting::LinecapLevel, 2) => fmt_larrow(
                 &mut tw,
-                game_config.linecap != crate::game::linecap::Linecap::Off
+                game_config.linecap != crate::game_screen::linecap::Linecap::Off
                     && game_config.linecap_level > 0,
             ),
             (SelectedMainSetting::LinecapLevel, 3) => match game_config.linecap {
-                crate::game::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
-                crate::game::linecap::Linecap::KillScreenX2
-                | crate::game::linecap::Linecap::Halt => {
+                crate::game_screen::linecap::Linecap::Off => fmt_desc(&mut tw, "".into()),
+                crate::game_screen::linecap::Linecap::KillScreenX2
+                | crate::game_screen::linecap::Linecap::Halt => {
                     fmt_desc(&mut tw, format!("{:02}", game_config.linecap_level.0))
                 }
             },
             (SelectedMainSetting::LinecapLevel, 4) => fmt_rarrow(
                 &mut tw,
-                game_config.linecap != crate::game::linecap::Linecap::Off,
+                game_config.linecap != crate::game_screen::linecap::Linecap::Off,
             ),
             (SelectedMainSetting::Gravity, 2) => {
                 fmt_larrow(&mut tw, game_config.gravity.enum_prev().is_some())

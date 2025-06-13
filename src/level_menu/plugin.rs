@@ -6,7 +6,7 @@ use bevy::{
 use crate::{
     app_state::AppState,
     audio::plugin::PlaySoundEvent,
-    game::{
+    game_screen::{
         game::{GameConfig, GameState},
         level::Level,
         player::{PlayerData, PlayerPhase},

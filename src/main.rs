@@ -9,7 +9,7 @@ use bevy::{
 
 mod app_state;
 mod audio;
-mod game;
+mod game_screen;
 mod init;
 mod input;
 mod language_menu;
@@ -75,7 +75,7 @@ fn main() {
         splash_screen::plugin::setup,
         settings_menu::plugin::setup,
         level_menu::plugin::setup,
-        game::plugin::setup,
+        game_screen::plugin::setup,
     ));
 
     load_internal_binary_asset!(

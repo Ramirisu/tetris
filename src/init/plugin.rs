@@ -5,7 +5,7 @@ use winit::window::Icon;
 
 use crate::{
     app_state::AppState,
-    game::{
+    game_screen::{
         level::Level,
         palette::{SquareImageSize, get_square_image_by_level},
         piece::Piece,

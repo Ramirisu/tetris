@@ -1307,7 +1307,7 @@ mod state_player_init {
 }
 
 mod state_player_dropping {
-    use crate::game::timer::EntryDelayTimer;
+    use crate::game_screen::timer::EntryDelayTimer;
 
     use super::*;
 
