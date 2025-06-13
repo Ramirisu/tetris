@@ -1,11 +1,12 @@
 use rand::Rng;
 
-// The seed of the rng is 32 bytes long. But only the lower 4 bytes are used for seeding due to the UI's limitation.
-pub const SEED_BYTES_USED: usize = 4;
+// The seed of the rng is 32 bytes long. But only the lower 8 bytes are used for seeding due to the UI's limitation.
+pub const SEED_BYTE_COUNT: usize = 8;
+pub const SEED_HEX_COUNT: usize = SEED_BYTE_COUNT * 2;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub struct Seed {
-    pub bytes: [u8; SEED_BYTES_USED],
+    pub bytes: [u8; SEED_BYTE_COUNT],
 }
 
 impl Seed {
@@ -41,7 +42,7 @@ impl Seed {
 impl Into<[u8; 32]> for Seed {
     fn into(self) -> [u8; 32] {
         let mut bytes = [0; 32];
-        bytes[0..SEED_BYTES_USED].copy_from_slice(&self.bytes);
+        bytes[0..SEED_BYTE_COUNT].copy_from_slice(&self.bytes);
         bytes
     }
 }

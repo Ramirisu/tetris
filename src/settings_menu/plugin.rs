@@ -12,7 +12,7 @@ use crate::{
     audio::plugin::PlaySoundEvent,
     game_screen::{
         game::GameConfig,
-        seed::{SEED_BYTES_USED, Seed},
+        seed::{SEED_HEX_COUNT, Seed},
         seeding::Seeding,
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
@@ -136,9 +136,8 @@ impl SelectedMainSetting {
 enum_advance::enum_advance_derive!(SelectedMainSetting);
 enum_advance_cycle::enum_advance_cycle_derive!(SelectedMainSetting);
 
-const SEED_LEN: usize = SEED_BYTES_USED * 2;
 const SEED_FIRST: usize = 0;
-const SEED_LAST: usize = SEED_LEN - 1;
+const SEED_LAST: usize = SEED_HEX_COUNT - 1;
 
 #[derive(Resource)]
 struct SettingsMenuData {
@@ -251,7 +250,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
 
                             if selected_main_setting == SelectedMainSetting::Seed && idx == 3 {
                                 ec.with_children(|p| {
-                                    for _ in 0..SEED_LEN {
+                                    for _ in 0..SEED_HEX_COUNT {
                                         p.spawn((
                                             TextSpan::default(),
                                             TextFont::from_font_size(*font_size),
@@ -751,8 +750,8 @@ fn update_ui_system(
                     for (byte_idx, byte) in game_config.seed.bytes.iter().enumerate() {
                         for (hex_idx, hex) in [byte & 0xf, byte >> 4].iter().enumerate() {
                             let idx = byte_idx * 2 + hex_idx;
-                            *tw.text(entity, SEED_LEN - idx) = format!("{:X}", *hex);
-                            tw.font(entity, SEED_LEN - idx).font_size = if settings_menu_data
+                            *tw.text(entity, SEED_HEX_COUNT - idx) = format!("{:X}", *hex);
+                            tw.font(entity, SEED_HEX_COUNT - idx).font_size = if settings_menu_data
                                 .selected_seed_setting
                                 .map_or(false, |selected| selected == idx)
                             {
