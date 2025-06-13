@@ -1,6 +1,5 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
-    ecs::spawn::SpawnWith,
     prelude::*,
     window::PrimaryWindow,
 };
@@ -74,6 +73,8 @@ struct SettingsMenuEntityMarker;
 #[derive(Component)]
 struct SelectedMainSettingEntityMarker(SelectedMainSetting, usize);
 
+const SETTINGS_MENU_FONT_SIZE: f32 = 25.0;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 enum SelectedMainSetting {
     #[default]
@@ -135,13 +136,6 @@ impl SelectedMainSetting {
 enum_advance::enum_advance_derive!(SelectedMainSetting);
 enum_advance_cycle::enum_advance_cycle_derive!(SelectedMainSetting);
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-enum SelectedSeedSetting {
-    #[default]
-    None,
-    Index(usize),
-}
-
 const SEED_LEN: usize = SEED_BYTES_USED * 2;
 const SEED_FIRST: usize = 0;
 const SEED_LAST: usize = SEED_LEN - 1;
@@ -149,7 +143,7 @@ const SEED_LAST: usize = SEED_LEN - 1;
 #[derive(Resource)]
 struct SettingsMenuData {
     selected_main_setting: SelectedMainSetting,
-    selected_seed_setting: SelectedSeedSetting,
+    selected_seed_setting: Option<usize>,
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
     fps_limiter: FPSLimiter,
     show_fps: ShowFPS,
@@ -162,7 +156,7 @@ impl SettingsMenuData {
     pub fn new() -> Self {
         Self {
             selected_main_setting: SelectedMainSetting::default(),
-            selected_seed_setting: SelectedSeedSetting::default(),
+            selected_seed_setting: None,
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             fps_limiter: FPSLimiter::default(),
             show_fps: ShowFPS::default(),
@@ -180,20 +174,22 @@ impl Default for SettingsMenuData {
 }
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
-    commands.spawn((
-        Node {
-            display: Display::Flex,
-            flex_direction: FlexDirection::Column,
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            overflow: Overflow::clip(),
-            ..default()
-        },
-        SettingsMenuEntityMarker,
-        Children::spawn(Spawn((
+    commands
+        .spawn((
             Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                overflow: Overflow::clip(),
+                ..default()
+            },
+            SettingsMenuEntityMarker,
+        ))
+        .with_children(|p| {
+            p.spawn(Node {
                 width: Val::Px(WINDOW_WIDTH),
                 height: Val::Px(WINDOW_HEIGHT),
                 display: Display::Flex,
@@ -202,16 +198,15 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 align_items: AlignItems::Center,
                 padding: UiRect::all(Val::Px(50.0)),
                 ..default()
-            },
-            Children::spawn((
-                Spawn((
-                    Node {
-                        margin: UiRect::all(Val::Px(40.0)),
-                        ..default()
-                    },
-                    Children::spawn(Spawn(logo(Val::Px(20.0), &mut image_assets))),
-                )),
-                Spawn((
+            })
+            .with_children(|p| {
+                p.spawn(Node {
+                    margin: UiRect::all(Val::Px(40.0)),
+                    ..default()
+                })
+                .with_child(logo(Val::Px(20.0), &mut image_assets));
+
+                p.spawn((
                     Node {
                         display: Display::Grid,
                         grid_template_columns: vec![GridTrack::auto(); 5],
@@ -225,36 +220,52 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                         ..default()
                     },
                     BorderColor::from(BLUE),
-                    Children::spawn(SpawnWith(|p: &mut ChildSpawner| {
-                        for selected_main_setting in SelectedMainSetting::iter() {
-                            let cols: [(String, Val, f32); 5] = [
-                                ("▶".into(), Val::Auto, 15.0),
-                                (selected_main_setting.name().into(), Val::Px(300.0), 25.0),
-                                ("".into(), Val::Auto, 25.0),
-                                ("".into(), Val::Px(300.0), 25.0),
-                                ("".into(), Val::Auto, 25.0),
-                            ];
+                ))
+                .with_children(|p| {
+                    for selected_main_setting in SelectedMainSetting::iter() {
+                        let cols: [(String, Val, f32); 5] = [
+                            ("▶".into(), Val::Auto, 15.0),
+                            (
+                                selected_main_setting.name().into(),
+                                Val::Px(300.0),
+                                SETTINGS_MENU_FONT_SIZE,
+                            ),
+                            ("".into(), Val::Auto, SETTINGS_MENU_FONT_SIZE),
+                            ("".into(), Val::Px(300.0), SETTINGS_MENU_FONT_SIZE),
+                            ("".into(), Val::Auto, SETTINGS_MENU_FONT_SIZE),
+                        ];
 
-                            for (idx, (name, width, font_size)) in cols.iter().enumerate() {
-                                p.spawn((
-                                    Node {
-                                        width: *width,
-                                        height: Val::Auto,
-                                        ..default()
-                                    },
-                                    Text::new(name),
-                                    TextFont::from_font_size(*font_size),
-                                    TextColor::from(WHITE),
-                                    TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
-                                    SelectedMainSettingEntityMarker(selected_main_setting, idx),
-                                ));
+                        for (idx, (name, width, font_size)) in cols.iter().enumerate() {
+                            let mut ec = p.spawn((
+                                Node {
+                                    width: *width,
+                                    height: Val::Auto,
+                                    ..default()
+                                },
+                                Text::new(name),
+                                TextFont::from_font_size(*font_size),
+                                TextColor::from(WHITE),
+                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                SelectedMainSettingEntityMarker(selected_main_setting, idx),
+                            ));
+
+                            if selected_main_setting == SelectedMainSetting::Seed && idx == 3 {
+                                ec.with_children(|p| {
+                                    for _ in 0..SEED_LEN {
+                                        p.spawn((
+                                            TextSpan::default(),
+                                            TextFont::from_font_size(*font_size),
+                                            TextColor::from(WHITE),
+                                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                        ));
+                                    }
+                                });
                             }
                         }
-                    })),
-                )),
-            )),
-        ))),
-    ));
+                    }
+                });
+            });
+        });
 }
 
 fn handle_input_system(
@@ -289,7 +300,7 @@ fn handle_input_system(
 
     if settings_menu_data.selected_main_setting != SelectedMainSetting::Seed
         || game_config.seeding == Seeding::System
-        || settings_menu_data.selected_seed_setting == SelectedSeedSetting::None
+        || settings_menu_data.selected_seed_setting.is_none()
     {
         match (
             player_inputs.up.just_pressed,
@@ -402,50 +413,47 @@ fn handle_input_system(
         SelectedMainSetting::Seed => {
             if player_inputs.start.just_pressed {
                 match settings_menu_data.selected_seed_setting {
-                    SelectedSeedSetting::None => {
-                        settings_menu_data.selected_seed_setting =
-                            SelectedSeedSetting::Index(SEED_LAST);
+                    None => {
+                        settings_menu_data.selected_seed_setting = Some(SEED_LAST);
                     }
-                    SelectedSeedSetting::Index(_) => {
-                        settings_menu_data.selected_seed_setting = SelectedSeedSetting::None;
+                    Some(_) => {
+                        settings_menu_data.selected_seed_setting = None;
                     }
                 }
                 option_changed = true;
             } else if player_inputs.right.just_pressed {
                 match settings_menu_data.selected_seed_setting {
-                    SelectedSeedSetting::Index(SEED_FIRST) => (),
-                    SelectedSeedSetting::Index(index) => {
-                        settings_menu_data.selected_seed_setting =
-                            SelectedSeedSetting::Index(index - 1);
+                    Some(SEED_FIRST) => (),
+                    Some(index) => {
+                        settings_menu_data.selected_seed_setting = Some(index - 1);
                         option_changed = true;
                     }
-                    SelectedSeedSetting::None => (),
+                    None => (),
                 }
             } else if player_inputs.left.just_pressed {
                 match settings_menu_data.selected_seed_setting {
-                    SelectedSeedSetting::Index(SEED_LAST) => (),
-                    SelectedSeedSetting::Index(index) => {
-                        settings_menu_data.selected_seed_setting =
-                            SelectedSeedSetting::Index(index + 1);
+                    Some(SEED_LAST) => (),
+                    Some(index) => {
+                        settings_menu_data.selected_seed_setting = Some(index + 1);
                         option_changed = true;
                     }
-                    SelectedSeedSetting::None => (),
+                    None => (),
                 }
             } else if player_inputs.up.just_pressed {
                 match settings_menu_data.selected_seed_setting {
-                    SelectedSeedSetting::Index(index) => {
+                    Some(index) => {
                         game_config.seed.increment(index);
                         option_changed = true;
                     }
-                    SelectedSeedSetting::None => (),
+                    None => (),
                 }
             } else if player_inputs.down.just_pressed {
                 match settings_menu_data.selected_seed_setting {
-                    SelectedSeedSetting::Index(index) => {
+                    Some(index) => {
                         game_config.seed.decrement(index);
                         option_changed = true;
                     }
-                    SelectedSeedSetting::None => (),
+                    None => (),
                 }
             } else if player_inputs.select.just_pressed {
                 game_config.seed = Seed::new();
@@ -739,7 +747,22 @@ fn update_ui_system(
             (SelectedMainSetting::Seed, 2) => fmt_larrow(&mut tw, false),
             (SelectedMainSetting::Seed, 3) => match game_config.seeding {
                 Seeding::System => fmt_desc(&mut tw, "".into()),
-                Seeding::Custom => fmt_desc(&mut tw, game_config.seed.to_string()),
+                Seeding::Custom => {
+                    for (byte_idx, byte) in game_config.seed.bytes.iter().enumerate() {
+                        for (hex_idx, hex) in [byte & 0xf, byte >> 4].iter().enumerate() {
+                            let idx = byte_idx * 2 + hex_idx;
+                            *tw.text(entity, SEED_LEN - idx) = format!("{:X}", *hex);
+                            tw.font(entity, SEED_LEN - idx).font_size = if settings_menu_data
+                                .selected_seed_setting
+                                .map_or(false, |selected| selected == idx)
+                            {
+                                40.0
+                            } else {
+                                SETTINGS_MENU_FONT_SIZE
+                            };
+                        }
+                    }
+                }
             },
             (SelectedMainSetting::Seed, 4) => fmt_rarrow(&mut tw, false),
             (SelectedMainSetting::ScoreDisplay, 2) => {

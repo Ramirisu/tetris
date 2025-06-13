@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use rand::Rng;
 
 // The seed of the rng is 32 bytes long. But only the lower 4 bytes are used for seeding due to the UI's limitation.
@@ -45,20 +43,6 @@ impl Into<[u8; 32]> for Seed {
         let mut bytes = [0; 32];
         bytes[0..SEED_BYTES_USED].copy_from_slice(&self.bytes);
         bytes
-    }
-}
-
-impl Display for Seed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.bytes
-                .iter()
-                .rev()
-                .map(|byte| format!("{:02X?}", byte))
-                .collect::<String>()
-        )
     }
 }
 
