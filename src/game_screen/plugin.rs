@@ -1172,13 +1172,22 @@ fn update_board(
 }
 
 fn player_inputs_display_system(
+    t: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
+    mut player_data: ResMut<PlayerData>,
     q: Query<(&mut BackgroundColor, &PlayerInputsEntityMarker)>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
+
+    player_data
+        .input_freqency
+        .reset_when_expired(t.elapsed_secs());
+    if player_inputs.left.just_pressed || player_inputs.right.just_pressed {
+        player_data.input_freqency.increment(t.elapsed_secs());
+    }
 
     for (mut bg_color, marker) in q {
         let pressed = match marker {
@@ -1342,13 +1351,6 @@ mod state_player_dropping {
             }
             game_state.set(GameState::Pause);
             return;
-        }
-
-        player_data
-            .input_freqency
-            .reset_when_expired(t.elapsed_secs());
-        if player_inputs.left.just_pressed || player_inputs.right.just_pressed {
-            player_data.input_freqency.increment(t.elapsed_secs());
         }
 
         player_data.soft_drop_timer.tick(t.delta());
