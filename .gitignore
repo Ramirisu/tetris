@@ -1,4 +1,3 @@
 target
 dist/tetris
 dist/assets
-*.lock
