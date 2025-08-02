@@ -17,6 +17,7 @@ pub mod score_display;
 pub mod scoring;
 pub mod seed;
 pub mod seeding;
+pub mod tetris_flash;
 mod timer;
 pub mod transition;
 pub mod tv_system;

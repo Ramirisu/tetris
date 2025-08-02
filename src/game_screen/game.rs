@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::game_screen::tetris_flash::TetrisFlash;
+
 use super::{
     gravity::Gravity, invisible::Invisible, level::Level, level_display::LevelDisplay,
     linecap::Linecap, next_piece_hint::NextPieceHint, random::Random, score_display::ScoreDisplay,
@@ -30,6 +32,7 @@ pub struct GameConfig {
     pub tv_system: TVSystem,
     pub next_piece_hint: NextPieceHint,
     pub invisible: Invisible,
+    pub tetris_flash: TetrisFlash,
 }
 
 impl Default for GameConfig {
@@ -49,6 +52,7 @@ impl Default for GameConfig {
             tv_system: TVSystem::default(),
             next_piece_hint: NextPieceHint::default(),
             invisible: Invisible::default(),
+            tetris_flash: TetrisFlash::default(),
         }
     }
 }

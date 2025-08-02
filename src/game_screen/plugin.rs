@@ -20,6 +20,7 @@ use super::{
     palette::SquareImageSize,
     piece::Piece,
     player::{LineClearPhase, PlayerData, PlayerPhase},
+    tetris_flash::TetrisFlash,
 };
 
 pub fn setup(app: &mut App) {
@@ -1541,6 +1542,7 @@ mod state_player_line_clear {
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
         )>,
+        game_config: Res<GameConfig>,
         mut play_sound: EventWriter<PlaySoundEvent>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
@@ -1560,12 +1562,17 @@ mod state_player_line_clear {
                     }
                 }
                 if player_data.line_clear_rows.len() == 4 {
-                    if let Ok(mut bg_color) = q.p1().single_mut() {
-                        match bg_color.0.alpha() {
-                            0.0 => bg_color.0.set_alpha(1.0),
-                            1.0 => bg_color.0.set_alpha(0.0),
-                            _ => unreachable!(),
+                    match game_config.tetris_flash {
+                        TetrisFlash::On => {
+                            if let Ok(mut bg_color) = q.p1().single_mut() {
+                                match bg_color.0.alpha() {
+                                    0.0 => bg_color.0.set_alpha(1.0),
+                                    1.0 => bg_color.0.set_alpha(0.0),
+                                    _ => unreachable!(),
+                                }
+                            }
                         }
+                        TetrisFlash::Off => (),
                     }
                 }
             }

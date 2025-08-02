@@ -2,7 +2,7 @@ use crate::{
     game_screen::{
         gravity::Gravity, invisible::Invisible, level_display::LevelDisplay, linecap::Linecap,
         next_piece_hint::NextPieceHint, random::Random, score_display::ScoreDisplay,
-        seeding::Seeding, transition::Transition, tv_system::TVSystem,
+        seeding::Seeding, tetris_flash::TetrisFlash, transition::Transition, tv_system::TVSystem,
     },
     input::controller_mapping::ControllerMapping,
 };
@@ -120,6 +120,16 @@ impl SettingName for Invisible {
         match self {
             Invisible::Off => t!("tetris.settings.invisible.off"),
             Invisible::On => t!("tetris.settings.invisible.on"),
+        }
+        .into()
+    }
+}
+
+impl SettingName for TetrisFlash {
+    fn name(&self) -> String {
+        match self {
+            TetrisFlash::On => t!("tetris.settings.tetris_flash.on"),
+            TetrisFlash::Off => t!("tetris.settings.tetris_flash.off"),
         }
         .into()
     }
