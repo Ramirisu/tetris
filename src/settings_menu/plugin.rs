@@ -412,7 +412,7 @@ fn handle_input_system(
             }
         }
         SelectedMainSetting::Seed => {
-            if player_inputs.start.just_pressed {
+            if game_config.seeding == Seeding::Custom && player_inputs.start.just_pressed {
                 match settings_menu_data.selected_seed_setting {
                     None => {
                         settings_menu_data.selected_seed_setting = Some(SEED_LAST);
@@ -760,7 +760,12 @@ fn update_ui_system(
             }
             (SelectedMainSetting::Seed, 2) => fmt_larrow(&mut tw, false),
             (SelectedMainSetting::Seed, 3) => match game_config.seeding {
-                Seeding::System => fmt_desc(&mut tw, "".into()),
+                Seeding::System => {
+                    for idx in 0..=SEED_HEX_COUNT {
+                        *tw.text(entity, idx) = "".into();
+                        tw.font(entity, idx).font_size = SETTINGS_MENU_FONT_SIZE;
+                    }
+                }
                 Seeding::Custom => {
                     for (byte_idx, byte) in game_config.seed.bytes.iter().enumerate() {
                         for (hex_idx, hex) in [byte & 0xf, byte >> 4].iter().enumerate() {
@@ -770,7 +775,7 @@ fn update_ui_system(
                                 .selected_seed_setting
                                 .map_or(false, |selected| selected == idx)
                             {
-                                40.0
+                                SETTINGS_MENU_FONT_SIZE * 2.0
                             } else {
                                 SETTINGS_MENU_FONT_SIZE
                             };
