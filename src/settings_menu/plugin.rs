@@ -749,7 +749,7 @@ fn update_ui_system(
             }
             (SelectedMainSetting::Random, 3) => fmt_desc(&mut tw, game_config.random.name()),
             (SelectedMainSetting::Random, 4) => {
-                fmt_rarrow(&mut tw, game_config.random.enum_prev().is_some())
+                fmt_rarrow(&mut tw, game_config.random.enum_next().is_some())
             }
             (SelectedMainSetting::Seeding, 2) => {
                 fmt_larrow(&mut tw, game_config.seeding.enum_prev().is_some())
