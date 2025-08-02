@@ -51,6 +51,10 @@ tetris.settings.invisible:
   en: INVISIBLE
   zh-TW: 透明模式
   zh-CN: 隐形模式
+tetris.settings.tetris_flash:
+  en: TETRIS FLASH
+  zh-TW: 顯示四連消閃光
+  zh-CN: 显示四连消闪光
 tetris.settings.fps_limiter:
   en: FPS LIMITER
   zh-TW: 幀數限制
@@ -171,6 +175,14 @@ tetris.settings.invisible.on:
   en: ON
   zh-TW: 開啟
   zh-CN: 开启
+tetris.settings.tetris_flash.on:
+  en: ON
+  zh-TW: 開啟
+  zh-CN: 开启
+tetris.settings.tetris_flash.off:
+  en: OFF
+  zh-TW: 關閉
+  zh-CN: 关闭
 tetris.settings.fps_limiter.unlimited:
   en: UNLIMITED
   zh-TW: 無限制

@@ -91,6 +91,7 @@ enum SelectedMainSetting {
     TVSystem,
     NextPieceHint,
     Invisible,
+    TetrisFlash,
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
     FPSLimiter,
     ShowFPS,
@@ -118,6 +119,7 @@ impl SelectedMainSetting {
             SelectedMainSetting::TVSystem => t!("tetris.settings.tv_system"),
             SelectedMainSetting::NextPieceHint => t!("tetris.settings.next_piece_hint"),
             SelectedMainSetting::Invisible => t!("tetris.settings.invisible"),
+            SelectedMainSetting::TetrisFlash => t!("tetris.settings.tetris_flash"),
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             SelectedMainSetting::FPSLimiter => t!("tetris.settings.fps_limiter"),
             SelectedMainSetting::ShowFPS => t!("tetris.settings.show_fps"),
@@ -523,6 +525,19 @@ fn handle_input_system(
                 }
             }
         }
+        SelectedMainSetting::TetrisFlash => {
+            if player_inputs.right.just_pressed {
+                if let Some(e) = game_config.tetris_flash.enum_next() {
+                    game_config.tetris_flash = e;
+                    option_changed = true;
+                }
+            } else if player_inputs.left.just_pressed {
+                if let Some(e) = game_config.tetris_flash.enum_prev() {
+                    game_config.tetris_flash = e;
+                    option_changed = true;
+                }
+            }
+        }
         #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
         SelectedMainSetting::FPSLimiter => {
             if player_inputs.right.just_pressed {
@@ -804,6 +819,15 @@ fn update_ui_system(
             (SelectedMainSetting::Invisible, 3) => fmt_desc(&mut tw, game_config.invisible.name()),
             (SelectedMainSetting::Invisible, 4) => {
                 fmt_rarrow(&mut tw, game_config.invisible.enum_next().is_some())
+            }
+            (SelectedMainSetting::TetrisFlash, 2) => {
+                fmt_larrow(&mut tw, game_config.tetris_flash.enum_prev().is_some())
+            }
+            (SelectedMainSetting::TetrisFlash, 3) => {
+                fmt_desc(&mut tw, game_config.tetris_flash.name())
+            }
+            (SelectedMainSetting::TetrisFlash, 4) => {
+                fmt_rarrow(&mut tw, game_config.tetris_flash.enum_next().is_some())
             }
             #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
             (SelectedMainSetting::FPSLimiter, 2) => fmt_larrow(
