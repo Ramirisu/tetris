@@ -1356,9 +1356,9 @@ mod state_player_dropping {
 
         player_data.soft_drop_timer.tick(t.delta());
 
-        let (moved, horizontally_moved, rotated) =
+        let (moved_down, moved_horizontally, rotated) =
             handle_input(&player_inputs, &t, &mut player_data);
-        if moved {
+        if moved_down || moved_horizontally || rotated {
             update_board(
                 q.p0(),
                 &player_data,
@@ -1368,7 +1368,11 @@ mod state_player_dropping {
                 None,
             );
         }
-        if horizontally_moved {
+        if moved_down {
+            // Reset the soft drop timer if pressing down already triggered the piece to move down.
+            player_data.soft_drop_timer.reset();
+        }
+        if moved_horizontally {
             play_sound.write(PlaySoundEvent::MoveCurrPiece);
         }
         if rotated {
@@ -1381,15 +1385,15 @@ mod state_player_dropping {
         t: &Time,
         player_data: &mut PlayerData,
     ) -> (bool, bool, bool) {
-        let mut down_moved = false;
-        let mut horizontally_moved = false;
+        let mut moved_down = false;
+        let mut moved_horizontally = false;
         let mut rotated = false;
 
         if player_data.can_press_down {
             if inputs.down.pressed {
                 if player_data.press_down_timer.tick(t.delta()).consume() {
-                    down_moved |= player_data.board.move_piece_down();
-                    player_data.lock_curr_piece_immediately = !down_moved;
+                    moved_down |= player_data.board.move_piece_down();
+                    player_data.lock_curr_piece_immediately = !moved_down;
                 }
             } else {
                 player_data.can_press_down = false;
@@ -1408,8 +1412,8 @@ mod state_player_dropping {
             if inputs.left.just_pressed || inputs.right.just_pressed {
                 player_data.das_timer.reset();
                 match (inputs.left.just_pressed, inputs.right.just_pressed) {
-                    (true, false) => horizontally_moved |= player_data.board.move_piece_left(),
-                    (false, true) => horizontally_moved |= player_data.board.move_piece_right(),
+                    (true, false) => moved_horizontally |= player_data.board.move_piece_left(),
+                    (false, true) => moved_horizontally |= player_data.board.move_piece_right(),
                     _ => (),
                 }
             } else {
@@ -1421,14 +1425,14 @@ mod state_player_dropping {
                         if !player_data.board.is_left_movable() {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(t.delta()).consume() {
-                            horizontally_moved |= player_data.board.move_piece_left();
+                            moved_horizontally |= player_data.board.move_piece_left();
                         }
                     }
                     (false, true) => {
                         if !player_data.board.is_right_movable() {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(t.delta()).consume() {
-                            horizontally_moved |= player_data.board.move_piece_right();
+                            moved_horizontally |= player_data.board.move_piece_right();
                         }
                     }
                     _ => (),
@@ -1443,11 +1447,7 @@ mod state_player_dropping {
             rotated |= player_data.board.rotate_piece_counter_clockwise();
         }
 
-        (
-            down_moved | horizontally_moved | rotated,
-            horizontally_moved,
-            rotated,
-        )
+        (moved_down, moved_horizontally, rotated)
     }
 
     pub(super) fn drop_curr_piece_system(
