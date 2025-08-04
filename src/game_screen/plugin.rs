@@ -124,7 +124,7 @@ enum GameStatsEntityMarker {
     TetrisClearScore,
 }
 
-const BOARD_SQUARE_SIZE: f32 = 40.0;
+const BOARD_SQUARE_SIZE: f32 = 36.0;
 const BORDER_WIDTH: f32 = 4.0;
 
 #[derive(Clone, Copy, Component)]
@@ -524,8 +524,8 @@ fn setup_central_panel(p: &mut EntityCommands) {
                         for x in 0..Board::BOARD_COLS {
                             p.spawn((
                                 Node {
-                                    width: Val::Px(36.0),
-                                    height: Val::Px(36.0),
+                                    width: Val::Px(BOARD_SQUARE_SIZE),
+                                    height: Val::Px(BOARD_SQUARE_SIZE),
                                     ..default()
                                 },
                                 ImageNode::default(),
