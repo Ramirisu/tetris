@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundEvent,
+    audio::plugin::PlaySoundMessage,
     game_screen::{
         game::{GameConfig, GameState},
         level::Level,
@@ -164,7 +164,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                         Text::new(level.to_string()),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(RED),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextLayout::new_with_justify(Justify::Center),
                                     ));
                                 }
                             }
@@ -180,7 +180,7 @@ fn handle_input_system(
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
     mut level_menu_data: ResMut<LevelMenuData>,
-    mut play_sound: EventWriter<PlaySoundEvent>,
+    mut play_sound: MessageWriter<PlaySoundMessage>,
     mut game_config: ResMut<GameConfig>,
     mut app_state: ResMut<NextState<AppState>>,
     mut game_state: ResMut<NextState<GameState>>,
@@ -191,7 +191,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::SplashScreen);
         return;
     }
@@ -206,7 +206,7 @@ fn handle_input_system(
             if level_menu_data.selected_level.1 >= 4 {
                 level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            play_sound.write(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundMessage::MoveCursor);
         }
         (false, true) => {
             level_menu_data.selected_level.1 =
@@ -214,7 +214,7 @@ fn handle_input_system(
             if level_menu_data.selected_level.1 >= 4 {
                 level_menu_data.selected_level.0 = LEVELS_COLS as i32 - 1;
             }
-            play_sound.write(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundMessage::MoveCursor);
         }
         _ => {
             if level_menu_data.selected_level.1 < 4 {
@@ -225,12 +225,12 @@ fn handle_input_system(
                     (true, false) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.write(PlaySoundEvent::MoveCursor);
+                        play_sound.write(PlaySoundMessage::MoveCursor);
                     }
                     (false, true) => {
                         level_menu_data.selected_level.0 =
                             (level_menu_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.write(PlaySoundEvent::MoveCursor);
+                        play_sound.write(PlaySoundMessage::MoveCursor);
                     }
                     _ => {}
                 }
@@ -245,13 +245,13 @@ fn handle_input_system(
             game_config.start_level = Level(level);
 
             *player_data = PlayerData::new(*game_config);
-            play_sound.write(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundMessage::StartGame);
             game_state.set(GameState::Running);
             player_phase.set(PlayerPhase::Init);
             app_state.set(AppState::Game);
         }
     } else if player_inputs.b.just_pressed {
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::SettingsMenu);
     }
 }

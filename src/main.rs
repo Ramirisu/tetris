@@ -39,7 +39,7 @@ fn main() {
         DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT)
+                    resolution: WindowResolution::new(WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
                         .with_scale_factor_override(1.0),
                     present_mode: PresentMode::AutoNoVsync,
                     position: WindowPosition::Centered(MonitorSelection::Primary),

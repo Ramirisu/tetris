@@ -1,5 +1,6 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
+    ecs::system::NonSendMarker,
     prelude::*,
     window::PrimaryWindow,
 };
@@ -9,7 +10,7 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundEvent,
+    audio::plugin::PlaySoundMessage,
     game_screen::{
         game::GameConfig,
         seed::{SEED_HEX_COUNT, Seed},
@@ -30,7 +31,7 @@ use super::{
 use super::fps_limiter::FPSLimiter;
 
 #[cfg(not(target_arch = "wasm32"))]
-use bevy::winit::WinitWindows;
+use bevy::winit::WINIT_WINDOWS;
 
 #[cfg(not(target_arch = "wasm32"))]
 use super::window_mode::WindowMode;
@@ -246,7 +247,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 Text::new(name),
                                 TextFont::from_font_size(*font_size),
                                 TextColor::from(WHITE),
-                                TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                TextLayout::new(Justify::Center, LineBreak::NoWrap),
                                 SelectedMainSettingEntityMarker(selected_main_setting, idx),
                             ));
 
@@ -257,7 +258,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                             TextSpan::default(),
                                             TextFont::from_font_size(*font_size),
                                             TextColor::from(WHITE),
-                                            TextLayout::new(JustifyText::Center, LineBreak::NoWrap),
+                                            TextLayout::new(Justify::Center, LineBreak::NoWrap),
                                         ));
                                     }
                                 });
@@ -276,25 +277,25 @@ fn handle_input_system(
     mut settings_menu_data: ResMut<SettingsMenuData>,
     mut game_config: ResMut<GameConfig>,
     mut app_state: ResMut<NextState<AppState>>,
-    mut play_sound: EventWriter<PlaySoundEvent>,
+    mut play_sound: MessageWriter<PlaySoundMessage>,
     mut scale_factor: ResMut<ScaleFactor>,
     mut fps_overlay_config: ResMut<FpsOverlayConfig>,
     #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))] mut framepace_settins: ResMut<
         bevy_framepace::FramepaceSettings,
     >,
-    #[cfg(not(target_arch = "wasm32"))] mut exit: EventWriter<AppExit>,
+    #[cfg(not(target_arch = "wasm32"))] mut exit: MessageWriter<AppExit>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.soft_reset {
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::SplashScreen);
         return;
     }
 
     if player_inputs.b.just_pressed {
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::LanguageMenu);
         return;
     }
@@ -310,14 +311,14 @@ fn handle_input_system(
             (true, false) => {
                 settings_menu_data.selected_main_setting =
                     settings_menu_data.selected_main_setting.enum_prev_cycle();
-                play_sound.write(PlaySoundEvent::MoveCursor);
+                play_sound.write(PlaySoundMessage::MoveCursor);
 
                 return;
             }
             (false, true) => {
                 settings_menu_data.selected_main_setting =
                     settings_menu_data.selected_main_setting.enum_next_cycle();
-                play_sound.write(PlaySoundEvent::MoveCursor);
+                play_sound.write(PlaySoundMessage::MoveCursor);
                 return;
             }
             _ => (),
@@ -329,7 +330,7 @@ fn handle_input_system(
     match settings_menu_data.selected_main_setting {
         SelectedMainSetting::Tetris => {
             if player_inputs.start.just_pressed {
-                play_sound.write(PlaySoundEvent::StartGame);
+                play_sound.write(PlaySoundMessage::StartGame);
                 app_state.set(AppState::LevelMenu);
             }
         }
@@ -619,7 +620,7 @@ fn handle_input_system(
 
     option_changed |= settings_menu_data.scale_changed;
     if option_changed {
-        play_sound.write(PlaySoundEvent::MoveCursor);
+        play_sound.write(PlaySoundMessage::MoveCursor);
     }
 }
 
@@ -628,19 +629,20 @@ fn change_window_mode_system(
     scale_factor: Res<ScaleFactor>,
     mut q: ParamSet<(Query<Entity, With<PrimaryWindow>>, Query<&mut Window>)>,
     mut ui_scale: ResMut<UiScale>,
-    #[cfg(not(target_arch = "wasm32"))] winit_windows: NonSend<WinitWindows>,
+    #[cfg(not(target_arch = "wasm32"))] _marker: NonSendMarker,
 ) {
     if !std::mem::replace(&mut settings_menu_data.scale_changed, false) {
         return;
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    let monitor = q
-        .p0()
-        .single()
-        .ok()
-        .and_then(|entity| winit_windows.get_window(entity))
-        .and_then(|winit_window| winit_window.current_monitor());
+    let monitor = q.p0().single().ok().and_then(|entity| {
+        WINIT_WINDOWS.with_borrow(|winit_windows| {
+            winit_windows
+                .get_window(entity)
+                .and_then(|winit_window| winit_window.current_monitor())
+        })
+    });
 
     if let Ok(mut window) = q.p1().single_mut() {
         #[cfg(target_arch = "wasm32")]

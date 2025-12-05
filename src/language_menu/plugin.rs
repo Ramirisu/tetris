@@ -8,7 +8,7 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundEvent,
+    audio::plugin::PlaySoundMessage,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
     settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
@@ -122,14 +122,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 Text::new("▶"),
                                 TextFont::from_font_size(25.0),
                                 TextColor::from(WHITE),
-                                TextLayout::new_with_justify(JustifyText::Center),
+                                TextLayout::new_with_justify(Justify::Center),
                                 LanguageSelectionEntityMarker(lang),
                             ));
                             p.spawn((
                                 Text::new(lang.name()),
                                 TextFont::from_font_size(35.0),
                                 TextColor::from(WHITE),
-                                TextLayout::new_with_justify(JustifyText::Left),
+                                TextLayout::new_with_justify(Justify::Left),
                             ));
                         }
                     })),
@@ -144,7 +144,7 @@ fn handle_input_system(
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
     mut lang_menu_data: ResMut<LanguageMenuData>,
-    mut play_sound: EventWriter<PlaySoundEvent>,
+    mut play_sound: MessageWriter<PlaySoundMessage>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
     let player_inputs = PlayerInputs::with_keyboard(&keys)
@@ -152,13 +152,13 @@ fn handle_input_system(
 
     if player_inputs.start.just_pressed {
         rust_i18n::set_locale(lang_menu_data.selected_lang.locale());
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::SettingsMenu);
         return;
     }
 
     if player_inputs.soft_reset || player_inputs.b.just_pressed {
-        play_sound.write(PlaySoundEvent::StartGame);
+        play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::SplashScreen);
         return;
     }
@@ -169,11 +169,11 @@ fn handle_input_system(
     ) {
         (false, true) => {
             lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_next_cycle();
-            play_sound.write(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundMessage::MoveCursor);
         }
         (true, false) => {
             lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_prev_cycle();
-            play_sound.write(PlaySoundEvent::MoveCursor);
+            play_sound.write(PlaySoundMessage::MoveCursor);
         }
         _ => (),
     }

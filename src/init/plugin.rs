@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow, winit::WinitWindows};
+use bevy::{ecs::system::NonSendMarker, prelude::*, window::PrimaryWindow, winit::WINIT_WINDOWS};
 use image::{DynamicImage, GenericImageView, ImageBuffer};
 use strum::IntoEnumIterator;
 use winit::window::Icon;
@@ -28,24 +28,28 @@ pub fn setup(app: &mut App) {
 
 fn init_app_icon_system(
     mut primary_window: Query<Entity, With<PrimaryWindow>>,
-    windows: NonSend<WinitWindows>,
+    _marker: NonSendMarker,
 ) {
     let Ok(window) = primary_window.single_mut() else {
+        warn!("Unable to get entity of primary window");
         return;
     };
 
-    let Some(primary) = windows.get_window(window) else {
-        return;
-    };
+    WINIT_WINDOWS.with_borrow(|winit_windows| {
+        let Some(primary) = winit_windows.get_window(window) else {
+            warn!("Unable to get primary window");
+            return;
+        };
 
-    const SIZE: u32 = 256;
-    let image = create_app_icon().resize(SIZE, SIZE, image::imageops::FilterType::Nearest);
-    let Ok(icon) = Icon::from_rgba(image.into_rgba8().into_vec(), SIZE, SIZE) else {
-        error!("Failed to convert square image into `Icon`");
-        return;
-    };
+        const SIZE: u32 = 256;
+        let image = create_app_icon().resize(SIZE, SIZE, image::imageops::FilterType::Nearest);
+        let Ok(icon) = Icon::from_rgba(image.into_rgba8().into_vec(), SIZE, SIZE) else {
+            error!("Failed to convert square image into `Icon`");
+            return;
+        };
 
-    primary.set_window_icon(Some(icon));
+        primary.set_window_icon(Some(icon));
+    });
 }
 
 fn create_app_icon() -> DynamicImage {

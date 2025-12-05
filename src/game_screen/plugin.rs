@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundEvent,
+    audio::plugin::PlaySoundMessage,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     utility::{effect::flicker, entity::despawn_all, format::format_hhmmss},
@@ -298,7 +298,7 @@ fn setup_screen(
             Text::new(t!("tetris.game.pause_screen")),
             TextFont::from_font_size(60.0),
             TextColor::from(WHITE),
-            TextLayout::new_with_justify(JustifyText::Center),
+            TextLayout::new_with_justify(Justify::Center),
         ));
 }
 
@@ -318,13 +318,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                 Text::new(t!("tetris.game.lines")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Right),
+                TextLayout::new_with_justify(Justify::Right),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Right),
+                TextLayout::new_with_justify(Justify::Right),
                 LinesEntityMarker,
             ));
         });
@@ -354,14 +354,14 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         Text::default(),
                         TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(JustifyText::Center),
+                        TextLayout::new_with_justify(Justify::Center),
                         PieceDistributionEntityMarker(*piece, 0),
                     ));
                     p.spawn((
                         Text::new("("),
                         TextFont::from_font_size(20.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(JustifyText::Center),
+                        TextLayout::new_with_justify(Justify::Center),
                         PieceDistributionEntityMarker(*piece, 1),
                     ))
                     .with_children(|p| {
@@ -369,13 +369,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                             TextSpan::default(),
                             TextFont::from_font_size(20.0),
                             TextColor::from(WHITE),
-                            TextLayout::new_with_justify(JustifyText::Center),
+                            TextLayout::new_with_justify(Justify::Center),
                         ));
                         p.spawn((
                             TextSpan::new(")"),
                             TextFont::from_font_size(20.0),
                             TextColor::from(WHITE),
-                            TextLayout::new_with_justify(JustifyText::Center),
+                            TextLayout::new_with_justify(Justify::Center),
                         ));
                     });
                 });
@@ -430,7 +430,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         Text::default(),
                         TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(JustifyText::Center),
+                        TextLayout::new_with_justify(Justify::Center),
                         text_marker,
                     ));
                 });
@@ -475,13 +475,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                 Text::new(t!("tetris.game.time")),
                 TextFont::from_font_size(20.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Right),
+                TextLayout::new_with_justify(Justify::Right),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(30.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Right),
+                TextLayout::new_with_justify(Justify::Right),
                 GameStopwatchEntityMarker,
             ));
         });
@@ -591,13 +591,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.score")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Left),
+                TextLayout::new_with_justify(Justify::Left),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Left),
+                TextLayout::new_with_justify(Justify::Left),
                 ScoreEntityMarker,
             ));
         });
@@ -619,7 +619,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::default(),
                 TextFont::from_font_size(20.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(Justify::Center),
                 GameStatsEntityMarker::TetrisClearScore,
             ));
         });
@@ -643,7 +643,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.next")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Left),
+                TextLayout::new_with_justify(Justify::Left),
             ));
             // NEXT PIECE (0)
             spawn_next_piece(
@@ -692,13 +692,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.level")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(Justify::Center),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(Justify::Center),
                 LevelEntityMarker,
             ));
         });
@@ -763,7 +763,7 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                 Text::default(),
                 TextFont::from_font_size(25.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(Justify::Center),
                 DASCounterEntityMarker,
             ));
         });
@@ -828,7 +828,7 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                     Text::default(),
                     TextFont::from_font_size(20.0),
                     TextColor::from(WHITE),
-                    TextLayout::new_with_justify(JustifyText::Center),
+                    TextLayout::new_with_justify(Justify::Center),
                     InputHzEntityMarker,
                 ));
 
@@ -1270,11 +1270,11 @@ fn update_icon<Marker: Component>(
 }
 
 fn handle_game_over(
-    play_sound: &mut EventWriter<PlaySoundEvent>,
+    play_sound: &mut MessageWriter<PlaySoundMessage>,
     game_state: &mut NextState<GameState>,
     player_phase: &mut NextState<PlayerPhase>,
 ) {
-    play_sound.write(PlaySoundEvent::GameOver);
+    play_sound.write(PlaySoundMessage::GameOver);
     game_state.set(GameState::Over);
     player_phase.set(PlayerPhase::Over);
 }
@@ -1330,7 +1330,7 @@ mod state_player_dropping {
             Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
             Query<&mut Visibility, With<PauseScreenEntityMarker>>,
         )>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut player_data: ResMut<PlayerData>,
         game_config: Res<GameConfig>,
         mut game_state: ResMut<NextState<GameState>>,
@@ -1341,7 +1341,7 @@ mod state_player_dropping {
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.write(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundMessage::StartGame);
             app_state.set(AppState::SplashScreen);
             return;
         }
@@ -1373,10 +1373,10 @@ mod state_player_dropping {
             player_data.soft_drop_timer.reset();
         }
         if moved_horizontally {
-            play_sound.write(PlaySoundEvent::MoveCurrPiece);
+            play_sound.write(PlaySoundMessage::MoveCurrPiece);
         }
         if rotated {
-            play_sound.write(PlaySoundEvent::RotateCurrPiece);
+            play_sound.write(PlaySoundMessage::RotateCurrPiece);
         }
     }
 
@@ -1452,7 +1452,7 @@ mod state_player_dropping {
 
     pub(super) fn drop_curr_piece_system(
         q: Query<(&mut ImageNode, &BoardSquareEntityMarker)>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut game_state: ResMut<NextState<GameState>>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         game_config: Res<GameConfig>,
@@ -1515,9 +1515,9 @@ mod state_player_dropping {
                 );
 
                 match lines.len() {
-                    0 => play_sound.write(PlaySoundEvent::LockCurrPiece),
-                    1 | 2 | 3 => play_sound.write(PlaySoundEvent::LineClear),
-                    4 => play_sound.write(PlaySoundEvent::TetrisClear),
+                    0 => play_sound.write(PlaySoundMessage::LockCurrPiece),
+                    1 | 2 | 3 => play_sound.write(PlaySoundMessage::LineClear),
+                    4 => play_sound.write(PlaySoundMessage::TetrisClear),
                     _ => unreachable!(),
                 };
 
@@ -1543,7 +1543,7 @@ mod state_player_line_clear {
             Query<&mut BackgroundColor, With<BackgroundFlickeringEntityMarker>>,
         )>,
         game_config: Res<GameConfig>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
         mut square_image_assets: ResMut<SquareImageAssets>,
@@ -1580,7 +1580,7 @@ mod state_player_line_clear {
             if to_next_state {
                 let (new_level, old_level) = player_data.board.clear_lines();
                 if new_level > old_level {
-                    play_sound.write(PlaySoundEvent::LevelUp);
+                    play_sound.write(PlaySoundMessage::LevelUp);
                     player_data.soft_drop_timer.set_level(new_level);
                     *square_image_assets =
                         SquareImageAssets::new(&mut image_assets, player_data.board.level());
@@ -1612,7 +1612,7 @@ mod state_player_entry_delay {
         game_config: Res<GameConfig>,
         mut player_data: ResMut<PlayerData>,
         mut player_phase: ResMut<NextState<PlayerPhase>>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut game_state: ResMut<NextState<GameState>>,
         square_image_assets: Res<SquareImageAssets>,
     ) {
@@ -1655,7 +1655,7 @@ mod state_game_pause {
         gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
         mut q: Query<&mut Visibility, With<PauseScreenEntityMarker>>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut game_state: ResMut<NextState<GameState>>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
@@ -1663,7 +1663,7 @@ mod state_game_pause {
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.write(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundMessage::StartGame);
             app_state.set(AppState::SplashScreen);
             return;
         }
@@ -1684,14 +1684,14 @@ mod state_game_over {
         keys: Res<ButtonInput<KeyCode>>,
         gamepads: Query<&Gamepad>,
         controller_mapping: Res<ControllerMapping>,
-        mut play_sound: EventWriter<PlaySoundEvent>,
+        mut play_sound: MessageWriter<PlaySoundMessage>,
         mut app_state: ResMut<NextState<AppState>>,
     ) {
         let player_inputs = PlayerInputs::with_keyboard(&keys)
             | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
         if player_inputs.soft_reset {
-            play_sound.write(PlaySoundEvent::StartGame);
+            play_sound.write(PlaySoundMessage::StartGame);
             app_state.set(AppState::SplashScreen);
             return;
         }

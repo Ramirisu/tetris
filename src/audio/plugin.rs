@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 pub fn setup(app: &mut App) {
-    app.add_event::<PlaySoundEvent>()
+    app.add_message::<PlaySoundMessage>()
         .add_systems(Startup, load_audio_assets)
         .add_systems(Update, play_sound_system);
 }
@@ -33,8 +33,8 @@ fn load_audio_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-#[derive(Event)]
-pub enum PlaySoundEvent {
+#[derive(Message)]
+pub enum PlaySoundMessage {
     MoveCursor,
     StartGame,
     MoveCurrPiece,
@@ -49,19 +49,19 @@ pub enum PlaySoundEvent {
 fn play_sound_system(
     mut commands: Commands,
     audio_assets: Res<AudioAssets>,
-    mut event_reader: EventReader<PlaySoundEvent>,
+    mut play_sound: MessageReader<PlaySoundMessage>,
 ) {
-    for event in event_reader.read() {
+    for event in play_sound.read() {
         let audio = match event {
-            PlaySoundEvent::MoveCursor => &audio_assets.move_cursor,
-            PlaySoundEvent::StartGame => &audio_assets.start_game,
-            PlaySoundEvent::MoveCurrPiece => &audio_assets.move_curr_piece,
-            PlaySoundEvent::RotateCurrPiece => &audio_assets.rotate_curr_piece,
-            PlaySoundEvent::LockCurrPiece => &audio_assets.lock_curr_piece,
-            PlaySoundEvent::LineClear => &audio_assets.line_clear,
-            PlaySoundEvent::TetrisClear => &audio_assets.tetris_clear,
-            PlaySoundEvent::LevelUp => &audio_assets.level_up,
-            PlaySoundEvent::GameOver => &audio_assets.game_over,
+            PlaySoundMessage::MoveCursor => &audio_assets.move_cursor,
+            PlaySoundMessage::StartGame => &audio_assets.start_game,
+            PlaySoundMessage::MoveCurrPiece => &audio_assets.move_curr_piece,
+            PlaySoundMessage::RotateCurrPiece => &audio_assets.rotate_curr_piece,
+            PlaySoundMessage::LockCurrPiece => &audio_assets.lock_curr_piece,
+            PlaySoundMessage::LineClear => &audio_assets.line_clear,
+            PlaySoundMessage::TetrisClear => &audio_assets.tetris_clear,
+            PlaySoundMessage::LevelUp => &audio_assets.level_up,
+            PlaySoundMessage::GameOver => &audio_assets.game_over,
         }
         .clone();
         commands.spawn((AudioPlayer(audio), PlaybackSettings::DESPAWN));

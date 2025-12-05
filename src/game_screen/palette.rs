@@ -1,4 +1,5 @@
 use bevy::{
+    asset::RenderAssetUsages,
     color::palettes::{
         css::{
             BEIGE, BLACK, BLUE, BLUE_VIOLET, BURLYWOOD, DARK_BLUE, DARK_GRAY, DARK_GREEN,
@@ -10,7 +11,6 @@ use bevy::{
         tailwind::{AMBER_700, CYAN_950},
     },
     prelude::*,
-    render::render_asset::RenderAssetUsages,
 };
 use image::{DynamicImage, Rgb32FImage};
 
