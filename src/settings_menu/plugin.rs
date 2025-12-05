@@ -1,6 +1,5 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
-    ecs::system::NonSendMarker,
     prelude::*,
     window::PrimaryWindow,
 };
@@ -31,7 +30,7 @@ use super::{
 use super::fps_limiter::FPSLimiter;
 
 #[cfg(not(target_arch = "wasm32"))]
-use bevy::winit::WINIT_WINDOWS;
+use bevy::{ecs::system::NonSendMarker, winit::WINIT_WINDOWS};
 
 #[cfg(not(target_arch = "wasm32"))]
 use super::window_mode::WindowMode;
