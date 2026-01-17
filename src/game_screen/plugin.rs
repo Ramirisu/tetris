@@ -856,10 +856,10 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                                 width: Val::Px(30.0),
                                 height: Val::Px(10.0),
                                 margin: UiRect::axes(Val::Px(5.0), Val::Px(10.0)),
+                                border_radius: BorderRadius::all(Val::Px(5.0)),
                                 ..default()
                             },
                             BorderColor::from(WHITE),
-                            BorderRadius::all(Val::Px(5.0)),
                             button,
                         ));
                     }
@@ -894,10 +894,10 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                             width: Val::Px(30.0),
                             height: Val::Px(30.0),
                             margin: UiRect::all(Val::Px(5.0)),
+                            border_radius: BorderRadius::all(Val::Px(15.0)),
                             ..default()
                         },
                         BackgroundColor::from(WHITE),
-                        BorderRadius::all(Val::Px(15.0)),
                         button,
                     ));
                 }
