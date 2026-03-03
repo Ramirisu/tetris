@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::RngExt;
 
 // The seed of the rng is 32 bytes long. But only the lower 8 bytes are used for seeding due to the UI's limitation.
 pub const SEED_BYTE_COUNT: usize = 8;

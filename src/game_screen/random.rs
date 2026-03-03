@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use rand::seq::SliceRandom;
+use rand::{RngExt, seq::SliceRandom};
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
