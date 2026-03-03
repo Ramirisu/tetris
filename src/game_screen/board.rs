@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use rand::SeedableRng;
+use rand::{SeedableRng, rngs::ChaCha20Rng};
 
 use super::{
     level::Level,
@@ -19,7 +19,7 @@ pub struct Board {
     scoring: Scoring,
     random: Random,
     seed: Seed,
-    rng: rand_chacha::ChaCha20Rng,
+    rng: ChaCha20Rng,
     squares: Vec<Vec<Piece>>,
     curr_piece: Piece,
     curr_pos: (i32, i32),
@@ -53,7 +53,7 @@ impl Board {
             Seeding::System => Seed::new(),
             Seeding::Custom => seed,
         };
-        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.into());
+        let mut rng = ChaCha20Rng::from_seed(seed.into());
         let mut next_pieces = VecDeque::new();
         Self::gen_next_pieces(random, &mut rng, &mut next_pieces, next_piece_hint);
 
@@ -299,7 +299,7 @@ impl Board {
 
     fn gen_next_pieces(
         random: Random,
-        rng: &mut rand_chacha::ChaCha20Rng,
+        rng: &mut ChaCha20Rng,
         history: &mut PieceHistory,
         next_piece_hint: NextPieceHint,
     ) {
