@@ -1,4 +1,5 @@
-#![windows_subsystem = "windows"]
+// Do not pop up a terminal window for the release build, we only need it to show logs in debug build.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use bevy::{
     asset::load_internal_binary_asset,
