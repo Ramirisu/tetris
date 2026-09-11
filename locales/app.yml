@@ -96,7 +96,7 @@ tetris.settings.transition.every4lines:
   zh-TW: 每消除 4 行
   zh-CN: 每消除 4 行
 tetris.settings.linecap.off:
-  en: OFF
+  en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
 tetris.settings.linecap.killscreenx2:
@@ -156,7 +156,7 @@ tetris.settings.level_display.classic:
   zh-TW: 經典
   zh-CN: 经典
 tetris.settings.next_piece_hint.off:
-  en: OFF
+  en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
 tetris.settings.next_piece_hint.classic:
@@ -168,19 +168,19 @@ tetris.settings.next_piece_hint.modern:
   zh-TW: 現代
   zh-CN: 现代
 tetris.settings.invisible.off:
-  en: OFF
+  en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
 tetris.settings.invisible.on:
-  en: ON
+  en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
 tetris.settings.tetris_flash.on:
-  en: ON
+  en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
 tetris.settings.tetris_flash.off:
-  en: OFF
+  en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
 tetris.settings.fps_limiter.unlimited:
@@ -196,11 +196,11 @@ tetris.settings.fps_limiter.480fps:
   zh-TW: 每秒 480 幀
   zh-CN: 每秒 480 帧
 tetris.settings.show_fps.off:
-  en: OFF
+  en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
 tetris.settings.show_fps.on:
-  en: ON
+  en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
 tetris.settings.controller_mapping.mapping_a:
