@@ -764,7 +764,7 @@ fn update_ui_system(
                 Seeding::System => {
                     for idx in 0..=SEED_HEX_COUNT {
                         *tw.text(entity, idx) = "".into();
-                        tw.font(entity, idx).font_size = SETTINGS_MENU_FONT_SIZE;
+                        tw.font(entity, idx).font_size = FontSize::Px(SETTINGS_MENU_FONT_SIZE);
                     }
                 }
                 Seeding::Custom => {
@@ -776,9 +776,9 @@ fn update_ui_system(
                                 .selected_seed_setting
                                 .map_or(false, |selected| selected == idx)
                             {
-                                SETTINGS_MENU_FONT_SIZE * 2.0
+                                FontSize::Px(SETTINGS_MENU_FONT_SIZE * 2.0)
                             } else {
-                                SETTINGS_MENU_FONT_SIZE
+                                FontSize::Px(SETTINGS_MENU_FONT_SIZE)
                             };
                         }
                     }

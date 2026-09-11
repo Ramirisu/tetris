@@ -17,6 +17,7 @@ pub fn setup(app: &mut App) {
     app.add_systems(
         Update,
         (
+            init_app_font_system,
             init_app_icon_system,
             init_app_locale_system,
             complete_initialization_system,
@@ -24,6 +25,15 @@ pub fn setup(app: &mut App) {
             .chain()
             .run_if(in_state(AppState::Init)),
     );
+}
+
+fn init_app_font_system(mut fonts: ResMut<Assets<Font>>) {
+    const MONO_FONT_BYTES: &[u8] = include_bytes!("../../assets/fonts/NotoSansCJK-Regular.ttc");
+    let font = Font::from_bytes(MONO_FONT_BYTES.to_vec());
+
+    fonts
+        .insert(AssetId::default(), font)
+        .expect("Impossible to change default font");
 }
 
 fn init_app_icon_system(

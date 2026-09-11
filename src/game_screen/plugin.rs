@@ -298,7 +298,7 @@ fn setup_screen(
             Text::new(t!("tetris.game.pause_screen")),
             TextFont::from_font_size(60.0),
             TextColor::from(WHITE),
-            TextLayout::new_with_justify(Justify::Center),
+            TextLayout::justify(Justify::Center),
         ));
 }
 
@@ -318,13 +318,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                 Text::new(t!("tetris.game.lines")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Right),
+                TextLayout::justify(Justify::Right),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Right),
+                TextLayout::justify(Justify::Right),
                 LinesEntityMarker,
             ));
         });
@@ -354,14 +354,14 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         Text::default(),
                         TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(Justify::Center),
+                        TextLayout::justify(Justify::Center),
                         PieceDistributionEntityMarker(*piece, 0),
                     ));
                     p.spawn((
                         Text::new("("),
                         TextFont::from_font_size(20.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(Justify::Center),
+                        TextLayout::justify(Justify::Center),
                         PieceDistributionEntityMarker(*piece, 1),
                     ))
                     .with_children(|p| {
@@ -369,13 +369,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                             TextSpan::default(),
                             TextFont::from_font_size(20.0),
                             TextColor::from(WHITE),
-                            TextLayout::new_with_justify(Justify::Center),
+                            TextLayout::justify(Justify::Center),
                         ));
                         p.spawn((
                             TextSpan::new(")"),
                             TextFont::from_font_size(20.0),
                             TextColor::from(WHITE),
-                            TextLayout::new_with_justify(Justify::Center),
+                            TextLayout::justify(Justify::Center),
                         ));
                     });
                 });
@@ -430,7 +430,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
                         Text::default(),
                         TextFont::from_font_size(30.0),
                         TextColor::from(WHITE),
-                        TextLayout::new_with_justify(Justify::Center),
+                        TextLayout::justify(Justify::Center),
                         text_marker,
                     ));
                 });
@@ -475,13 +475,13 @@ fn setup_left_panel(p: &mut EntityCommands) {
                 Text::new(t!("tetris.game.time")),
                 TextFont::from_font_size(20.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Right),
+                TextLayout::justify(Justify::Right),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(30.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Right),
+                TextLayout::justify(Justify::Right),
                 GameStopwatchEntityMarker,
             ));
         });
@@ -591,13 +591,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.score")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Left),
+                TextLayout::justify(Justify::Left),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Left),
+                TextLayout::justify(Justify::Left),
                 ScoreEntityMarker,
             ));
         });
@@ -619,7 +619,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::default(),
                 TextFont::from_font_size(20.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Center),
+                TextLayout::justify(Justify::Center),
                 GameStatsEntityMarker::TetrisClearScore,
             ));
         });
@@ -643,7 +643,7 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.next")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Left),
+                TextLayout::justify(Justify::Left),
             ));
             // NEXT PIECE (0)
             spawn_next_piece(
@@ -692,13 +692,13 @@ fn setup_right_panel(p: &mut EntityCommands, game_config: &GameConfig, player_da
                 Text::new(t!("tetris.game.level")),
                 TextFont::from_font_size(40.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Center),
+                TextLayout::justify(Justify::Center),
             ));
             p.spawn((
                 Text::default(),
                 TextFont::from_font_size(80.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Center),
+                TextLayout::justify(Justify::Center),
                 LevelEntityMarker,
             ));
         });
@@ -763,7 +763,7 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                 Text::default(),
                 TextFont::from_font_size(25.0),
                 TextColor::from(WHITE),
-                TextLayout::new_with_justify(Justify::Center),
+                TextLayout::justify(Justify::Center),
                 DASCounterEntityMarker,
             ));
         });
@@ -828,7 +828,7 @@ fn spawn_player_inputs(p: &mut ChildSpawnerCommands, player_data: &PlayerData) {
                     Text::default(),
                     TextFont::from_font_size(20.0),
                     TextColor::from(WHITE),
-                    TextLayout::new_with_justify(Justify::Center),
+                    TextLayout::justify(Justify::Center),
                     InputHzEntityMarker,
                 ));
 

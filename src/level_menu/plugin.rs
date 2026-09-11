@@ -164,7 +164,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                         Text::new(level.to_string()),
                                         TextFont::from_font_size(40.0),
                                         TextColor::from(RED),
-                                        TextLayout::new_with_justify(Justify::Center),
+                                        TextLayout::justify(Justify::Center),
                                     ));
                                 }
                             }

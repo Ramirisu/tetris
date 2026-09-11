@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use bevy::{
-    asset::load_internal_binary_asset,
     color::palettes::css::GREEN,
     prelude::*,
     window::{EnabledButtons, PresentMode, WindowResolution},
@@ -34,59 +33,53 @@ extern crate rust_i18n;
 i18n!("locales", fallback = "en");
 
 fn main() {
-    let mut app = App::new();
-
-    app.add_plugins(
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    resolution: WindowResolution::new(WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
+    App::new()
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        resolution: WindowResolution::new(
+                            WINDOW_WIDTH as u32,
+                            WINDOW_HEIGHT as u32,
+                        )
                         .with_scale_factor_override(1.0),
-                    present_mode: PresentMode::AutoNoVsync,
-                    position: WindowPosition::Centered(MonitorSelection::Primary),
-                    resizable: false,
-                    enabled_buttons: EnabledButtons {
-                        minimize: true,
-                        maximize: false,
-                        close: true,
-                    },
-                    title: "TETRIS".into(),
+                        present_mode: PresentMode::AutoNoVsync,
+                        position: WindowPosition::Centered(MonitorSelection::Primary),
+                        resizable: false,
+                        enabled_buttons: EnabledButtons {
+                            minimize: true,
+                            maximize: false,
+                            close: true,
+                        },
+                        title: "TETRIS".into(),
+                        ..default()
+                    }),
                     ..default()
-                }),
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
+        .add_plugins(FpsOverlayPlugin {
+            config: FpsOverlayConfig {
+                text_color: GREEN.into(),
+                enabled: ShowFPS::default().is_enabled(),
                 ..default()
-            })
-            .set(ImagePlugin::default_nearest()),
-    )
-    .add_plugins(FpsOverlayPlugin {
-        config: FpsOverlayConfig {
-            text_color: GREEN.into(),
-            enabled: ShowFPS::default().is_enabled(),
-            ..default()
-        },
-    })
-    .insert_resource(ClearColor(Color::BLACK)) // application background color
-    .init_state::<AppState>()
-    .add_systems(Startup, setup_camera)
-    .add_plugins((
-        input::plugin::setup,
-        audio::plugin::setup,
-        init::plugin::setup,
-        loading_screen::plugin::setup,
-        language_menu::plugin::setup,
-        splash_screen::plugin::setup,
-        settings_menu::plugin::setup,
-        level_menu::plugin::setup,
-        game_screen::plugin::setup,
-    ));
-
-    load_internal_binary_asset!(
-        app,
-        TextFont::default().font,
-        "../assets/fonts/NotoSansCJK-Regular.ttc",
-        |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
-    );
-
-    app.run();
+            },
+        })
+        .insert_resource(ClearColor(Color::BLACK)) // application background color
+        .init_state::<AppState>()
+        .add_systems(Startup, setup_camera)
+        .add_plugins((
+            input::plugin::setup,
+            audio::plugin::setup,
+            init::plugin::setup,
+            loading_screen::plugin::setup,
+            language_menu::plugin::setup,
+            splash_screen::plugin::setup,
+            settings_menu::plugin::setup,
+            level_menu::plugin::setup,
+            game_screen::plugin::setup,
+        ))
+        .run();
 }
 
 fn setup_camera(mut commands: Commands) {

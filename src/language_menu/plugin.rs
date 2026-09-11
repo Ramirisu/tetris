@@ -122,14 +122,14 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                 Text::new("▶"),
                                 TextFont::from_font_size(25.0),
                                 TextColor::from(WHITE),
-                                TextLayout::new_with_justify(Justify::Center),
+                                TextLayout::justify(Justify::Center),
                                 LanguageSelectionEntityMarker(lang),
                             ));
                             p.spawn((
                                 Text::new(lang.name()),
                                 TextFont::from_font_size(35.0),
                                 TextColor::from(WHITE),
-                                TextLayout::new_with_justify(Justify::Left),
+                                TextLayout::justify(Justify::Left),
                             ));
                         }
                     })),
