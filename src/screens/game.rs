@@ -5,32 +5,32 @@ use bevy::{
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundMessage,
+    audio::PlaySoundMessage,
+    game::{
+        asset::{SquareImageAssets, SquareImageDisplayLevel},
+        board::Board,
+        game::{GameConfig, GameState},
+        invisible::Invisible,
+        palette::SquareImageSize,
+        piece::Piece,
+        player::{PlayerData, PlayerPhase},
+    },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
-    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    options::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     utility::{effect::flicker, entity::despawn_all, format::format_hhmmss},
 };
 
-use super::{
-    asset::{SquareImageAssets, SquareImageDisplayLevel},
-    board::Board,
-    game::{GameConfig, GameState},
-    invisible::Invisible,
-    linecap::Linecap,
-    palette::SquareImageSize,
-    piece::Piece,
-    player::{LineClearPhase, PlayerData, PlayerPhase},
-    tetris_flash::TetrisFlash,
-};
-
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .insert_resource(GameConfig::default())
         .insert_resource(PlayerData::default())
         .init_state::<PlayerPhase>()
-        .add_systems(OnEnter(AppState::Game), (load_assets, setup_screen).chain())
         .add_systems(
-            OnExit(AppState::Game),
+            OnEnter(AppState::GameScreen),
+            (load_assets, setup_screen).chain(),
+        )
+        .add_systems(
+            OnExit(AppState::GameScreen),
             (despawn_all::<GameEntityMarker>, unload_assets),
         )
         .add_systems(
@@ -76,7 +76,7 @@ pub fn setup(app: &mut App) {
                 ) //
                     .run_if(in_state(GameState::Over)),
             )
-                .run_if(in_state(AppState::Game)),
+                .run_if(in_state(AppState::GameScreen)),
         );
 }
 
@@ -1317,7 +1317,7 @@ mod state_player_init {
 }
 
 mod state_player_dropping {
-    use crate::game_screen::timer::EntryDelayTimer;
+    use crate::game::{player::LineClearPhase, timer::EntryDelayTimer};
 
     use super::*;
 
@@ -1534,6 +1534,8 @@ mod state_player_dropping {
 }
 
 mod state_player_line_clear {
+    use crate::game::tetris_flash::TetrisFlash;
+
     use super::*;
 
     pub(super) fn clear_lines_system(
@@ -1592,6 +1594,8 @@ mod state_player_line_clear {
 }
 
 mod state_player_entry_delay {
+    use crate::game::linecap::Linecap;
+
     use super::*;
 
     pub(super) fn deploy_new_piece_system(
@@ -1697,7 +1701,7 @@ mod state_game_over {
         }
 
         if player_inputs.start.just_pressed {
-            app_state.set(AppState::LevelMenu);
+            app_state.set(AppState::GameLevelsScreen);
         }
     }
 }

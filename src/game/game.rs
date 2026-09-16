@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::game_screen::tetris_flash::TetrisFlash;
+use crate::game::tetris_flash::TetrisFlash;
 
 use super::{
     gravity::Gravity, invisible::Invisible, level::Level, level_display::LevelDisplay,

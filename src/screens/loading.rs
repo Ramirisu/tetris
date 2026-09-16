@@ -8,7 +8,7 @@ use crate::{
     utility::entity::despawn_all,
 };
 
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.insert_resource(LoadingScreenIconTimeDuration::default())
         .add_systems(OnEnter(AppState::LoadingScreen), setup_screen)
         .add_systems(

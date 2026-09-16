@@ -6,8 +6,8 @@ pub enum AppState {
     Init,
     LoadingScreen,
     SplashScreen,
-    LanguageMenu,
-    SettingsMenu,
-    LevelMenu,
-    Game,
+    LanguageScreen,
+    GameOptionsScreen,
+    GameLevelsScreen,
+    GameScreen,
 }

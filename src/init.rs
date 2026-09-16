@@ -5,22 +5,22 @@ use winit::window::Icon;
 
 use crate::{
     app_state::AppState,
-    game_screen::{
+    game::{
         level::Level,
         palette::{SquareImageSize, get_square_image_by_level},
         piece::Piece,
     },
-    language_menu::plugin::{Language, LanguageMenuData},
+    screens::language::{Language, LanguageMenuData},
 };
 
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
             init_app_font_system,
             init_app_icon_system,
             init_app_locale_system,
-            complete_initialization_system,
+            complete_init_system,
         )
             .chain()
             .run_if(in_state(AppState::Init)),
@@ -28,7 +28,7 @@ pub fn setup(app: &mut App) {
 }
 
 fn init_app_font_system(mut fonts: ResMut<Assets<Font>>) {
-    const MONO_FONT_BYTES: &[u8] = include_bytes!("../../assets/fonts/NotoSansCJK-Regular.ttc");
+    const MONO_FONT_BYTES: &[u8] = include_bytes!("../assets/fonts/NotoSansCJK-Regular.ttc");
     let font = Font::from_bytes(MONO_FONT_BYTES.to_vec());
 
     fonts
@@ -111,6 +111,6 @@ fn init_app_locale_system(mut lang_menu_data: ResMut<LanguageMenuData>) {
     }
 }
 
-fn complete_initialization_system(mut app_state: ResMut<NextState<AppState>>) {
+fn complete_init_system(mut app_state: ResMut<NextState<AppState>>) {
     app_state.set(AppState::LoadingScreen);
 }

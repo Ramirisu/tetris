@@ -1,6 +1,6 @@
 use bevy::{ecs::spawn, prelude::*};
 
-use crate::game_screen::{
+use crate::game::{
     level::Level,
     palette::{SquareImageSize, get_square_image_by_level, into_image},
     piece::Piece,

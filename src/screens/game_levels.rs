@@ -5,29 +5,29 @@ use bevy::{
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundMessage,
-    game_screen::{
+    audio::PlaySoundMessage,
+    game::{
         game::{GameConfig, GameState},
         level::Level,
         player::{PlayerData, PlayerPhase},
     },
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    options::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     utility::{effect::flicker, entity::despawn_all},
 };
 
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.insert_resource(LevelMenuData::default())
-        .add_systems(OnEnter(AppState::LevelMenu), setup_screen)
+        .add_systems(OnEnter(AppState::GameLevelsScreen), setup_screen)
         .add_systems(
             Update,
             (handle_input_system, update_ui_system)
                 .chain()
-                .run_if(in_state(AppState::LevelMenu)),
+                .run_if(in_state(AppState::GameLevelsScreen)),
         )
         .add_systems(
-            OnExit(AppState::LevelMenu),
+            OnExit(AppState::GameLevelsScreen),
             despawn_all::<LevelMenuEntityMarker>,
         );
 }
@@ -248,11 +248,11 @@ fn handle_input_system(
             play_sound.write(PlaySoundMessage::StartGame);
             game_state.set(GameState::Running);
             player_phase.set(PlayerPhase::Init);
-            app_state.set(AppState::Game);
+            app_state.set(AppState::GameScreen);
         }
     } else if player_inputs.b.just_pressed {
         play_sound.write(PlaySoundMessage::StartGame);
-        app_state.set(AppState::SettingsMenu);
+        app_state.set(AppState::GameOptionsScreen);
     }
 }
 

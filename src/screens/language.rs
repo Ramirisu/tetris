@@ -8,22 +8,22 @@ use strum_macros::{EnumCount, EnumIter, FromRepr};
 
 use crate::{
     app_state::AppState,
-    audio::plugin::PlaySoundMessage,
+    audio::PlaySoundMessage,
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
-    settings_menu::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
+    options::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     utility::{effect::flicker, entity::despawn_all, enum_advance, enum_advance_cycle},
 };
 
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.insert_resource(LanguageMenuData::default())
-        .add_systems(OnEnter(AppState::LanguageMenu), setup_screen)
+        .add_systems(OnEnter(AppState::LanguageScreen), setup_screen)
         .add_systems(
             Update,
-            (handle_input_system, update_ui_system).run_if(in_state(AppState::LanguageMenu)),
+            (handle_input_system, update_ui_system).run_if(in_state(AppState::LanguageScreen)),
         )
         .add_systems(
-            OnExit(AppState::LanguageMenu),
+            OnExit(AppState::LanguageScreen),
             despawn_all::<LanguageMenuEntityMarker>,
         );
 }
@@ -153,7 +153,7 @@ fn handle_input_system(
     if player_inputs.start.just_pressed {
         rust_i18n::set_locale(lang_menu_data.selected_lang.locale());
         play_sound.write(PlaySoundMessage::StartGame);
-        app_state.set(AppState::SettingsMenu);
+        app_state.set(AppState::GameOptionsScreen);
         return;
     }
 

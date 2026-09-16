@@ -3,219 +3,219 @@ tetris.splash.press_start:
   en: PRESS START
   zh-TW: 按開始繼續
   zh-CN: 按开始继续
-tetris.settings.transition:
+tetris.options.transition:
   en: TRANSITION
   zh-TW: 升等設定
   zh-CN: 升等设置
-tetris.settings.linecap:
+tetris.options.linecap:
   en: LINECAP
   zh-TW: 終局模式
   zh-CN: 终局模式
-tetris.settings.linecap_level:
+tetris.options.linecap_level:
   en: LINECAP LEVEL
   zh-TW: 終局等級
   zh-CN: 终局等级
-tetris.settings.gravity:
+tetris.options.gravity:
   en: GRAVITY
   zh-TW: 重力設定
   zh-CN: 重力设置
-tetris.settings.random:
+tetris.options.random:
   en: RANDOM
   zh-TW: 隨機模式
   zh-CN: 随机模式
-tetris.settings.seeding:
+tetris.options.seeding:
   en: SEEDING
   zh-TW: 隨機種子模式
   zh-CN: 随机种子模式
-tetris.settings.seed:
+tetris.options.seed:
   en: SEED
   zh-TW: 種子
   zh-CN: 种子
-tetris.settings.score_display:
+tetris.options.score_display:
   en: SCORE DISPLAY
   zh-TW: 分數顯示
   zh-CN: 分数显示
-tetris.settings.level_display:
+tetris.options.level_display:
   en: LEVEL DISPLAY
   zh-TW: 等級顯示
   zh-CN: 等级显示
-tetris.settings.tv_system:
+tetris.options.tv_system:
   en: TV SYSTEM
   zh-TW: 電視系統
   zh-CN: 电视系统
-tetris.settings.next_piece_hint:
+tetris.options.next_piece_hint:
   en: NEXT PIECE HINT
   zh-TW: 方塊提示
   zh-CN: 方块提示
-tetris.settings.invisible:
+tetris.options.invisible:
   en: INVISIBLE
   zh-TW: 透明模式
   zh-CN: 隐形模式
-tetris.settings.tetris_flash:
+tetris.options.tetris_flash:
   en: TETRIS FLASH
   zh-TW: 顯示四連消閃光
   zh-CN: 显示四连消闪光
-tetris.settings.fps_limiter:
+tetris.options.fps_limiter:
   en: FPS LIMITER
   zh-TW: 幀數限制
   zh-CN: 帧数限制
-tetris.settings.show_fps:
+tetris.options.show_fps:
   en: SHOW FPS
   zh-TW: 幀數顯示
   zh-CN: 帧数显示
-tetris.settings.controller_mapping:
+tetris.options.controller_mapping:
   en: CONTROLLER MAPPING
   zh-TW: 控制器型態
   zh-CN: 控制器类型
-tetris.settings.window_mode:
+tetris.options.window_mode:
   en: WINDOW MODE
   zh-TW: 視窗模式
   zh-CN: 窗口模式
-tetris.settings.scale_factor:
+tetris.options.scale_factor:
   en: SCALE FACTOR
   zh-TW: 介面縮放比例
   zh-CN: 界面缩放比例
-tetris.settings.exit:
+tetris.options.exit:
   en: EXIT
   zh-TW: 離開
   zh-CN: 退出
-tetris.settings.transition.classic:
+tetris.options.transition.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.transition.fixed:
+tetris.options.transition.fixed:
   en: FIXED
   zh-TW: 修正
   zh-CN: 修正
-tetris.settings.transition.every10lines:
+tetris.options.transition.every10lines:
   en: EVERY 10 LINES
   zh-TW: 每消除 10 行
   zh-CN: 每消除 10 行
-tetris.settings.transition.every4lines:
+tetris.options.transition.every4lines:
   en: EVERY 4 LINES
   zh-TW: 每消除 4 行
   zh-CN: 每消除 4 行
-tetris.settings.linecap.off:
+tetris.options.linecap.off:
   en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.settings.linecap.killscreenx2:
+tetris.options.linecap.killscreenx2:
   en: KILL SCREEN X2
   zh-TW: 兩倍死亡重力
   zh-CN: 双倍死亡重力
-tetris.settings.linecap.halt:
+tetris.options.linecap.halt:
   en: HALT
   zh-TW: 立刻終止
   zh-CN: 立刻终止
-tetris.settings.gravity.level:
+tetris.options.gravity.level:
   en: LEVEL
   zh-TW: 跟隨等級
   zh-CN: 跟随等级
-tetris.settings.gravity.locked:
+tetris.options.gravity.locked:
   en: LOCKED
   zh-TW: 鎖定起始等級
   zh-CN: 锁定起始等级
-tetris.settings.random.uniform:
+tetris.options.random.uniform:
   en: UNIFORM
   zh-TW: 均勻
   zh-CN: 均匀
-tetris.settings.random.classic:
+tetris.options.random.classic:
   en: CLASSIC (1H2R)
   zh-TW: 經典 (1H2R)
   zh-CN: 经典 (1H2R)
-tetris.settings.random.modern:
+tetris.options.random.modern:
   en: MODERN (7BAG)
   zh-TW: 現代 (7BAG)
   zh-CN: 现代 (7BAG)
-tetris.settings.seeding.system:
+tetris.options.seeding.system:
   en: SYSTEM
   zh-TW: 系統
   zh-CN: 系统
-tetris.settings.seeding.custom:
+tetris.options.seeding.custom:
   en: CUSTOM
   zh-TW: 自訂
   zh-CN: 自定义
-tetris.settings.score_display.decimal:
+tetris.options.score_display.decimal:
   en: DECIMAL
   zh-TW: 十進制
   zh-CN: 十进制
-tetris.settings.score_display.classic:
+tetris.options.score_display.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.score_display.base36:
+tetris.options.score_display.base36:
   en: BASE36
   zh-TW: 三十六進制
   zh-CN: 三十六进制
-tetris.settings.level_display.decimal:
+tetris.options.level_display.decimal:
   en: DECIMAL
   zh-TW: 十進制
   zh-CN: 十进制
-tetris.settings.level_display.classic:
+tetris.options.level_display.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.next_piece_hint.off:
+tetris.options.next_piece_hint.off:
   en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.settings.next_piece_hint.classic:
+tetris.options.next_piece_hint.classic:
   en: CLASSIC
   zh-TW: 經典
   zh-CN: 经典
-tetris.settings.next_piece_hint.modern:
+tetris.options.next_piece_hint.modern:
   en: MODERN
   zh-TW: 現代
   zh-CN: 现代
-tetris.settings.invisible.off:
+tetris.options.invisible.off:
   en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.settings.invisible.on:
+tetris.options.invisible.on:
   en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
-tetris.settings.tetris_flash.on:
+tetris.options.tetris_flash.on:
   en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
-tetris.settings.tetris_flash.off:
+tetris.options.tetris_flash.off:
   en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.settings.fps_limiter.unlimited:
+tetris.options.fps_limiter.unlimited:
   en: UNLIMITED
   zh-TW: 無限制
   zh-CN: 无限制
-tetris.settings.fps_limiter.240fps:
+tetris.options.fps_limiter.240fps:
   en: 240 FPS
   zh-TW: 每秒 240 幀
   zh-CN: 每秒 240 帧
-tetris.settings.fps_limiter.480fps:
+tetris.options.fps_limiter.480fps:
   en: 480 FPS
   zh-TW: 每秒 480 幀
   zh-CN: 每秒 480 帧
-tetris.settings.show_fps.off:
+tetris.options.show_fps.off:
   en: "OFF"
   zh-TW: 關閉
   zh-CN: 关闭
-tetris.settings.show_fps.on:
+tetris.options.show_fps.on:
   en: "ON"
   zh-TW: 開啟
   zh-CN: 开启
-tetris.settings.controller_mapping.mapping_a:
+tetris.options.controller_mapping.mapping_a:
   en: MAPPING A
   zh-TW: A 類型
   zh-CN: A 类型
-tetris.settings.controller_mapping.mapping_b:
+tetris.options.controller_mapping.mapping_b:
   en: MAPPING B
   zh-TW: B 類型
   zh-CN: B 类型
-tetris.settings.window_mode.windowed:
+tetris.options.window_mode.windowed:
   en: WINDOWED
   zh-TW: 視窗化
   zh-CN: 窗口化
-tetris.settings.window_mode.borderless_fullscreen:
+tetris.options.window_mode.borderless_fullscreen:
   en: BORDERLESS FULLSCREEN
   zh-TW: 無邊界視窗
   zh-CN: 无边框全屏

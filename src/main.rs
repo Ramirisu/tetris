@@ -9,23 +9,22 @@ use bevy::{
 
 mod app_state;
 mod audio;
-mod game_screen;
+mod game;
 mod init;
 mod input;
-mod language_menu;
-mod level_menu;
-mod loading_screen;
 mod logo;
-mod settings_menu;
-mod splash_screen;
+mod options;
+mod screens;
 mod utility;
 
 use app_state::AppState;
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use settings_menu::{
+use options::{
     scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     show_fps::ShowFPS,
 };
+
+use crate::input::controller_mapping::ControllerMapping;
 
 #[macro_use]
 extern crate rust_i18n;
@@ -67,17 +66,17 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::BLACK)) // application background color
         .init_state::<AppState>()
+        .insert_resource(ControllerMapping::default())
         .add_systems(Startup, setup_camera)
         .add_plugins((
-            input::plugin::setup,
-            audio::plugin::setup,
-            init::plugin::setup,
-            loading_screen::plugin::setup,
-            language_menu::plugin::setup,
-            splash_screen::plugin::setup,
-            settings_menu::plugin::setup,
-            level_menu::plugin::setup,
-            game_screen::plugin::setup,
+            audio::plugin,
+            init::plugin,
+            screens::loading::plugin,
+            screens::splash::plugin,
+            screens::language::plugin,
+            screens::game_options::plugin,
+            screens::game_levels::plugin,
+            screens::game::plugin,
         ))
         .run();
 }

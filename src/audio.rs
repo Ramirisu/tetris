@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub fn setup(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.add_message::<PlaySoundMessage>()
         .add_systems(Startup, load_audio_assets)
         .add_systems(Update, play_sound_system);
