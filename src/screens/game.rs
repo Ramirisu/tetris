@@ -256,6 +256,8 @@ fn setup_screen(
                         ..default()
                     })
                     .insert_if(BorderColor::from(WHITE), || cfg!(debug_assertions)),
+                    player_data.board.rows(),
+                    player_data.board.cols(),
                 );
                 setup_right_panel(
                     p.spawn(Node {
@@ -488,7 +490,7 @@ fn setup_left_panel(p: &mut EntityCommands) {
     });
 }
 
-fn setup_central_panel(p: &mut EntityCommands) {
+fn setup_central_panel(p: &mut EntityCommands, rows: usize, cols: usize) {
     p.with_children(|p| {
         p.spawn(Node {
             display: Display::Flex,
@@ -520,8 +522,8 @@ fn setup_central_panel(p: &mut EntityCommands) {
                     BackgroundColor::from(BLACK),
                 ))
                 .with_children(|p| {
-                    fn spawn_row(p: &mut ChildSpawnerCommands, y: usize) {
-                        for x in 0..Board::BOARD_COLS {
+                    fn spawn_row(p: &mut ChildSpawnerCommands, y: usize, cols: usize) {
+                        for x in 0..cols {
                             p.spawn((
                                 Node {
                                     width: Val::Px(BOARD_SQUARE_SIZE),
@@ -537,7 +539,7 @@ fn setup_central_panel(p: &mut EntityCommands) {
                     p.spawn((
                         Node {
                             display: Display::Grid,
-                            grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                            grid_template_columns: vec![GridTrack::auto(); cols],
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
                             border: UiRect::horizontal(Val::Px(BORDER_WIDTH)),
@@ -547,15 +549,15 @@ fn setup_central_panel(p: &mut EntityCommands) {
                         BackgroundColor::from(BLACK),
                     ))
                     .with_children(|p| {
-                        for y in (Board::BOARD_ROWS..Board::INTERNAL_BOARD_ROWS).rev() {
-                            spawn_row(p, y);
+                        for y in (rows..Board::padded_rows(rows)).rev() {
+                            spawn_row(p, y, cols);
                         }
                     });
 
                     p.spawn((
                         Node {
                             display: Display::Grid,
-                            grid_template_columns: vec![GridTrack::auto(); Board::BOARD_COLS],
+                            grid_template_columns: vec![GridTrack::auto(); cols],
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
                             border: UiRect::px(BORDER_WIDTH, BORDER_WIDTH, 0.0, BORDER_WIDTH),
@@ -565,8 +567,8 @@ fn setup_central_panel(p: &mut EntityCommands) {
                         BackgroundColor::from(BLACK),
                     ))
                     .with_children(|p| {
-                        for y in (0..Board::BOARD_ROWS).rev() {
-                            spawn_row(p, y);
+                        for y in (0..rows).rev() {
+                            spawn_row(p, y, cols);
                         }
                     });
                 });
@@ -1081,11 +1083,11 @@ fn update_game_stats_system(
 
     let total_piece_count = Piece::iter()
         .filter(|piece| !piece.is_placeholder())
-        .map(|piece| player_data.board.get_piece_count(*piece))
+        .map(|piece| player_data.board.piece_count(*piece))
         .sum::<usize>();
 
     for (entity, marker) in q.p2() {
-        let count = player_data.board.get_piece_count(marker.0);
+        let count = player_data.board.piece_count(marker.0);
         match marker.1 {
             0 => {
                 *tw.text(entity, 0) = format!("{:03}", count);
@@ -1162,9 +1164,7 @@ fn update_board(
         {
             img.image = square_image_assets.get_image(
                 SquareImageSize::Standard,
-                player_data
-                    .board
-                    .get_square(marker.0 as i32, marker.1 as i32),
+                player_data.board.square(marker.0, marker.1),
             );
         } else {
             img.image = square_image_assets.get_image(SquareImageSize::Standard, Piece::X);
@@ -1317,7 +1317,7 @@ mod state_player_init {
 }
 
 mod state_player_dropping {
-    use crate::game::{player::LineClearPhase, timer::EntryDelayTimer};
+    use crate::game::{board::CurrPieceAction, player::LineClearPhase, timer::EntryDelayTimer};
 
     use super::*;
 
@@ -1392,7 +1392,9 @@ mod state_player_dropping {
         if player_data.can_press_down {
             if inputs.down.pressed {
                 if player_data.press_down_timer.tick(t.delta()).consume() {
-                    moved_down |= player_data.board.move_piece_down();
+                    moved_down |= player_data
+                        .board
+                        .try_apply_action(CurrPieceAction::MoveDown);
                     player_data.lock_curr_piece_immediately = !moved_down;
                 }
             } else {
@@ -1412,8 +1414,16 @@ mod state_player_dropping {
             if inputs.left.just_pressed || inputs.right.just_pressed {
                 player_data.das_timer.reset();
                 match (inputs.left.just_pressed, inputs.right.just_pressed) {
-                    (true, false) => moved_horizontally |= player_data.board.move_piece_left(),
-                    (false, true) => moved_horizontally |= player_data.board.move_piece_right(),
+                    (true, false) => {
+                        moved_horizontally |= player_data
+                            .board
+                            .try_apply_action(CurrPieceAction::MoveLeft)
+                    }
+                    (false, true) => {
+                        moved_horizontally |= player_data
+                            .board
+                            .try_apply_action(CurrPieceAction::MoveRight)
+                    }
                     _ => (),
                 }
             } else {
@@ -1422,17 +1432,27 @@ mod state_player_dropping {
                         player_data.das_timer.tick(t.delta());
                     }
                     (true, false) => {
-                        if !player_data.board.is_left_movable() {
+                        if !player_data
+                            .board
+                            .can_apply_action(CurrPieceAction::MoveLeft)
+                        {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(t.delta()).consume() {
-                            moved_horizontally |= player_data.board.move_piece_left();
+                            moved_horizontally |= player_data
+                                .board
+                                .try_apply_action(CurrPieceAction::MoveLeft);
                         }
                     }
                     (false, true) => {
-                        if !player_data.board.is_right_movable() {
+                        if !player_data
+                            .board
+                            .can_apply_action(CurrPieceAction::MoveRight)
+                        {
                             player_data.das_timer.charge();
                         } else if player_data.das_timer.tick(t.delta()).consume() {
-                            moved_horizontally |= player_data.board.move_piece_right();
+                            moved_horizontally |= player_data
+                                .board
+                                .try_apply_action(CurrPieceAction::MoveRight);
                         }
                     }
                     _ => (),
@@ -1441,10 +1461,14 @@ mod state_player_dropping {
         }
 
         if inputs.a.just_pressed {
-            rotated |= player_data.board.rotate_piece_clockwise();
+            rotated |= player_data
+                .board
+                .try_apply_action(CurrPieceAction::RotateClockwise);
         }
         if inputs.b.just_pressed {
-            rotated |= player_data.board.rotate_piece_counter_clockwise();
+            rotated |= player_data
+                .board
+                .try_apply_action(CurrPieceAction::RotateCounterClockwise);
         }
 
         (moved_down, moved_horizontally, rotated)
@@ -1472,7 +1496,10 @@ mod state_player_dropping {
             let new_level = player_data.board.level();
             player_data.soft_drop_timer.set_level(new_level);
 
-            if player_data.board.move_piece_down() {
+            if player_data
+                .board
+                .try_apply_action(CurrPieceAction::MoveDown)
+            {
                 update_board(
                     q,
                     &player_data,
@@ -1481,7 +1508,7 @@ mod state_player_dropping {
                     false,
                     None,
                 );
-            } else if !player_data.board.is_curr_position_valid() {
+            } else if !player_data.board.is_curr_piece_pos_valid() {
                 update_board(
                     q,
                     &player_data,
@@ -1503,7 +1530,7 @@ mod state_player_dropping {
                 player_data.entry_delay_timer = EntryDelayTimer::new(min_y, game_config.tv_system);
 
                 player_data.board.lock_curr_piece();
-                let lines = player_data.board.get_line_clear_rows();
+                let lines = player_data.board.get_filled_lines();
 
                 update_board(
                     q,
@@ -1523,7 +1550,8 @@ mod state_player_dropping {
 
                 if lines.len() > 0 {
                     player_data.line_clear_rows = lines;
-                    player_data.line_clear_phase = LineClearPhase::new(game_config.tv_system);
+                    player_data.line_clear_phase =
+                        LineClearPhase::new(game_config.tv_system, player_data.board.cols());
                     player_phase.set(PlayerPhase::LineClear);
                 } else {
                     player_phase.set(PlayerPhase::EntryDelay);
@@ -1580,7 +1608,7 @@ mod state_player_line_clear {
             }
 
             if to_next_state {
-                let (new_level, old_level) = player_data.board.clear_lines();
+                let (new_level, old_level) = player_data.board.clear_filled_lines();
                 if new_level > old_level {
                     play_sound.write(PlaySoundMessage::LevelUp);
                     player_data.soft_drop_timer.set_level(new_level);

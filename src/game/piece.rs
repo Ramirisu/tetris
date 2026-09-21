@@ -6,12 +6,6 @@ use crate::utility::{enum_advance, enum_advance_cycle};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub i32, pub i32);
 
-impl Square {
-    pub fn to_coordinate(&self, x: i32, y: i32) -> (i32, i32) {
-        (self.0 + x, self.1 + y)
-    }
-}
-
 #[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
 pub enum PieceT {
     #[default]

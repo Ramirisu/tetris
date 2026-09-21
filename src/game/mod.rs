@@ -2,7 +2,7 @@ pub mod asset;
 pub mod board;
 pub mod game;
 pub mod gravity;
-pub mod input_freqency;
+pub mod input_frequency;
 pub mod invisible;
 pub mod level;
 pub mod level_display;

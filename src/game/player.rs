@@ -1,9 +1,9 @@
 use bevy::{prelude::*, time::Stopwatch};
 
-use super::{
+use crate::game::{
     board::Board,
     game::GameConfig,
-    input_freqency::InputFrequency,
+    input_frequency::InputFrequency,
     timer::{DelayAutoShiftTimer, EntryDelayTimer, LineClearTimer, PressDownTimer, SoftDropTimer},
     tv_system::TVSystem,
 };
@@ -35,8 +35,12 @@ pub struct PlayerData {
 
 impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
+        const BOARD_ROWS: usize = 20;
+        const BOARD_COLS: usize = 10;
         Self {
             board: Board::new(
+                BOARD_ROWS,
+                BOARD_COLS,
                 config.start_level,
                 config.transition,
                 config.scoring,
@@ -59,7 +63,7 @@ impl PlayerData {
             press_down_timer: PressDownTimer::new(config.tv_system),
             das_timer: DelayAutoShiftTimer::new(config.tv_system),
             line_clear_rows: default(),
-            line_clear_phase: LineClearPhase::new(config.tv_system),
+            line_clear_phase: LineClearPhase::new(config.tv_system, BOARD_COLS),
             entry_delay_timer: EntryDelayTimer::new(0, config.tv_system),
             input_freqency: InputFrequency::default(),
         }
@@ -80,8 +84,7 @@ pub struct LineClearPhase {
 }
 
 impl LineClearPhase {
-    pub fn new(tv_system: TVSystem) -> Self {
-        let cols = Board::BOARD_COLS;
+    pub fn new(tv_system: TVSystem, cols: usize) -> Self {
         let phase = (cols + 1) / 2;
         Self {
             cols,
