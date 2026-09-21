@@ -1031,7 +1031,7 @@ fn update_game_stats_system(
         *tw.text(entity, 0) = format_hhmmss(player_data.stopwatch.elapsed());
     }
     if let Ok(entity) = q.p0().p4().single_mut() {
-        *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_freqency.freq());
+        *tw.text(entity, 0) = format!("{:2.1} HZ", player_data.input_frequency.freq());
     }
 
     let drought_level = match player_data.board.drought() {
@@ -1184,10 +1184,10 @@ fn player_inputs_display_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     player_data
-        .input_freqency
+        .input_frequency
         .reset_when_expired(t.elapsed_secs());
     if player_inputs.left.just_pressed || player_inputs.right.just_pressed {
-        player_data.input_freqency.increment(t.elapsed_secs());
+        player_data.input_frequency.increment(t.elapsed_secs());
     }
 
     for (mut bg_color, marker) in q {

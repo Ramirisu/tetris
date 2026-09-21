@@ -8,6 +8,9 @@ use crate::game::{
     tv_system::TVSystem,
 };
 
+const BOARD_ROWS: usize = 20;
+const BOARD_COLS: usize = 10;
+
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash, States)]
 pub enum PlayerPhase {
     #[default]
@@ -30,13 +33,11 @@ pub struct PlayerData {
     pub line_clear_rows: Vec<usize>,
     pub line_clear_phase: LineClearPhase,
     pub entry_delay_timer: EntryDelayTimer,
-    pub input_freqency: InputFrequency,
+    pub input_frequency: InputFrequency,
 }
 
 impl PlayerData {
     pub fn new(config: GameConfig) -> Self {
-        const BOARD_ROWS: usize = 20;
-        const BOARD_COLS: usize = 10;
         Self {
             board: Board::new(
                 BOARD_ROWS,
@@ -65,7 +66,7 @@ impl PlayerData {
             line_clear_rows: default(),
             line_clear_phase: LineClearPhase::new(config.tv_system, BOARD_COLS),
             entry_delay_timer: EntryDelayTimer::new(0, config.tv_system),
-            input_freqency: InputFrequency::default(),
+            input_frequency: InputFrequency::default(),
         }
     }
 }
