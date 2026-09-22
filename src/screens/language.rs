@@ -16,7 +16,7 @@ use crate::{
 };
 
 pub fn plugin(app: &mut App) {
-    app.insert_resource(LanguageMenuData::default())
+    app.insert_resource(LanguageScreenData::default())
         .add_systems(OnEnter(AppState::LanguageScreen), setup_screen)
         .add_systems(
             Update,
@@ -24,12 +24,12 @@ pub fn plugin(app: &mut App) {
         )
         .add_systems(
             OnExit(AppState::LanguageScreen),
-            despawn_all::<LanguageMenuEntityMarker>,
+            despawn_all::<LanguageScreenEntityMarker>,
         );
 }
 
 #[derive(Component)]
-struct LanguageMenuEntityMarker;
+struct LanguageScreenEntityMarker;
 
 #[derive(Component)]
 struct LanguageSelectionEntityMarker(Language);
@@ -64,7 +64,7 @@ impl Language {
 }
 
 #[derive(Default, Resource)]
-pub struct LanguageMenuData {
+pub struct LanguageScreenData {
     pub selected_lang: Language,
 }
 
@@ -80,7 +80,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
             overflow: Overflow::clip(),
             ..default()
         },
-        LanguageMenuEntityMarker,
+        LanguageScreenEntityMarker,
         Children::spawn(Spawn((
             Node {
                 width: Val::Px(WINDOW_WIDTH),
@@ -143,7 +143,7 @@ fn handle_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     controller_mapping: Res<ControllerMapping>,
-    mut lang_menu_data: ResMut<LanguageMenuData>,
+    mut screen_data: ResMut<LanguageScreenData>,
     mut play_sound: MessageWriter<PlaySoundMessage>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
@@ -151,7 +151,7 @@ fn handle_input_system(
         | PlayerInputs::with_gamepads(gamepads, *controller_mapping);
 
     if player_inputs.start.just_pressed {
-        rust_i18n::set_locale(lang_menu_data.selected_lang.locale());
+        rust_i18n::set_locale(screen_data.selected_lang.locale());
         play_sound.write(PlaySoundMessage::StartGame);
         app_state.set(AppState::GameOptionsScreen);
         return;
@@ -168,11 +168,11 @@ fn handle_input_system(
         player_inputs.down.just_pressed,
     ) {
         (false, true) => {
-            lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_next_cycle();
+            screen_data.selected_lang = screen_data.selected_lang.enum_next_cycle();
             play_sound.write(PlaySoundMessage::MoveCursor);
         }
         (true, false) => {
-            lang_menu_data.selected_lang = lang_menu_data.selected_lang.enum_prev_cycle();
+            screen_data.selected_lang = screen_data.selected_lang.enum_prev_cycle();
             play_sound.write(PlaySoundMessage::MoveCursor);
         }
         _ => (),
@@ -183,11 +183,11 @@ fn update_ui_system(
     t: Res<Time>,
     q: Query<(Entity, &LanguageSelectionEntityMarker)>,
     mut tw: TextUiWriter,
-    lang_menu_data: Res<LanguageMenuData>,
+    screen_data: Res<LanguageScreenData>,
 ) {
     for (entity, marker) in q {
         tw.color(entity, 0)
-            .set_alpha(if lang_menu_data.selected_lang == marker.0 {
+            .set_alpha(if screen_data.selected_lang == marker.0 {
                 flicker(t.elapsed_secs(), 0.5)
             } else {
                 0.0

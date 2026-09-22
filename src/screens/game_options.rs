@@ -55,7 +55,7 @@ pub fn plugin(app: &mut App) {
         )
         .add_systems(
             OnExit(AppState::GameOptionsScreen),
-            despawn_all::<SettingsMenuEntityMarker>,
+            despawn_all::<GameOptionsScreenEntityMarker>,
         );
 }
 
@@ -67,7 +67,7 @@ fn init_bevy_framepace_settings(mut framepace_settins: ResMut<bevy_framepace::Fr
 }
 
 #[derive(Component)]
-struct SettingsMenuEntityMarker;
+struct GameOptionsScreenEntityMarker;
 
 #[derive(Component)]
 struct SelectedMainSettingEntityMarker(SelectedMainOption, usize);
@@ -186,7 +186,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                 overflow: Overflow::clip(),
                 ..default()
             },
-            SettingsMenuEntityMarker,
+            GameOptionsScreenEntityMarker,
         ))
         .with_children(|p| {
             p.spawn(Node {

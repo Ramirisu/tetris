@@ -10,7 +10,7 @@ use crate::{
         palette::{SquareImageSize, get_square_image_by_level},
         piece::Piece,
     },
-    screens::language::{Language, LanguageMenuData},
+    screens::language::{Language, LanguageScreenData},
 };
 
 pub fn plugin(app: &mut App) {
@@ -97,13 +97,13 @@ fn create_app_icon() -> DynamicImage {
     image.crop_imm(0, height / 2, width * 3, height * 3)
 }
 
-fn init_app_locale_system(mut lang_menu_data: ResMut<LanguageMenuData>) {
+fn init_app_locale_system(mut language_screen_data: ResMut<LanguageScreenData>) {
     if let Some(locale) = sys_locale::get_locale() {
         info!("System locale: {}", locale);
         rust_i18n::set_locale(&locale);
         for lang in Language::iter() {
             if lang.locale() == locale {
-                lang_menu_data.selected_lang = lang;
+                language_screen_data.selected_lang = lang;
             }
         }
     } else {
