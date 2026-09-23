@@ -38,27 +38,25 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
         },
         SplashScreenEntityMarker,
         Children::spawn((
-            Spawn((
-                Node {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                },
-                Children::spawn(Spawn(logo(Val::Px(40.0), &mut image_assets))),
-            )),
-            Spawn((
-                Node {
-                    margin: UiRect::all(Val::Px(40.0)),
-                    ..default()
-                },
-                Children::spawn(Spawn((
-                    Text::new(t!("tetris.splash.press_start")),
-                    TextFont::from_font_size(40.0),
-                    TextColor::from(WHITE),
-                    PressStartEntityMarker,
-                ))),
-            )),
+            Spawn(padded_child(logo(Val::Px(40.0), &mut image_assets))),
+            Spawn(padded_child((
+                Text::new(t!("tetris.splash.press_start")),
+                TextFont::from_font_size(40.0),
+                TextColor::from(WHITE),
+                PressStartEntityMarker,
+            ))),
         )),
     ));
+}
+
+fn padded_child(child: impl Bundle) -> impl Bundle {
+    (
+        Node {
+            margin: UiRect::all(Val::Px(40.0)),
+            ..default()
+        },
+        Children::spawn(Spawn(child)),
+    )
 }
 
 fn handle_input_system(

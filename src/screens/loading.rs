@@ -28,7 +28,9 @@ struct LoadingScreenEntityMarker;
 struct LoadingScreenIconEntityMarker;
 
 #[derive(Default, Resource)]
-struct LoadingScreenIconTimeDuration(Duration);
+struct LoadingScreenIconTimeDuration {
+    elapsed: Duration,
+}
 
 fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
@@ -74,17 +76,24 @@ fn update_ui_system(
     mut q: Query<&mut ImageNode, With<LoadingScreenIconEntityMarker>>,
     mut app_state: ResMut<NextState<AppState>>,
 ) {
-    duration.0 += t.delta();
+    duration.elapsed += t.delta();
 
     if let Ok(mut img) = q.single_mut() {
-        let t = duration.0.as_secs_f32();
-        match t {
-            0.0..2.0 => img.color.set_alpha(0.0),
-            2.0..4.0 => img.color.set_alpha((t - 2.0) / 2.0),
-            4.0..6.0 => img.color.set_alpha(1.0),
-            6.0..8.0 => img.color.set_alpha((8.0 - t) / 2.0),
-            8.0..9.0 => img.color.set_alpha(0.0),
-            _ => app_state.set(AppState::SplashScreen),
+        if let Some(alpha) = loading_icon_alpha(duration.elapsed.as_secs_f32()) {
+            img.color.set_alpha(alpha);
+        } else {
+            app_state.set(AppState::SplashScreen);
         }
+    }
+}
+
+fn loading_icon_alpha(seconds: f32) -> Option<f32> {
+    match seconds {
+        0.0..2.0 => Some(0.0),
+        2.0..4.0 => Some((seconds - 2.0) / 2.0),
+        4.0..6.0 => Some(1.0),
+        6.0..8.0 => Some((8.0 - seconds) / 2.0),
+        8.0..9.0 => Some(0.0),
+        _ => None,
     }
 }
