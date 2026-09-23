@@ -65,7 +65,7 @@ fn init_app_icon_system(
 fn create_app_icon() -> DynamicImage {
     let sqr = get_square_image_by_level(SquareImageSize::Small, Piece::j(), Level(19));
     let (width, height) = sqr.dimensions();
-    let pattern = [
+    const PATTERN: [[u8; 3]; 4] = [
         [0, 0, 0], //
         [1, 1, 1],
         [0, 1, 0],
@@ -73,28 +73,39 @@ fn create_app_icon() -> DynamicImage {
     ];
 
     let mut buffer = ImageBuffer::new(
-        pattern[0].len() as u32 * width,
-        pattern.len() as u32 * height,
+        PATTERN[0].len() as u32 * width,
+        PATTERN.len() as u32 * height,
     );
+    draw_icon_pattern(&mut buffer, &sqr, &PATTERN, width, height);
 
-    for (py, row) in pattern.iter().enumerate() {
-        for (px, element) in row.iter().enumerate() {
+    let image: DynamicImage = buffer.into();
+    image.crop_imm(0, height / 2, width * 3, height * 3)
+}
+
+fn draw_icon_pattern(
+    buffer: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>,
+    square: &image::DynamicImage,
+    pattern: &[[u8; 3]; 4],
+    width: u32,
+    height: u32,
+) {
+    for (pattern_y, row) in pattern.iter().enumerate() {
+        for (pattern_x, &filled) in row.iter().enumerate() {
+            if filled == 0 {
+                continue;
+            }
+
             for y in 0..height {
                 for x in 0..width {
-                    if *element > 0 {
-                        buffer.put_pixel(
-                            x + px as u32 * width,
-                            y + py as u32 * height,
-                            sqr.get_pixel(x, y),
-                        );
-                    }
+                    buffer.put_pixel(
+                        x + pattern_x as u32 * width,
+                        y + pattern_y as u32 * height,
+                        square.get_pixel(x, y),
+                    );
                 }
             }
         }
     }
-
-    let image: DynamicImage = buffer.into();
-    image.crop_imm(0, height / 2, width * 3, height * 3)
 }
 
 fn init_app_locale_system(mut language_screen_data: ResMut<LanguageScreenData>) {
