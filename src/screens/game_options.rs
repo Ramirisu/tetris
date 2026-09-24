@@ -185,6 +185,29 @@ impl Default for OptionsScreenData {
     }
 }
 
+fn cycle_selected_main_option(screen_data: &mut OptionsScreenData, direction: i32) {
+    screen_data.selected_main_option = match direction {
+        -1 => screen_data.selected_main_option.enum_prev_cycle(),
+        1 => screen_data.selected_main_option.enum_next_cycle(),
+        _ => screen_data.selected_main_option,
+    };
+}
+
+fn step_enum<T: EnumAdvance + Copy>(value: &mut T, direction: i32) -> bool {
+    let next = match direction {
+        -1 => value.enum_prev(),
+        1 => value.enum_next(),
+        _ => None,
+    };
+
+    if let Some(next_value) = next {
+        *value = next_value;
+        true
+    } else {
+        false
+    }
+}
+
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     commands
         .spawn((
@@ -319,15 +342,12 @@ fn handle_input_system(
             player_inputs.down.just_pressed,
         ) {
             (true, false) => {
-                options_screen_data.selected_main_option =
-                    options_screen_data.selected_main_option.enum_prev_cycle();
+                cycle_selected_main_option(&mut options_screen_data, -1);
                 play_sound.write(PlaySoundMessage::MoveCursor);
-
                 return;
             }
             (false, true) => {
-                options_screen_data.selected_main_option =
-                    options_screen_data.selected_main_option.enum_next_cycle();
+                cycle_selected_main_option(&mut options_screen_data, 1);
                 play_sound.write(PlaySoundMessage::MoveCursor);
                 return;
             }
@@ -346,28 +366,16 @@ fn handle_input_system(
         }
         SelectedMainOption::Transition => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.transition.enum_next() {
-                    game_config.transition = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.transition, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.transition.enum_prev() {
-                    game_config.transition = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.transition, -1);
             }
         }
         SelectedMainOption::Linecap => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.linecap.enum_next() {
-                    game_config.linecap = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.linecap, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.linecap.enum_prev() {
-                    game_config.linecap = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.linecap, -1);
             }
         }
         SelectedMainOption::LinecapLevel => {
@@ -385,41 +393,23 @@ fn handle_input_system(
         }
         SelectedMainOption::Gravity => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.gravity.enum_next() {
-                    game_config.gravity = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.gravity, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.gravity.enum_prev() {
-                    game_config.gravity = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.gravity, -1);
             }
         }
         SelectedMainOption::Random => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.random.enum_next() {
-                    game_config.random = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.random, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.random.enum_prev() {
-                    game_config.random = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.random, -1);
             }
         }
         SelectedMainOption::Seeding => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.seeding.enum_next() {
-                    game_config.seeding = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.seeding, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.seeding.enum_prev() {
-                    game_config.seeding = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.seeding, -1);
             }
         }
         SelectedMainOption::Seed => {
@@ -473,149 +463,95 @@ fn handle_input_system(
         }
         SelectedMainOption::ScoreDisplay => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.score_display.enum_next() {
-                    game_config.score_display = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.score_display, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.score_display.enum_prev() {
-                    game_config.score_display = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.score_display, -1);
             }
         }
         SelectedMainOption::LevelDisplay => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.level_display.enum_next() {
-                    game_config.level_display = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.level_display, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.level_display.enum_prev() {
-                    game_config.level_display = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.level_display, -1);
             }
         }
         SelectedMainOption::TVSystem => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.tv_system.enum_next() {
-                    game_config.tv_system = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.tv_system, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.tv_system.enum_prev() {
-                    game_config.tv_system = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.tv_system, -1);
             }
         }
         SelectedMainOption::NextPieceHint => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.next_piece_hint.enum_next() {
-                    game_config.next_piece_hint = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.next_piece_hint, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.next_piece_hint.enum_prev() {
-                    game_config.next_piece_hint = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.next_piece_hint, -1);
             }
         }
         SelectedMainOption::Invisible => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.invisible.enum_next() {
-                    game_config.invisible = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.invisible, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.invisible.enum_prev() {
-                    game_config.invisible = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.invisible, -1);
             }
         }
         SelectedMainOption::TetrisFlash => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = game_config.tetris_flash.enum_next() {
-                    game_config.tetris_flash = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.tetris_flash, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = game_config.tetris_flash.enum_prev() {
-                    game_config.tetris_flash = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut game_config.tetris_flash, -1);
             }
         }
         #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
         SelectedMainOption::FPSLimiter => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = options_screen_data.fps_limiter.enum_next() {
-                    options_screen_data.fps_limiter = e;
+                option_changed |= step_enum(&mut options_screen_data.fps_limiter, 1);
+                if option_changed {
                     framepace_settins.limiter = options_screen_data.fps_limiter.into();
-                    option_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = options_screen_data.fps_limiter.enum_prev() {
-                    options_screen_data.fps_limiter = e;
+                option_changed |= step_enum(&mut options_screen_data.fps_limiter, -1);
+                if option_changed {
                     framepace_settins.limiter = options_screen_data.fps_limiter.into();
-                    option_changed = true;
                 }
             }
         }
         SelectedMainOption::ShowFPS => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = options_screen_data.show_fps.enum_next() {
-                    options_screen_data.show_fps = e;
-                    fps_overlay_config.enabled = options_screen_data.show_fps.is_enabled();
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut options_screen_data.show_fps, 1);
+                fps_overlay_config.enabled = options_screen_data.show_fps.is_enabled();
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = options_screen_data.show_fps.enum_prev() {
-                    options_screen_data.show_fps = e;
-                    fps_overlay_config.enabled = options_screen_data.show_fps.is_enabled();
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut options_screen_data.show_fps, -1);
+                fps_overlay_config.enabled = options_screen_data.show_fps.is_enabled();
             }
         }
         SelectedMainOption::ControllerMapping => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = controller_mapping.enum_next() {
-                    *controller_mapping = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut *controller_mapping, 1);
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = controller_mapping.enum_prev() {
-                    *controller_mapping = e;
-                    option_changed = true;
-                }
+                option_changed |= step_enum(&mut *controller_mapping, -1);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
         SelectedMainOption::WindowMode => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = options_screen_data.window_mode.enum_next() {
-                    options_screen_data.window_mode = e;
+                if step_enum(&mut options_screen_data.window_mode, 1) {
                     options_screen_data.scale_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = options_screen_data.window_mode.enum_prev() {
-                    options_screen_data.window_mode = e;
+                if step_enum(&mut options_screen_data.window_mode, -1) {
                     options_screen_data.scale_changed = true;
                 }
             }
         }
         SelectedMainOption::ScaleFactor => {
             if player_inputs.right.just_pressed {
-                if let Some(e) = scale_factor.enum_next() {
-                    *scale_factor = e;
+                if step_enum(&mut *scale_factor, 1) {
                     options_screen_data.scale_changed = true;
                 }
             } else if player_inputs.left.just_pressed {
-                if let Some(e) = scale_factor.enum_prev() {
-                    *scale_factor = e;
+                if step_enum(&mut *scale_factor, -1) {
                     options_screen_data.scale_changed = true;
                 }
             }
