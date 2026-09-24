@@ -1,40 +1,37 @@
-macro_rules! enum_advance_cycle_derive {
-    ($name: ident) => {
-        impl $name {
-            pub fn enum_prev_cycle(&self) -> Self {
-                self.enum_prev()
-                    .unwrap_or_else(|| Self::from_repr(Self::COUNT - 1).unwrap())
-            }
+use crate::utility::enum_advance::EnumAdvance;
 
-            pub fn enum_next_cycle(&self) -> Self {
-                self.enum_next()
-                    .unwrap_or_else(|| Self::from_repr(0).unwrap())
-            }
-        }
-    };
+pub(crate) trait EnumAdvanceCycle: EnumAdvance {
+    fn enum_next_cycle(&self) -> Self;
+    fn enum_prev_cycle(&self) -> Self;
 }
-
-pub(crate) use enum_advance_cycle_derive;
 
 #[cfg(test)]
 mod test {
-    use crate::utility::enum_advance::enum_advance_derive;
-
     #[test]
     fn test() {
+        use crate::utility::enum_advance_cycle::EnumAdvanceCycle;
         use strum::EnumCount;
         use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+        #[derive(
+            Debug,
+            Default,
+            Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            FromRepr,
+            EnumIter,
+            EnumCount,
+            tetris_macros::EnumAdvance,
+            tetris_macros::EnumAdvanceCycle,
+        )]
         enum E {
             #[default]
             A,
             B,
             C,
         }
-
-        enum_advance_derive!(E);
-        enum_advance_cycle_derive!(E);
 
         let mut e = E::default();
         assert_eq!(e, E::A);

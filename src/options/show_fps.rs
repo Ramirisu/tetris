@@ -2,16 +2,13 @@ use bevy::prelude::*;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource, tetris_macros::EnumAdvance)]
 pub enum ShowFPS {
     #[default]
     Off,
     On,
 }
 
-enum_advance::enum_advance_derive!(ShowFPS);
 
 impl ShowFPS {
     pub fn is_enabled(&self) -> bool {

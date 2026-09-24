@@ -2,9 +2,7 @@ use bevy::prelude::*;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum NextPieceHint {
     Off,
     #[default]
@@ -12,7 +10,6 @@ pub enum NextPieceHint {
     Modern,
 }
 
-enum_advance::enum_advance_derive!(NextPieceHint);
 
 impl NextPieceHint {
     pub fn count(&self) -> usize {

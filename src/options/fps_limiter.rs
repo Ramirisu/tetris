@@ -4,9 +4,7 @@ use bevy::prelude::*;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource, tetris_macros::EnumAdvance)]
 pub enum FPSLimiter {
     F240,
     F480,
@@ -14,7 +12,6 @@ pub enum FPSLimiter {
     Unlimited,
 }
 
-enum_advance::enum_advance_derive!(FPSLimiter);
 
 impl Into<bevy_framepace::Limiter> for FPSLimiter {
     fn into(self) -> bevy_framepace::Limiter {

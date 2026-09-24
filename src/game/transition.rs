@@ -1,11 +1,9 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
 use super::level::Level;
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum Transition {
     #[default]
     Classic,
@@ -14,7 +12,6 @@ pub enum Transition {
     Every4Lines,
 }
 
-enum_advance::enum_advance_derive!(Transition);
 
 impl Transition {
     pub fn transform(&self, start_level: Level, lines: usize) -> Level {

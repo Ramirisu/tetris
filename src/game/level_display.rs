@@ -1,18 +1,15 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
 use super::level::Level;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum LevelDisplay {
     #[default]
     Decimal,
     Classic,
 }
 
-enum_advance::enum_advance_derive!(LevelDisplay);
 
 impl LevelDisplay {
     pub fn format(&self, level: Level) -> String {

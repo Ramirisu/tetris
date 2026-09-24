@@ -1,12 +1,23 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::{enum_advance, enum_advance_cycle};
+use crate::utility::enum_advance_cycle::EnumAdvanceCycle;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub i32, pub i32);
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceT {
     #[default]
     T0,
@@ -14,9 +25,6 @@ pub enum PieceT {
     T2,
     T3,
 }
-
-enum_advance::enum_advance_derive!(PieceT);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceT);
 
 impl PieceT {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -29,7 +37,18 @@ impl PieceT {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceJ {
     #[default]
     J0,
@@ -37,9 +56,6 @@ pub enum PieceJ {
     J2,
     J3,
 }
-
-enum_advance::enum_advance_derive!(PieceJ);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceJ);
 
 impl PieceJ {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -52,15 +68,23 @@ impl PieceJ {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceZ {
     #[default]
     Z0,
     Z1,
 }
-
-enum_advance::enum_advance_derive!(PieceZ);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceZ);
 
 impl PieceZ {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -71,14 +95,22 @@ impl PieceZ {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceO {
     #[default]
     O0,
 }
-
-enum_advance::enum_advance_derive!(PieceO);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceO);
 
 impl PieceO {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -86,15 +118,23 @@ impl PieceO {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceS {
     #[default]
     S0,
     S1,
 }
-
-enum_advance::enum_advance_derive!(PieceS);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceS);
 
 impl PieceS {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -105,7 +145,18 @@ impl PieceS {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceL {
     #[default]
     L0,
@@ -113,9 +164,6 @@ pub enum PieceL {
     L2,
     L3,
 }
-
-enum_advance::enum_advance_derive!(PieceL);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceL);
 
 impl PieceL {
     pub fn to_squares(&self) -> [Square; 4] {
@@ -128,15 +176,23 @@ impl PieceL {
     }
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum PieceI {
     #[default]
     I0,
     I1,
 }
-
-enum_advance::enum_advance_derive!(PieceI);
-enum_advance_cycle::enum_advance_cycle_derive!(PieceI);
 
 impl PieceI {
     pub fn to_squares(&self) -> [Square; 4] {

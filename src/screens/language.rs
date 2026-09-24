@@ -12,7 +12,7 @@ use crate::{
     input::{controller_mapping::ControllerMapping, player_inputs::PlayerInputs},
     logo::logo,
     options::scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
-    utility::{effect::flicker, entity::despawn_all, enum_advance, enum_advance_cycle},
+    utility::{effect::flicker, entity::despawn_all, enum_advance_cycle::EnumAdvanceCycle},
 };
 
 pub fn plugin(app: &mut App) {
@@ -34,16 +34,24 @@ struct LanguageScreenEntityMarker;
 #[derive(Component)]
 struct LanguageSelectionEntityMarker(Language);
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 pub enum Language {
     #[default]
     English,
     TraditionalChinese,
     SimplifiedChinese,
 }
-
-enum_advance::enum_advance_derive!(Language);
-enum_advance_cycle::enum_advance_cycle_derive!(Language);
 
 impl Language {
     pub fn name(&self) -> &'static str {

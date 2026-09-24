@@ -1,42 +1,35 @@
-macro_rules! enum_advance_derive {
-    ($name: ident) => {
-        impl $name {
-            pub fn enum_prev(&self) -> Option<Self> {
-                let v = *self as usize;
-                if v == 0 { None } else { Self::from_repr(v - 1) }
-            }
-
-            pub fn enum_next(&self) -> Option<Self> {
-                let v = *self as usize;
-                if v == Self::COUNT - 1 {
-                    None
-                } else {
-                    Self::from_repr(v + 1)
-                }
-            }
-        }
-    };
+pub(crate) trait EnumAdvance: Copy {
+    fn enum_next(&self) -> Option<Self>;
+    fn enum_prev(&self) -> Option<Self>;
 }
-
-pub(crate) use enum_advance_derive;
 
 #[cfg(test)]
 mod test {
 
     #[test]
     fn test() {
+        use crate::utility::enum_advance::EnumAdvance;
         use strum::EnumCount;
         use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+        #[derive(
+            Debug,
+            Default,
+            Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            FromRepr,
+            EnumIter,
+            EnumCount,
+            tetris_macros::EnumAdvance,
+        )]
         enum E {
             #[default]
             A,
             B,
             C,
         }
-
-        enum_advance_derive!(E);
 
         let mut e = E::default();
         assert_eq!(e, E::A);

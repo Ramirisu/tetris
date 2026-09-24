@@ -2,16 +2,23 @@ use bevy::prelude::Visibility;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+)]
 pub enum Invisible {
     #[default]
     Off,
     On,
 }
-
-enum_advance::enum_advance_derive!(Invisible);
 
 impl Into<Visibility> for Invisible {
     fn into(self) -> Visibility {

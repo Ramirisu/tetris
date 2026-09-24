@@ -22,7 +22,10 @@ use crate::{
         scale_factor::{ScaleFactor, WINDOW_HEIGHT, WINDOW_WIDTH},
         show_fps::ShowFPS,
     },
-    utility::{effect::flicker, entity::despawn_all, enum_advance, enum_advance_cycle},
+    utility::{
+        effect::flicker, entity::despawn_all, enum_advance::EnumAdvance,
+        enum_advance_cycle::EnumAdvanceCycle,
+    },
 };
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "fps_limiter"))]
@@ -74,7 +77,19 @@ struct SelectedMainSettingEntityMarker(SelectedMainOption, usize);
 
 const FONT_SIZE: f32 = 25.0;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    FromRepr,
+    EnumIter,
+    EnumCount,
+    tetris_macros::EnumAdvance,
+    tetris_macros::EnumAdvanceCycle,
+)]
 enum SelectedMainOption {
     #[default]
     Tetris,
@@ -133,9 +148,6 @@ impl SelectedMainOption {
         }
     }
 }
-
-enum_advance::enum_advance_derive!(SelectedMainOption);
-enum_advance_cycle::enum_advance_cycle_derive!(SelectedMainOption);
 
 const SEED_FIRST: usize = 0;
 const SEED_LAST: usize = SEED_HEX_COUNT - 1;

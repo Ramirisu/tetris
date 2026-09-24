@@ -4,13 +4,11 @@ use rand::{RngExt, seq::SliceRandom};
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
 use super::piece::Piece;
 
 pub type PieceHistory = VecDeque<Piece>;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum Random {
     Uniform,
     #[default]
@@ -18,7 +16,6 @@ pub enum Random {
     Modern,
 }
 
-enum_advance::enum_advance_derive!(Random);
 
 impl Random {
     pub fn gen_pieces<R: rand::Rng>(&self, rng: &mut R, history: &PieceHistory) -> Vec<Piece> {

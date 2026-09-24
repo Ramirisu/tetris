@@ -2,12 +2,10 @@ use bevy::prelude::*;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
 pub const WINDOW_WIDTH: f32 = 1440.0;
 pub const WINDOW_HEIGHT: f32 = 1080.0;
 
-#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource)]
+#[derive(Default, Clone, Copy, FromRepr, EnumIter, EnumCount, Resource, tetris_macros::EnumAdvance)]
 pub enum ScaleFactor {
     S720,
     #[default]
@@ -20,7 +18,6 @@ pub enum ScaleFactor {
     S4320,
 }
 
-enum_advance::enum_advance_derive!(ScaleFactor);
 
 impl ScaleFactor {
     pub fn mul(&self) -> f32 {

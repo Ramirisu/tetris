@@ -1,9 +1,7 @@
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum ScoreDisplay {
     #[default]
     Decimal,
@@ -11,7 +9,6 @@ pub enum ScoreDisplay {
     Base36,
 }
 
-enum_advance::enum_advance_derive!(ScoreDisplay);
 
 impl ScoreDisplay {
     pub fn format(&self, score: usize) -> String {

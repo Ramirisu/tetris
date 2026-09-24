@@ -3,16 +3,13 @@ use std::time::Duration;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
-use crate::utility::enum_advance;
-
-#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, FromRepr, EnumIter, EnumCount, tetris_macros::EnumAdvance)]
 pub enum TVSystem {
     #[default]
     NTSC,
     PAL,
 }
 
-enum_advance::enum_advance_derive!(TVSystem);
 
 impl TVSystem {
     pub const fn ticks_to_duration(self, ticks: u64) -> Duration {
