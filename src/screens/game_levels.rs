@@ -37,29 +37,15 @@ struct GameLevelsScreenEntityMarker;
 
 #[derive(Component)]
 struct ButtonEntityMarker {
-    cordinate: (i32, i32),
+    coordinate: (i32, i32),
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct GameLevelsScreenData {
     selected_level: (i32, i32),
 }
 
-impl GameLevelsScreenData {
-    pub fn new() -> Self {
-        Self {
-            selected_level: (0, 0),
-        }
-    }
-}
-
-impl Default for GameLevelsScreenData {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
+const LEVELS: [[Option<usize>; 5]; 6] = [
     [Some(0), Some(1), Some(2), Some(3), Some(4)],
     [Some(5), Some(6), Some(7), Some(8), Some(9)],
     [Some(10), Some(11), Some(12), Some(13), Some(14)],
@@ -70,6 +56,34 @@ const LEVELS: &'static [[Option<usize>; 5]; 6] = &[
 
 const LEVELS_ROWS: usize = LEVELS.len();
 const LEVELS_COLS: usize = LEVELS[0].len();
+
+fn move_selection_row(selection: &mut (i32, i32), delta: i32) {
+    selection.1 = (selection.1 + delta).rem_euclid(LEVELS_ROWS as i32);
+    while LEVELS[selection.1 as usize][selection.0 as usize] == None {
+        selection.1 = (selection.1 + delta).rem_euclid(LEVELS_ROWS as i32);
+    }
+}
+
+fn move_selection_column(selection: &mut (i32, i32), delta: i32) {
+    selection.0 = (selection.0 + delta).rem_euclid(LEVELS_COLS as i32);
+    while LEVELS[selection.1 as usize][selection.0 as usize] == None {
+        selection.0 = (selection.0 + delta).rem_euclid(LEVELS_COLS as i32);
+    }
+}
+
+fn try_start_selected_level(
+    selection: &(i32, i32),
+    game_config: &mut GameConfig,
+    player_data: &mut PlayerData,
+) -> bool {
+    let Some(level) = LEVELS[selection.1 as usize][selection.0 as usize] else {
+        return false;
+    };
+
+    game_config.start_level = Level(level);
+    *player_data = PlayerData::new(*game_config);
+    true
+}
 
 fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>) {
     commands
@@ -156,7 +170,7 @@ fn setup_screen(mut commands: Commands, mut image_assets: ResMut<Assets<Image>>)
                                     },
                                     BackgroundColor::from(BLACK),
                                     ButtonEntityMarker {
-                                        cordinate: (x as i32, y as i32),
+                                        coordinate: (x as i32, y as i32),
                                     },
                                 ));
                                 if let Some(level) = col {
@@ -201,50 +215,35 @@ fn handle_input_system(
         player_inputs.down.just_pressed,
     ) {
         (true, false) => {
-            screen_data.selected_level.1 =
-                (screen_data.selected_level.1 - 1).rem_euclid(LEVELS_ROWS as i32);
-            if screen_data.selected_level.1 >= 4 {
-                screen_data.selected_level.0 = LEVELS_COLS as i32 - 1;
-            }
+            move_selection_row(&mut screen_data.selected_level, -1);
             play_sound.write(PlaySoundMessage::MoveCursor);
         }
         (false, true) => {
-            screen_data.selected_level.1 =
-                (screen_data.selected_level.1 + 1).rem_euclid(LEVELS_ROWS as i32);
-            if screen_data.selected_level.1 >= 4 {
-                screen_data.selected_level.0 = LEVELS_COLS as i32 - 1;
-            }
+            move_selection_row(&mut screen_data.selected_level, 1);
             play_sound.write(PlaySoundMessage::MoveCursor);
         }
-        _ => {
-            if screen_data.selected_level.1 < 4 {
-                match (
-                    player_inputs.left.just_pressed,
-                    player_inputs.right.just_pressed,
-                ) {
-                    (true, false) => {
-                        screen_data.selected_level.0 =
-                            (screen_data.selected_level.0 - 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.write(PlaySoundMessage::MoveCursor);
-                    }
-                    (false, true) => {
-                        screen_data.selected_level.0 =
-                            (screen_data.selected_level.0 + 1).rem_euclid(LEVELS_COLS as i32);
-                        play_sound.write(PlaySoundMessage::MoveCursor);
-                    }
-                    _ => {}
-                }
+        _ => match (
+            player_inputs.left.just_pressed,
+            player_inputs.right.just_pressed,
+        ) {
+            (true, false) => {
+                move_selection_column(&mut screen_data.selected_level, -1);
+                play_sound.write(PlaySoundMessage::MoveCursor);
             }
-        }
+            (false, true) => {
+                move_selection_column(&mut screen_data.selected_level, 1);
+                play_sound.write(PlaySoundMessage::MoveCursor);
+            }
+            _ => {}
+        },
     }
 
     if player_inputs.start.just_pressed {
-        if let Some(level) =
-            LEVELS[screen_data.selected_level.1 as usize][screen_data.selected_level.0 as usize]
-        {
-            game_config.start_level = Level(level);
-
-            *player_data = PlayerData::new(*game_config);
+        if try_start_selected_level(
+            &screen_data.selected_level,
+            &mut game_config,
+            &mut player_data,
+        ) {
             play_sound.write(PlaySoundMessage::StartGame);
             game_state.set(GameState::Running);
             player_phase.set(PlayerPhase::Init);
@@ -262,7 +261,7 @@ fn update_ui_system(
     screen_data: Res<GameLevelsScreenData>,
 ) {
     for (mut bg_color, marker) in q {
-        if marker.cordinate == screen_data.selected_level {
+        if marker.coordinate == screen_data.selected_level {
             let mut color = GOLD;
             color.set_alpha(flicker(t.elapsed_secs(), 0.25));
 
