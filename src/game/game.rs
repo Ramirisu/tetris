@@ -38,7 +38,7 @@ pub struct GameConfig {
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
-            start_level: Level(0),
+            start_level: Level::default(),
             transition: Transition::default(),
             scoring: Scoring::default(),
             linecap: Linecap::default(),

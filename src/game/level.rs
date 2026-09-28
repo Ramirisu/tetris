@@ -1,6 +1,6 @@
 use std::ops::{AddAssign, SubAssign};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Level(pub usize);
 
 impl Level {
