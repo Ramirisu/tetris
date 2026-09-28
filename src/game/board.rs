@@ -178,10 +178,11 @@ impl Board {
     }
 
     pub fn is_curr_piece_pos_valid(&self) -> bool {
-        self.curr_piece_to_squares_with_pos().iter().all(|sqr| {
-            self.is_inside_board(sqr.0, sqr.1)
-                && self.square(sqr.0 as usize, sqr.1 as usize).is_placeholder()
-        })
+        self.is_piece_position_valid(
+            self.curr_piece,
+            self.curr_piece_pos_x,
+            self.curr_piece_pos_y,
+        )
     }
 
     pub fn next_pieces(&self) -> &PieceHistory {
@@ -283,6 +284,13 @@ impl Board {
         x >= 0 && x < self.cols as i32 && y >= 0 && y < Self::padded_rows(self.rows) as i32
     }
 
+    fn is_piece_position_valid(&self, piece: Piece, x: i32, y: i32) -> bool {
+        Self::piece_to_squares(piece, x, y).iter().all(|sqr| {
+            self.is_inside_board(sqr.0, sqr.1)
+                && self.square(sqr.0 as usize, sqr.1 as usize).is_placeholder()
+        })
+    }
+
     fn piece_to_squares(piece: Piece, x: i32, y: i32) -> [Square; 4] {
         piece.to_squares().map(|sqr| Square(sqr.0 + x, sqr.1 + y))
     }
@@ -309,12 +317,7 @@ impl Board {
             piece
         };
 
-        Self::piece_to_squares(new_piece, new_pos_x, new_pos_y)
-            .iter()
-            .all(|sqr| {
-                self.is_inside_board(sqr.0, sqr.1)
-                    && self.square(sqr.0 as usize, sqr.1 as usize).is_placeholder()
-            })
+        self.is_piece_position_valid(new_piece, new_pos_x, new_pos_y)
             .then_some((new_pos_x, new_pos_y, new_piece))
     }
 
