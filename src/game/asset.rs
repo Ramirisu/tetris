@@ -39,37 +39,41 @@ pub struct SquareImageAssets {
 impl SquareImageAssets {
     pub fn new(image_assets: &mut Assets<Image>, level: Level) -> Self {
         Self {
-            standard: Piece::iter()
-                .map(|piece| {
-                    image_assets.add(into_image(get_square_image_by_level(
-                        SquareImageSize::Standard,
-                        *piece,
-                        level,
-                    )))
-                })
-                .collect(),
-            small: Piece::iter()
-                .map(|piece| {
-                    image_assets.add(into_image(get_square_image_by_level(
-                        SquareImageSize::Small,
-                        *piece,
-                        level,
-                    )))
-                })
-                .collect(),
-            level: SquareImageDisplayLevel::iter()
-                .map(|level| {
-                    image_assets.add(into_image(SquareImagePattern::X.to_dynamic_image(
-                        SquareImageSize::Small,
-                        &[BLACK, level.color(), level.color(), level.color()],
-                    )))
-                })
-                .collect(),
-            burned: image_assets.add(into_image(
-                SquareImagePattern::X
-                    .to_dynamic_image(SquareImageSize::Small, &[BLACK, BLACK, BLACK, RED]),
-            )),
+            standard: Self::build_piece_images(image_assets, SquareImageSize::Standard, level),
+            small: Self::build_piece_images(image_assets, SquareImageSize::Small, level),
+            level: Self::build_display_level_images(image_assets),
+            burned: Self::build_burned_image(image_assets),
         }
+    }
+
+    fn build_piece_images(
+        image_assets: &mut Assets<Image>,
+        size: SquareImageSize,
+        level: Level,
+    ) -> Vec<Handle<Image>> {
+        Piece::iter()
+            .map(|piece| {
+                image_assets.add(into_image(get_square_image_by_level(size, *piece, level)))
+            })
+            .collect()
+    }
+
+    fn build_display_level_images(image_assets: &mut Assets<Image>) -> Vec<Handle<Image>> {
+        SquareImageDisplayLevel::iter()
+            .map(|level| {
+                image_assets.add(into_image(SquareImagePattern::X.to_dynamic_image(
+                    SquareImageSize::Small,
+                    &[BLACK, level.color(), level.color(), level.color()],
+                )))
+            })
+            .collect()
+    }
+
+    fn build_burned_image(image_assets: &mut Assets<Image>) -> Handle<Image> {
+        image_assets.add(into_image(
+            SquareImagePattern::X
+                .to_dynamic_image(SquareImageSize::Small, &[BLACK, BLACK, BLACK, RED]),
+        ))
     }
 
     pub fn get_image(&self, size: SquareImageSize, piece: Piece) -> Handle<Image> {
