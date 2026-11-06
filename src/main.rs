@@ -3,6 +3,7 @@
 
 use bevy::{
     color::palettes::css::GREEN,
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     prelude::*,
     window::{EnabledButtons, PresentMode, WindowResolution},
 };
@@ -18,7 +19,6 @@ mod screens;
 mod utility;
 
 use app_state::AppState;
-use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use options::{
     scale_factor::{WINDOW_HEIGHT, WINDOW_WIDTH},
     show_fps::ShowFPS,

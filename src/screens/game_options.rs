@@ -1,9 +1,9 @@
 use bevy::{
     color::palettes::css::{BLUE, WHITE},
+    dev_tools::fps_overlay::FpsOverlayConfig,
     prelude::*,
     window::PrimaryWindow,
 };
-use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumCount, EnumIter, FromRepr};
 
